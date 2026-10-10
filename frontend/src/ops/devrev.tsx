@@ -2,6 +2,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useRef, use
 import { useNavigate } from "react-router-dom";
 import { ArrowRight, ExternalLink, Flame, Timer, Workflow } from "lucide-react";
 import { Button, EmptyState, Pill, PriorityBadge, Sheet } from "../components/ui";
+import { authHeaders } from "../lib/auth";
 import "./devrev.css";
 
 /* ---- contract types (GET /api/devrev/board, /events) ---- */
@@ -28,7 +29,7 @@ export const STAGE_LABEL: Record<StageKey, string> = {
 /** Plain GET that resolves null on any failure (endpoint missing, restart, offline): the UI then shows nothing. */
 async function getJson<T>(path: string): Promise<T | null> {
   try {
-    const r = await fetch(path);
+    const r = await fetch(path, { headers: authHeaders() });
     if (!r.ok) return null;
     return (await r.json()) as T;
   } catch { return null; }

@@ -108,3 +108,12 @@ Legacy exports kept so existing screens work: `BucketChip, TicketChip, EdgeChip,
 - **Touch targets**: buttons, icon buttons and segmented options are 44px on coarse pointers automatically.
 - **Map colours**: pins use `--p1..--p4` and `--success`. `lib/const.ts` BUCKET_COLOR still has the old hexes; map code should read the CSS vars or use P1 #E5484D, P2 #F97316, P3 #F5B301, P4 #8A97AD, fixed #12B981.
 - **Status line**: dots and a connecting line are the brand. Reuse `<LineStepper>` or draw route connectors with a 4px rounded line in `--primary` and 26px station dots.
+
+## Roles and builds
+
+One codebase, two apps, selected at build time by `VITE_ROLE` (loaded from `.env.citizen` / `.env.city` via `vite --mode`).
+
+- **Citizen** (`npm run dev:citizen`, port 5173, `build:citizen` to `dist/citizen`): phone-first. Routes `/`, `/requests`, `/requests/:id`, `/profile`. Compact logo header, bottom tab bar (Report / My requests / Profile), installable PWA (`public/manifest.webmanifest`). No ops, vendor, workflow, analytics or admin code is in this bundle.
+- **City** (`npm run dev:city`, port 5174, `build:city` to `dist/city`): staff portal. Routes `/ops`, `/vendor`, `/workflow`; header nav, "City operations" badge, Sign out, health popover. A PIN gate (`src/city/Gate.tsx`, demo PIN `city`) comes first. This is demo-level, not real security.
+- `src/lib/auth.ts` owns the role: `ROLE`, `authHeaders()` (always `X-User-Id`; plus `X-Role-Token` once unlocked in the city role), `unlockStaff`, `lockStaff`, `isStaffUnlocked`. The SSE stream sends the token as `?token=`. Any 403 in the city role locks the app and returns to the gate.
+- `npm run build` runs `tsc` once, then both builds.

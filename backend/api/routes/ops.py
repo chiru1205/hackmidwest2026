@@ -4,12 +4,13 @@ from __future__ import annotations
 from datetime import datetime, timedelta, timezone
 from typing import Optional
 
-from fastapi import APIRouter, File, Header, HTTPException, Query, UploadFile
+from fastapi import APIRouter, Depends, File, Header, HTTPException, Query, UploadFile
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 
 from contracts.models import Cluster, Event, Health, Stats, Ticket, VendorOrder
 from .. import adapters, config, events, pipeline, store
+from ..auth import require_staff, require_staff_events
 
 router = APIRouter()
 DUE_DAYS = {"P1": 2, "P2": 5, "P3": 10, "P4": 14}
@@ -20,12 +21,12 @@ async def health():
     return Health(status="ok", flags=config.flags, services=adapters.services())
 
 
-@router.get("/stats", response_model=Stats)
+@router.get("/stats", response_model=Stats, dependencies=[Depends(require_staff)])
 async def get_stats():
     return store.stats()
 
 
-@router.get("/tickets", response_model=list[Ticket])
+@router.get("/tickets", response_model=list[Ticket], dependencies=[Depends(require_staff)])
 async def tickets():
     return adapters.list_tickets(300)
 
@@ -34,7 +35,7 @@ class AdvanceBody(BaseModel):
     stage: str
 
 
-@router.post("/tickets/{ticket_id}/advance", response_model=Ticket)
+@router.post("/tickets/{ticket_id}/advance", response_model=Ticket, dependencies=[Depends(require_staff)])
 async def advance(ticket_id: str, body: AdvanceBody):
     if body.stage not in ("queued", "work_in_progress", "resolved", "canceled"):
         raise HTTPException(422, "bad stage")
@@ -55,7 +56,7 @@ async def advance(ticket_id: str, body: AdvanceBody):
     return t
 
 
-@router.get("/vendor/orders", response_model=list[VendorOrder])
+@router.get("/vendor/orders", response_model=list[VendorOrder], dependencies=[Depends(require_staff)])
 async def vendor_orders(vendor: Optional[str] = None):
     out = []
     for c in sorted(store.clusters.values(), key=lambda c: -c.priority):
@@ -72,7 +73,7 @@ async def vendor_orders(vendor: Optional[str] = None):
     return out
 
 
-@router.post("/vendor/orders/{cluster_id}/fix", response_model=Cluster)
+@router.post("/vendor/orders/{cluster_id}/fix", response_model=Cluster, dependencies=[Depends(require_staff)])
 async def vendor_fix(cluster_id: str, photo: Optional[UploadFile] = File(None)):
     c = store.clusters.get(cluster_id)
     if c is None:
@@ -99,22 +100,27 @@ async def impact():
     f = lambda label, value, note, source, est=False: {"label": label, "value": value, "note": note,
                                                           "estimate": est, "source": source}
     return {
-        "headline": "Duplicates waste city time. Civic Flow turns many reports into one ticket.",
+        "headline": "Many reports, one ticket, for any city issue.",
         "facts": [
-            f("Pothole 311 requests, KC 2025", "about 9,700", "Kansas City 311 service requests",
+            f("Kansas City 311 requests in 2025", "about 167,089",
+              "All request types, not only potholes (potholes were the 4th most common type)", "data.kcmo.org d4px-6rwg"),
+            f("Pothole requests repeated within 50 m and 30 days", "about 28%",
+              "Our analysis of the open data; other issue types were not measured", "data.kcmo.org d4px-6rwg", True),
+            f("Median days to close a pothole", "13 (90th percentile 51)",
+              "Pothole requests closed in KC; one example issue type", "data.kcmo.org d4px-6rwg"),
+            f("Pothole requests in 2025 (one example type)", "about 9,700", "Kansas City 311 service requests",
               "data.kcmo.org d4px-6rwg"),
-            f("Median days to close", "13 (90th percentile 51)", "Pothole requests closed in KC", "data.kcmo.org d4px-6rwg"),
-            f("Requests within 50 m and 30 days of an earlier one", "about 28%", "Our analysis of the open data",
-              "data.kcmo.org d4px-6rwg", True),
-            f("Canceled pothole requests, 2025", "30%", "Many are duplicates or already known", "data.kcmo.org d4px-6rwg"),
-            f("NYC potholes formally closed as duplicates", "8.8%", "NYC 311 closure codes", "NYC Open Data 311"),
-            f("Average US pothole repair cost to drivers", "about $600", "Per vehicle repair", "AAA"),
-            f("Extra yearly cost of poor roads, KC driver", "$704", "Vehicle operating costs", "TRIP 2020"),
+            f("Canceled pothole requests, 2025", "30%", "Many are duplicates or already known (pothole example)",
+              "data.kcmo.org d4px-6rwg"),
+            f("NYC potholes formally closed as duplicates", "8.8%", "NYC 311 closure codes (pothole example)", "NYC Open Data 311"),
+            f("Average US pothole repair cost to drivers", "about $600", "Per vehicle repair (pothole example)", "AAA"),
+            f("Extra yearly cost of poor roads, KC driver", "$704", "Vehicle operating costs (road condition example)",
+              "TRIP 2020"),
         ],
     }
 
 
-@router.get("/events")
+@router.get("/events", dependencies=[Depends(require_staff_events)])
 async def sse(since: Optional[int] = Query(None), last_event_id: Optional[str] = Header(None)):
     if since is None and last_event_id and last_event_id.isdigit():
         since = int(last_event_id)
@@ -122,6 +128,6 @@ async def sse(since: Optional[int] = Query(None), last_event_id: Optional[str] =
                              headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no", "Connection": "keep-alive"})
 
 
-@router.get("/events/recent", response_model=list[Event])
+@router.get("/events/recent", response_model=list[Event], dependencies=[Depends(require_staff)])
 async def recent(limit: int = 50):
     return events.recent(limit)

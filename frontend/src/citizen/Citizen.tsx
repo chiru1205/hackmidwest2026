@@ -1,41 +1,28 @@
 import { useEffect, useRef, useState } from "react";
-import { NavLink, Route, Routes, useLocation, useSearchParams } from "react-router-dom";
+import { matchPath, Navigate, NavLink, useLocation, useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Camera, ClipboardList, GitMerge, UserRound, Wrench, Cloud, Signal, BatteryFull, Wifi } from "lucide-react";
-import type { Cluster } from "@contracts";
 import { api } from "../lib/api";
 import { PRESETS } from "../lib/const";
-import { useAsync, useEvents } from "../lib/hooks";
-import { AnimatedNumber, Skeleton, spring, useToast } from "../components/ui";
+import { useAsync } from "../lib/hooks";
+import { Skeleton, SkeletonText, spring } from "../components/ui";
 import { LocProvider, useLoc } from "./loc";
 import { OverlayCtx } from "./overlay";
 import Report from "./Report";
-import MyReports from "./MyReports";
+import Requests from "./Requests";
+import RequestDetail from "./RequestDetail";
+import { useFixedToasts, useMyRequests } from "./requestsApi";
 import Profile from "./Profile";
 import "./citizen.css";
 
 function FixedWatcher() {
-  const toast = useToast();
-  const mine = useRef<Set<string> | null>(null);
-  const seen = useRef(new Set<string>());
-  useEvents(async (e) => {
-    if (e.type !== "cluster.updated") return;
-    const c = e.data.cluster as Cluster | undefined;
-    if (!c || c.status !== "fixed" || seen.current.has(c.id)) return;
-    if (!mine.current) {
-      try { mine.current = new Set((await api.myReports()).map((x) => x.id)); } catch { mine.current = new Set(); }
-    }
-    if (mine.current.has(c.id)) {
-      seen.current.add(c.id);
-      toast("Fixed! Your report is done", (e.data.points as number) || 100);
-    }
-  });
+  const { data } = useMyRequests(5000);
+  useFixedToasts(data);
   return null;
 }
 
 function DemoPanel() {
   const { override, clearOverride, loc } = useLoc();
-  const toast = useToast();
   return (
     <div className="cz-demo" role="region" aria-label="Demo panel">
       <strong>Demo panel</strong>
@@ -43,7 +30,6 @@ function DemoPanel() {
       <div className="cz-demo__row">{PRESETS.map((p) => <button key={p.name} onClick={() => override(p.lat, p.lng)}>{p.name}</button>)}</div>
       <div className="cz-demo__row">
         <button onClick={clearOverride}>Use GPS</button>
-        <button onClick={async () => { await api.reset(); toast("Demo reset"); window.location.reload(); }}>Reset</button>
       </div>
     </div>
   );
@@ -54,7 +40,7 @@ function Tabs() {
   const to = (p: string) => ({ pathname: p, search });
   const items = [
     { to: "/", label: "Report", icon: Camera, end: true },
-    { to: "/mine", label: "My reports", icon: ClipboardList, end: false },
+    { to: "/requests", label: "My requests", icon: ClipboardList, end: false },
     { to: "/profile", label: "Profile", icon: UserRound, end: false },
   ];
   return (
@@ -76,11 +62,10 @@ function Tabs() {
 
 /** Left-hand story panel on desktop: live numbers, the three-step idea, the sponsor line. */
 function Story() {
-  const stats = useAsync(() => api.stats(), []);
-  useEvents((e) => { if (e.type === "stats.updated" && e.data.stats) stats.setData(e.data.stats); });
-  const s = stats.data;
+  const impact = useAsync(() => api.impact(), []);
+  const s = impact.data;
   const steps = [
-    { icon: Camera, title: "Neighbors report", text: "A photo, a pin and a tap. Thousands of phones, one city." },
+    { icon: Camera, title: "Neighbors report", text: "A photo, a pin and a tap. Potholes, lights, flooding, anything." },
     { icon: GitMerge, title: "Reports converge", text: "Duplicates fold into one issue, matched by place and by meaning." },
     { icon: Wrench, title: "One ticket, one crew", text: "Scored, ticketed, assigned. You watch it get fixed." },
   ];
@@ -88,12 +73,11 @@ function Story() {
     <aside className="cz-story" aria-label="About Civic Flow">
       <div className="t-eyebrow cz-story__eyebrow">Live from Kansas City</div>
       <h1 className="cz-story__h">
-        {s ? <AnimatedNumber value={s.total_reports} /> : <Skeleton width={150} height={52} />} reports
-        <br />became {s ? <span className="cz-story__accent"><AnimatedNumber value={s.unique_clusters} /></span> : <Skeleton width={110} height={52} />} issues.
+        {s ? s.headline : <Skeleton width={260} height={52} />}
       </h1>
-      <p className="t-body lg muted cz-story__lede">
-        {s ? <>{s.duplicates_absorbed.toLocaleString("en-US")} duplicate reports were folded into the ones that were already there. Every neighbor counts, and the crew only gets one ticket.</> : "Counting neighbors..."}
-      </p>
+      <div className="t-body lg muted cz-story__lede">
+        {s ? s.facts.slice(0, 3).map((f) => <p key={f.label} style={{ margin: "0 0 6px" }}><b>{f.value}</b> {f.label.toLowerCase()}{f.estimate ? " (estimate)" : ""}</p>) : <SkeletonText lines={2} />}
+      </div>
       <ol className="cz-story__steps">
         {steps.map((st, i) => (
           <motion.li key={st.title} initial={{ opacity: 0, x: -12 }} animate={{ opacity: 1, x: 0 }} transition={{ ...spring.soft, delay: 0.15 + i * 0.1 }}>
@@ -105,6 +89,17 @@ function Story() {
       <div className="cz-story__sponsor"><Cloud size={16} strokeWidth={1.75} aria-hidden /> Powered by Akamai Cloud AI</div>
     </aside>
   );
+}
+
+/** Path-based screen switch (the shell mounts this component on several absolute paths, so nested relative routes would not match). */
+function Screen() {
+  const { pathname, search } = useLocation();
+  const detail = matchPath("/requests/:id", pathname);
+  if (detail) return <RequestDetail />;
+  if (pathname.startsWith("/requests")) return <Requests />;
+  if (pathname === "/mine") return <Navigate to={{ pathname: "/requests", search }} replace />;
+  if (pathname.startsWith("/profile")) return <Profile />;
+  return <Report />;
 }
 
 export default function Citizen() {
@@ -126,12 +121,7 @@ export default function Citizen() {
               <span className="cz-status__r"><Signal size={14} /><Wifi size={14} /><BatteryFull size={16} /></span>
             </div>
             <div className="cz-body" ref={scroller}>
-              <Routes>
-                <Route index element={<Report />} />
-                <Route path="mine" element={<MyReports />} />
-                <Route path="profile" element={<Profile />} />
-                <Route path="*" element={<Report />} />
-              </Routes>
+              <Screen />
             </div>
             <Tabs />
             <div className="cz-overlay-root" ref={setRoot} />

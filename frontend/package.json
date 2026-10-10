@@ -4,8 +4,12 @@
   "version": "0.1.0",
   "type": "module",
   "scripts": {
-    "dev": "vite --port 5173",
-    "build": "tsc --noEmit && vite build",
+    "dev": "vite --port 5173 --mode citizen",
+    "dev:citizen": "vite --port 5173 --mode citizen",
+    "dev:city": "vite --port 5174 --mode city",
+    "build:citizen": "vite build --mode citizen",
+    "build:city": "vite build --mode city",
+    "build": "tsc --noEmit && npm run build:citizen && npm run build:city",
     "preview": "vite preview"
   },
   "dependencies": {

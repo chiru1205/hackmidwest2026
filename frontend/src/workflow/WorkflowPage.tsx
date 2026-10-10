@@ -192,7 +192,7 @@ function JourneyPanel({ ticketId, board, onChanged, reduced }: {
           <motion.div className="wf-note" initial={reduced ? false : { opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }}>
             <label htmlFor="wf-note">{noteFor === "approve" ? "Evidence note (required)" : "Reason for escalation (optional)"}</label>
             <textarea id="wf-note" rows={2} value={note} onChange={(e) => setNote(e.target.value)}
-              placeholder={noteFor === "approve" ? "After photo checked, pothole filled and flush with the road" : "Why does this need to go up?"} />
+              placeholder={noteFor === "approve" ? "After photo checked, the repair is complete and the site is safe" : "Why does this need to go up?"} />
             <div className="wf-note-row">
               <Button size="sm" variant="ghost" onClick={() => { setNoteFor(null); setMsg(null); }}>Cancel</Button>
               <Button size="sm" loading={busy === noteFor} onClick={() => click(noteFor)}>{noteFor === "approve" ? "Confirm and resolve" : "Confirm escalation"}</Button>

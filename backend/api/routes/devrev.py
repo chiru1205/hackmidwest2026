@@ -4,12 +4,14 @@ from __future__ import annotations
 import asyncio
 from typing import Optional
 
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel
 
 from backend.integrations.devrev import actions, board, events
 
-router = APIRouter()
+from ..auth import require_staff
+
+router = APIRouter(dependencies=[Depends(require_staff)])
 
 
 class ActionBody(BaseModel):

@@ -114,3 +114,17 @@ export interface TicketEventRow {
   ts: string; kind: "created" | "stage" | "comment" | "escalated" | "verification" | "resolved" | "reopened";
   ticket_id: string; devrev_id: string | null; text: string; source: "DevRev" | "Civic Flow";
 }
+
+// ---- citizen app: GET /api/me/requests, GET /api/me/requests/{cluster_id}
+export interface CitizenTimelineItem { ts: string; label: string; detail: string }
+export type CitizenStatus = "reported" | "assigned" | "in_progress" | "awaiting_verification" | "fixed";
+export interface CitizenRequest {
+  id: string; category: Category; title: string; address?: string | null; neighborhood?: string | null;
+  district?: string | null; zones: string[]; photo_url?: string | null; neighbors: number;
+  status: CitizenStatus;
+  stage_label: "Reported" | "Crew assigned" | "Work in progress" | "Awaiting verification" | "Fixed";
+  ticket_id?: string | null; crew?: string | null; due?: string | null; priority_bucket: Bucket;
+  rationale: string;
+  detected: { category: Category; severity: number; is_hazard: boolean; hazard_description: string };
+  my_points: number; created_at: string; updated_at: string; timeline: CitizenTimelineItem[];
+}

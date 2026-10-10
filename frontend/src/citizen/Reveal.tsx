@@ -1,10 +1,11 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import confetti from "canvas-confetti";
-import { ArrowRight, Check, ChevronDown, HardHat, HeartHandshake, ShieldAlert, Sparkles } from "lucide-react";
+import { ArrowRight, CalendarClock, Check, ChevronDown, HardHat, HeartHandshake, ShieldAlert, Sparkles } from "lucide-react";
 import type { AgentStep, Bucket, ReportResult } from "@contracts";
 import { catLabel } from "../lib/const";
-import { useEvents } from "../lib/hooks";
+import { fetchMyRequest, type CitizenRequest } from "./requestsApi";
+import { detectedLine } from "./RequestDetail";
 import { AnimatedNumber, Button, PriorityBadge, ProgressRing, TicketId, item, list, spring, useCountUp, useReducedMotion } from "../components/ui";
 import { CatIcon, areaLine, geoOf, levelSpan } from "./common";
 
@@ -134,12 +135,21 @@ export default function Reveal({ result, onClose }: { result: ReportResult; onCl
   const c = result.cluster;
   const [why, setWhy] = useState<string | null>(c?.rationale ?? null);
   const [whyKey, setWhyKey] = useState(0);
-  // the AI-written explanation can arrive a few seconds after the ticket
-  useEvents((e) => {
-    if (e.type !== "cluster.updated" || !c) return;
-    const cl = e.data?.cluster;
-    if (cl?.id === c.id && typeof cl.rationale === "string" && cl.rationale && cl.rationale !== why) { setWhy(cl.rationale); setWhyKey((k) => k + 1); }
-  });
+  // the citizen's own view of this request: crew, due date, what was detected; the AI-written explanation can land a few seconds later
+  const [mine, setMine] = useState<CitizenRequest | null>(null);
+  useEffect(() => {
+    if (!c || rejected) return;
+    let live = true, n = 0;
+    const load = () => fetchMyRequest(c.id).then((r) => {
+      if (!live) return;
+      setMine(r);
+      if (r.rationale && r.rationale !== why) { setWhy(r.rationale); setWhyKey((k) => k + 1); }
+    }).catch(() => undefined);
+    load();
+    const t = setInterval(() => { if (++n > 4) clearInterval(t); else load(); }, 3000);
+    return () => { live = false; clearInterval(t); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [c?.id, rejected]);
   const [stage, setStage] = useState(reduced ? 1 : 0);
   const [open, setOpen] = useState(false);
   const root = useRef<HTMLDivElement>(null);
@@ -168,7 +178,7 @@ export default function Reveal({ result, onClose }: { result: ReportResult; onCl
 
   const bucket = c?.bucket ?? "P3";
   const score = result.priority_after ?? c?.priority ?? 0;
-  const vendor = result.ticket?.vendor ?? c?.vendor;
+  const vendor = mine?.crew ?? result.ticket?.vendor ?? c?.vendor;
   const ticketId = result.ticket?.id ?? c?.ticket_id;
   const xpAfter = result.xp_total, xpBefore = Math.max(0, xpAfter - result.points_awarded);
   const lvl = levelSpan(xpAfter);
@@ -237,6 +247,9 @@ export default function Reveal({ result, onClose }: { result: ReportResult; onCl
                         {geoOf(c).zones.map((z) => <span key={z} className="cz-zone"><ShieldAlert size={13} strokeWidth={2} aria-hidden /> {z}</span>)}
                       </div>
                     )}
+                    {mine && (
+                      <p className="cz-rv__sub" style={{ margin: "10px 0 0" }}><Sparkles size={13} strokeWidth={1.75} aria-hidden style={{ verticalAlign: "-2px" }} /> {detectedLine(mine)}</p>
+                    )}
                     <div className="cz-rv__ticket">
                       <TicketId id={ticketId} />
                       <span className="cz-rv__crew">
@@ -244,6 +257,9 @@ export default function Reveal({ result, onClose }: { result: ReportResult; onCl
                         <span><b>{vendor ? "Crew assigned" : "Waiting for a crew"}</b>{vendor && <em>{vendor}</em>}</span>
                       </span>
                     </div>
+                    {mine?.due && (
+                      <p className="cz-rv__sub" style={{ margin: "8px 0 0" }}><CalendarClock size={13} strokeWidth={1.75} aria-hidden style={{ verticalAlign: "-2px" }} /> Target {new Date(mine.due).toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" })}</p>
+                    )}
                   </motion.div>
 
                   {(result.points_awarded > 0 || xpAfter > 0) && (

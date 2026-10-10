@@ -3,6 +3,7 @@ import type {
   Profile, ReportResult, SimulateRequest, Stats, Ticket, TicketStage, VendorOrder, Category,
 } from "@contracts";
 import { mockApi } from "../mock";
+import { ROLE, authHeaders, lockStaff, staffToken } from "./auth";
 
 export interface ReportInput {
   lat: number; lng: number; accuracy_m: number; category: Category; note: string; severity?: number;
@@ -35,15 +36,14 @@ export interface Api {
   subscribe(onEvent: (e: CivicEvent) => void, onStatus?: (connected: boolean) => void): () => void;
 }
 
-export const userId = (): string => {
-  try { return localStorage.getItem("cf_user") || "u_you"; } catch { return "u_you"; }
-};
+export { userId } from "./auth";
 
 async function req<T>(path: string, init: RequestInit = {}): Promise<T> {
   const headers = new Headers(init.headers);
-  headers.set("X-User-Id", userId());
+  Object.entries(authHeaders()).forEach(([k, v]) => headers.set(k, v));
   if (init.body && typeof init.body === "string") headers.set("Content-Type", "application/json");
   const res = await fetch(path, { ...init, headers });
+  if (res.status === 403 && ROLE === "city") lockStaff();
   if (!res.ok) {
     let msg = `${res.status} ${res.statusText}`;
     try {
@@ -103,7 +103,7 @@ const realApi: Api = {
     let timer: number | undefined;
     const open = () => {
       if (closed) return;
-      es = new EventSource(`/api/events${lastId ? `?since=${lastId}` : ""}`);
+      es = new EventSource(`/api/events${qs({ since: lastId || undefined, token: staffToken() ?? undefined })}`);
       es.onopen = () => onStatus?.(true);
       es.onmessage = (m) => {
         try {

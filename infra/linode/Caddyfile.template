@@ -1,15 +1,17 @@
-# Civic Flow Caddyfile template. provision.sh replaces {$DOMAIN} with the real host name
-# and installs the result as /etc/caddy/Caddyfile. Caddy gets a Let's Encrypt certificate
-# automatically (ports 80 and 443 must be reachable and the name must resolve to this server).
+# Civic Flow Caddyfile template. provision.sh replaces {$DOMAIN} (citizen app) and
+# {$CITY_DOMAIN} (city staff portal, city.<DOMAIN>) with the real host names and installs
+# the result as /etc/caddy/Caddyfile. Caddy gets a Let's Encrypt certificate for EACH name
+# automatically (ports 80 and 443 must be reachable and both names must resolve to this server;
+# sslip.io resolves city.<ip>.sslip.io to the same IP).
 #
 # Optional admin password: provision.sh writes /etc/caddy/civicflow-admin-auth.caddy.
 #   - CITY_PASS_HASH set in /opt/civicflow/.env  -> a basicauth block for CITY_USER
 #   - not set                                    -> a harmless no-op header line
+# It applies to /api/admin/* on both sites.
 # Make a hash with:  caddy hash-password   (then put CITY_USER=... and CITY_PASS_HASH=... in .env)
 
-{$DOMAIN} {
-	root * /opt/civicflow/web
-
+# Shared by both sites: headers, /api and /photos proxy, SPA fallback. The site block sets the web root.
+(civicflow_site) {
 	header {
 		Strict-Transport-Security "max-age=31536000"
 		X-Content-Type-Options "nosniff"
@@ -52,4 +54,16 @@
 	}
 
 	log
+}
+
+# Citizen app (phone-first).
+{$DOMAIN} {
+	root * /opt/civicflow/web
+	import civicflow_site
+}
+
+# City staff portal (separate build, same backend and database).
+{$CITY_DOMAIN} {
+	root * /opt/civicflow/web-city
+	import civicflow_site
 }

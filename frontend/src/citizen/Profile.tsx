@@ -1,9 +1,9 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { Award, Binoculars, Camera, Crown, Flame, ShieldCheck, HardHat, Lock, MapPin, Users } from "lucide-react";
 import type { Badge, LeaderboardEntry } from "@contracts";
 import { api } from "../lib/api";
-import { useAsync, useEvents } from "../lib/hooks";
+import { useAsync } from "../lib/hooks";
 import { AnimatedNumber, Avatar, EmptyState, ErrorState, Pill, ProgressRing, Skeleton, item, list, spring } from "../components/ui";
 import { levelSpan } from "./common";
 
@@ -57,7 +57,7 @@ function Podium({ top }: { top: LeaderboardEntry[] }) {
 export default function Profile() {
   const me = useAsync(() => api.me(), []);
   const lb = useAsync(() => api.leaderboard(), []);
-  useEvents((e) => { if (e.type === "cluster.updated" && e.data.cluster?.status === "fixed") me.reload(); });
+  useEffect(() => { const t = setInterval(() => { if (!document.hidden) me.reload(); }, 15000); return () => clearInterval(t); }, [me.reload]);
   const p = me.data;
   const lvl = p ? levelSpan(p.xp) : null;
 

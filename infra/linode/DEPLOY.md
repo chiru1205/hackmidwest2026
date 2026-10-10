@@ -1,6 +1,6 @@
 # Deploy Civic Flow to Akamai Cloud (Linode)
 
-One Ubuntu 24.04 server, no Docker. The deploy script installs Python, Caddy (automatic HTTPS) and a small key-value server, runs the API as a systemd service, and serves the web app. Judges open one `https://` address on their phones.
+One Ubuntu 24.04 server, no Docker. The deploy script installs Python, Caddy (automatic HTTPS) and a small key-value server, runs the API as a systemd service, and serves two web apps from the same backend and database: a **citizen app** and a **city staff portal**. Judges open the citizen address on their phones and the city address on a laptop.
 
 You need: this repo on your Windows PC, a filled-in `.env` (your keys), Node.js (already installed by `setup.ps1`) and a Linode account.
 
@@ -47,21 +47,41 @@ Optional switches:
 
 | Switch | Meaning |
 |---|---|
-| `-SkipBuild` | Reuse `frontend\dist` (faster when only backend code changed) |
-| `-Domain my.example.com` | Use your own domain (its DNS A record must point at the IP). Default is `<ip-with-dashes>.sslip.io`, which works with no DNS setup |
+| `-SkipBuild` | Reuse `frontend\dist\citizen` and `frontend\dist\city` (faster when only backend code changed) |
+| `-Domain my.example.com` | Use your own domain (its DNS A record, and one for `city.my.example.com`, must point at the IP). Default is `<ip-with-dashes>.sslip.io`, which works with no DNS setup |
 | `-CityPass "..." [-CityUser city]` | Password-protect `/api/admin/*` (see Security) |
 | `-DemoMode false` | Turn off the relaxed demo checks (default `true`) |
 | `-ResetData` | Wipe the server database and uploaded photos (it reseeds the demo data) |
 | `-KeyPath`, `-User`, `-EnvFile` | Non-default key, SSH user or env file |
 
+## 3a. The two addresses and the two roles
+
+| Role | URL | Who |
+|---|---|---|
+| Citizen app (phone-first) | `https://<ip-with-dashes>.sslip.io/` | Residents: report an issue, see only their own requests |
+| City portal (staff) | `https://city.<ip-with-dashes>.sslip.io/` | City staff: map, queue, ops, vendor, workflow, analytics |
+
+`sslip.io` resolves any sub-name to the same IP, so `city.` needs no DNS work. With your own domain via `-Domain`, add a second A record for `city.<your-domain>` pointing at the same IP. Caddy gets one certificate per name (the first takes up to a minute each).
+
+- **Demo PIN:** the city portal asks for the PIN `city` (lowercase). It is a demo-level gate in the browser, not real security.
+- **Staff token:** after the PIN, the portal sends `X-Role-Token: civicflow-city-demo` and the server (env `CITY_TOKEN`) refuses staff routes (`/api/admin/*`, `/api/tickets*`, `/api/vendor/*`, `/api/analytics/*`, `/api/devrev/*`, clusters, stats, events, nearby, geofence layers) with 403 without it. The deploy sets `CITY_TOKEN=civicflow-city-demo` unless your local `.env` defines another value; it is kept across redeploys. The token is visible in the city web bundle, so treat it as a demo speed bump, not protection of sensitive data.
+- Both hostnames reach the same API, so the citizen sees only their own requests (`/api/me/requests`) while staff see everything.
+
+**Test each role after deploy**
+
+1. Citizen: open the citizen URL on a phone, report an issue, then open My Requests. There is no map of other reports and no ops or vendor pages.
+2. City: open the city URL, enter `city`, and confirm the map, queue, Ops, Vendor and Workflow pages load.
+3. Token check: `curl -s -o /dev/null -w "%{http_code}" https://<domain>/api/tickets` should print `403`; with `-H "X-Role-Token: civicflow-city-demo"` it prints `200`.
+4. Optional second layer: `-CityPass` adds a browser password on `/api/admin/*` for both hostnames.
+
 ## 4. What you will see
 
 1. Frontend build, then packing (under a minute).
 2. Upload (a few MB), then the server setup. **First run takes about 3 to 6 minutes** (apt packages and pip). Re-runs take about 1 minute because unchanged packages are skipped.
-3. The script waits up to 2 minutes for `https://<ip-with-dashes>.sslip.io/api/health`. The first certificate takes 10 to 60 seconds.
-4. It prints the Citizen, Ops, Vendor and Workflow links. Open the Citizen link on your phone to test the camera and location prompts.
+3. The script waits for `https://<ip-with-dashes>.sslip.io/api/health` and `https://city.<ip-with-dashes>.sslip.io/` (up to 2 minutes each). The first certificate per name takes 10 to 60 seconds.
+4. It prints the Citizen app and City portal links. Open the Citizen link on your phone to test the camera and location prompts.
 
-Your local `.env` is never changed. The server gets a copy with `PUBLIC_BASE_URL`, `DB_PATH`, `EDGEKV_BACKEND=valkey` and `DEMO_MODE` adjusted. If the key-value server is down the app quietly falls back to its in-memory cache.
+Your local `.env` is never changed. The server gets a copy with `PUBLIC_BASE_URL` (the citizen URL), `DB_PATH`, `EDGEKV_BACKEND=valkey`, `DEMO_MODE` and `CITY_TOKEN` adjusted. If the key-value server is down the app quietly falls back to its in-memory cache.
 
 ## 5. Updating after code changes
 
@@ -99,6 +119,7 @@ Rollback: check out the previous version of the code on your PC and run the depl
 | Symptom | Likely cause and fix |
 |---|---|
 | `Cannot log in over SSH` | Wrong IP, Linode not Running, or the Linode was created without your public key. Add it in Cloud Manager (Account > SSH Keys) and rebuild, or check `-KeyPath`. If you reused an IP, delete its old line in `%USERPROFILE%\.ssh\known_hosts` |
+| Citizen works but `city.` does not (or the reverse) | Each name needs its own certificate and DNS entry. `nslookup city.<domain>`; `journalctl -u caddy -n 50`. With a custom domain add the `city.` A record |
 | Browser says certificate error or the site never loads | Caddy could not get a certificate. Check `journalctl -u caddy -n 50`. Port 80 must be reachable (no Cloud Firewall in front of the Linode), and the name must resolve to the IP (`nslookup <domain>`). With your own domain wait for DNS, then `systemctl restart caddy`. Let's Encrypt limits repeated failures, so wait a few minutes before retrying |
 | `502 Bad Gateway` from Caddy | The API is not running. `systemctl status civicflow-api` and `journalctl -u civicflow-api -n 50` |
 | API will not start | Look for a missing package or a typo in `.env` in the log. `ssh root@<ip> "cd /opt/civicflow && sudo -u civic .venv/bin/python -c 'import backend.api.main'"` shows the import error. Fix, then redeploy |

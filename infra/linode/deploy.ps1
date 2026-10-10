@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-  Deploys Civic Flow to ONE Ubuntu 24.04 Linode (Akamai Cloud) over SSH. Safe to re-run.
+  Deploys Civic Flow (citizen app + city staff portal) to ONE Ubuntu 24.04 Linode (Akamai Cloud) over SSH. Safe to re-run.
 
 .EXAMPLE
   powershell -ExecutionPolicy Bypass -File infra/linode/deploy.ps1 -Ip 203.0.113.10
@@ -9,8 +9,9 @@
 .PARAMETER User       SSH user (default root).
 .PARAMETER KeyPath    SSH private key (default ~/.ssh/id_ed25519).
 .PARAMETER EnvFile    Local .env to turn into the server .env (default .env in the repo root). Never modified.
-.PARAMETER SkipBuild  Do not rebuild the frontend; reuse frontend/dist.
-.PARAMETER Domain     Host name. Default: <ip-with-dashes>.sslip.io (real certificate, no DNS work).
+.PARAMETER SkipBuild  Do not rebuild the frontend; reuse frontend/dist/citizen and frontend/dist/city.
+.PARAMETER Domain     Citizen host name. Default: <ip-with-dashes>.sslip.io (real certificate, no DNS work).
+                  The city portal is served at city.<Domain> (sslip.io resolves it to the same IP).
 .PARAMETER CityPass   Optional password for /api/admin/* (basic auth). Hashed ON the server; never printed or stored locally.
 .PARAMETER CityUser   User name for that basic auth (default city).
 .PARAMETER DemoMode   true or false (default true) -> DEMO_MODE in the server .env.
@@ -47,6 +48,7 @@ if ($KeyPath -eq '') { $KeyPath = Join-Path $env:USERPROFILE '.ssh\id_ed25519' }
 if (-not [IO.Path]::IsPathRooted($EnvFile)) { $EnvFile = Join-Path $root $EnvFile }
 if ($Domain -eq '') { $Domain = ($Ip -replace '\.', '-') + '.sslip.io' }
 if ($Domain -notmatch '^[A-Za-z0-9]([A-Za-z0-9.-]*[A-Za-z0-9])?$') { Fail "-Domain '$Domain' looks invalid." }
+$CityDomain = 'city.' + $Domain
 $remote = "$User@$Ip"
 $stage = '/root/cf-stage'
 $app = '/opt/civicflow'
@@ -79,23 +81,37 @@ New-Item -ItemType Directory -Path $tmp | Out-Null
 
 try {
   # ---------------------------------------------------------------- 2. build
-  $dist = Join-Path $root 'frontend\dist'
+  $distRoot = Join-Path $root 'frontend\dist'
+  $distCitizen = Join-Path $distRoot 'citizen'
+  $distCity = Join-Path $distRoot 'city'
   if ($SkipBuild) {
     Step 'Skipping frontend build (-SkipBuild)'
-    if (-not (Test-Path (Join-Path $dist 'index.html'))) { Fail 'frontend\dist\index.html is missing. Run once without -SkipBuild.' }
   } else {
-    Step 'Building the frontend (npm run build)'
+    Step 'Building both apps (npm run build: citizen + city)'
     $npm = Get-Command npm.cmd -ErrorAction SilentlyContinue
-    if (-not $npm) { Fail 'npm.cmd not found. Install Node.js (LTS) or use -SkipBuild with an existing frontend\dist.' }
+    if (-not $npm) { Fail 'npm.cmd not found. Install Node.js (LTS) or use -SkipBuild with an existing build.' }
     if (-not (Test-Path (Join-Path $root 'frontend\node_modules'))) { Fail 'frontend\node_modules is missing. Run setup.ps1 first.' }
+    $pkgText = Get-Content -Raw (Join-Path $root 'frontend\package.json')
+    if (-not ($pkgText -match '"build:citizen"' -and $pkgText -match '"build:city"')) {
+      Write-Host '    package.json has no build:citizen/build:city scripts; building the single app and using it for both hostnames' -ForegroundColor Yellow
+    }
     $oldMock = $env:VITE_MOCK
     $env:VITE_MOCK = '0'
     Push-Location (Join-Path $root 'frontend')
     try { & $npm.Source run build; $code = $LASTEXITCODE } finally { Pop-Location; $env:VITE_MOCK = $oldMock }
     if ($code -ne 0) { Fail 'Frontend build failed (see the messages above). Fix them, or deploy an older build with -SkipBuild.' }
-    if (-not (Test-Path (Join-Path $dist 'index.html'))) { Fail 'Build finished but frontend\dist\index.html is missing.' }
-    Ok 'frontend\dist built'
   }
+  # Output layout per the contract: dist/citizen and dist/city. Fallback: a single dist/ serves both.
+  if (-not (Test-Path (Join-Path $distCitizen 'index.html'))) {
+    if (Test-Path (Join-Path $distRoot 'index.html')) { $distCitizen = $distRoot; Write-Host '    frontend\dist\citizen missing; using frontend\dist for the citizen app' -ForegroundColor Yellow }
+    else { Fail 'frontend\dist\citizen\index.html is missing. Run once without -SkipBuild.' }
+  }
+  if (-not (Test-Path (Join-Path $distCity 'index.html'))) {
+    $distCity = $distCitizen
+    Write-Host '    frontend\dist\city missing; the city hostname will serve the same build as the citizen app (no role separation)' -ForegroundColor Yellow
+  }
+  Ok "citizen build: $distCitizen"
+  Ok "city build:    $distCity"
 
   # ---------------------------------------------------------------- 3. package
   Step 'Packing the app (no .env, no database, no node_modules)'
@@ -111,9 +127,13 @@ try {
   & $tarExe @tarArgs
   if ($LASTEXITCODE -ne 0) { Fail 'tar failed while packing the app.' }
   $webTgz = Join-Path $tmp 'web.tgz'
-  & $tarExe -czf $webTgz -C $dist .
-  if ($LASTEXITCODE -ne 0) { Fail 'tar failed while packing the frontend.' }
-  Ok ("app {0:N1} MB, web {1:N1} MB" -f ((Get-Item $appTgz).Length / 1MB), ((Get-Item $webTgz).Length / 1MB))
+  # --exclude only matters in the single-dist fallback (dist/ then contains the citizen/city subfolders)
+  & $tarExe -czf $webTgz -C $distCitizen --exclude=city --exclude=citizen .
+  if ($LASTEXITCODE -ne 0) { Fail 'tar failed while packing the citizen app.' }
+  $webCityTgz = Join-Path $tmp 'webcity.tgz'
+  & $tarExe -czf $webCityTgz -C $distCity --exclude=city --exclude=citizen .
+  if ($LASTEXITCODE -ne 0) { Fail 'tar failed while packing the city portal.' }
+  Ok ("app {0:N1} MB, citizen web {1:N1} MB, city web {2:N1} MB" -f ((Get-Item $appTgz).Length / 1MB), ((Get-Item $webTgz).Length / 1MB), ((Get-Item $webCityTgz).Length / 1MB))
 
   # ---------------------------------------------------------------- 4. server .env (local file untouched)
   Step 'Preparing the server .env (written to a temp file; local .env is not changed)'
@@ -128,6 +148,15 @@ try {
   }
   $dropKeys = @($override.Keys)
   if ($CityPass -ne '') { $dropKeys += @('CITY_USER', 'CITY_PASS_HASH') }
+  # CITY_TOKEN: keep a value the local .env defines; otherwise the demo default.
+  $cityToken = 'civicflow-city-demo'
+  foreach ($line in [IO.File]::ReadAllLines($EnvFile)) {
+    if ($line -match '^\s*CITY_TOKEN\s*=\s*(.*)$') {
+      $v = (($Matches[1] -replace '\s+#.*$', '').Trim().Trim('"').Trim("'"))
+      if ($v -ne '') { $cityToken = $v }
+    }
+  }
+  $dropKeys += 'CITY_TOKEN'
   $out = New-Object System.Collections.Generic.List[string]
   foreach ($line in [IO.File]::ReadAllLines($EnvFile)) {
     $l = $line.TrimEnd("`r")
@@ -142,9 +171,10 @@ try {
   $out.Add('')
   $out.Add('# --- added by deploy.ps1 ---')
   foreach ($k in $override.Keys) { $out.Add("$k=$($override[$k])") }
+  $out.Add("CITY_TOKEN=$cityToken")
   $envTmp = Join-Path $tmp 'env'
   [IO.File]::WriteAllText($envTmp, (($out -join "`n") + "`n"), (New-Object System.Text.UTF8Encoding($false)))
-  Ok "PUBLIC_BASE_URL=https://$Domain, EDGEKV_BACKEND=valkey (falls back to memory if unreachable), DEMO_MODE=$DemoMode"
+  Ok "PUBLIC_BASE_URL=https://$Domain (citizen URL), CITY_TOKEN set, EDGEKV_BACKEND=valkey (falls back to memory if unreachable), DEMO_MODE=$DemoMode"
 
   # ---------------------------------------------------------------- 5. connect
   Step "Connecting to $remote"
@@ -158,9 +188,10 @@ try {
   Invoke-Ssh "umask 077; mkdir -p $stage"
   Send-File $appTgz "$stage/app.tgz"
   Send-File $webTgz "$stage/web.tgz"
+  Send-File $webCityTgz "$stage/webcity.tgz"
   Send-File $envTmp "$stage/env"
   Invoke-Ssh "chmod 600 $stage/env"
-  Ok 'app, frontend and .env uploaded (.env is mode 600 on the server)'
+  Ok 'app, both frontends and .env uploaded (.env is mode 600 on the server)'
 
   # ---------------------------------------------------------------- 7. unpack
   Step 'Unpacking on the server'
@@ -173,8 +204,8 @@ try {
 
   # ---------------------------------------------------------------- 8. provision
   Step 'Running provision.sh on the server (first run takes about 3 to 6 minutes)'
-  try { Invoke-Ssh "DOMAIN=$Domain bash $app/infra/linode/provision.sh" } catch {
-    Fail ("provision.sh failed. Read the messages above. On the server you can re-run it: ssh $remote 'DOMAIN=$Domain bash $app/infra/linode/provision.sh'. Logs: journalctl -u civicflow-api -n 50 --no-pager")
+  try { Invoke-Ssh "DOMAIN=$Domain CITY_DOMAIN=$CityDomain bash $app/infra/linode/provision.sh" } catch {
+    Fail ("provision.sh failed. Read the messages above. On the server you can re-run it: ssh $remote 'DOMAIN=$Domain CITY_DOMAIN=$CityDomain bash $app/infra/linode/provision.sh'. Logs: journalctl -u civicflow-api -n 50 --no-pager")
   }
 
   # ---------------------------------------------------------------- 9. optional admin password
@@ -192,7 +223,7 @@ try {
     [IO.File]::WriteAllText($cityFile, ("CITY_USER=$CityUser`nCITY_PASS_HASH=$hash`n"), (New-Object System.Text.UTF8Encoding($false)))
     Send-File $cityFile "$stage/city.env"
     Invoke-Ssh "grep -v ^CITY_ $app/.env > $app/.env.new; cat $stage/city.env >> $app/.env.new; chown civic:civic $app/.env.new; chmod 600 $app/.env.new; mv $app/.env.new $app/.env; rm -f $stage/city.env"
-    Invoke-Ssh "DOMAIN=$Domain bash $app/infra/linode/provision.sh"
+    Invoke-Ssh "DOMAIN=$Domain CITY_DOMAIN=$CityDomain bash $app/infra/linode/provision.sh"
     Ok 'Admin basic auth is ON (the browser asks once on the Ops page)'
   }
 
@@ -200,34 +231,38 @@ try {
   Invoke-Ssh "rm -rf $stage"
 
   # ---------------------------------------------------------------- 11. health
-  Step "Waiting for https://$Domain/api/health (up to 120 s; the first certificate takes 10 to 60 s)"
-  $healthy = $false
-  $deadline = (Get-Date).AddSeconds(120)
-  while ((Get-Date) -lt $deadline) {
-    try {
-      $r = Invoke-WebRequest -Uri "https://$Domain/api/health" -UseBasicParsing -TimeoutSec 8
-      if ($r.StatusCode -eq 200) { $healthy = $true; break }
-    } catch { }
-    Start-Sleep -Seconds 4
+  Step "Waiting for https://$Domain/api/health and https://$CityDomain/ (up to 4 minutes; the first certificate takes 10 to 60 s per host name)"
+  function Wait-Url([string]$url, [int]$seconds) {
+    $deadline = (Get-Date).AddSeconds($seconds)
+    while ((Get-Date) -lt $deadline) {
+      try {
+        $r = Invoke-WebRequest -Uri $url -UseBasicParsing -TimeoutSec 8
+        if ($r.StatusCode -eq 200) { return $true }
+      } catch { }
+      Start-Sleep -Seconds 4
+    }
+    return $false
   }
-  if (-not $healthy) {
+  $healthy = Wait-Url "https://$Domain/api/health" 120
+  if ($healthy) { Ok "citizen host answers: https://$Domain/api/health" }
+  $cityUp = Wait-Url "https://$CityDomain/" 120
+  if ($cityUp) { Ok "city host answers: https://$CityDomain/" }
+  if (-not $healthy -or -not $cityUp) {
     Write-Host ''
-    Write-Host 'The site did not answer over HTTPS within 120 s.' -ForegroundColor Yellow
-    Write-Host '  - The API itself was healthy on the server (provision.sh checks that). Usually it is the certificate:'
+    if (-not $healthy) { Write-Host "The citizen host https://$Domain did not answer over HTTPS in time." -ForegroundColor Yellow }
+    if (-not $cityUp) { Write-Host "The city host https://$CityDomain did not answer over HTTPS in time." -ForegroundColor Yellow }
+    Write-Host '  - The API itself was healthy on the server (provision.sh checks that). Usually it is a certificate (one per host name):'
     Write-Host "    ssh $remote 'journalctl -u caddy -n 40 --no-pager'"
-    Write-Host '  - Needs ports 80 and 443 open (no Cloud Firewall blocking) and the name resolving to the IP.'
+    Write-Host '  - Needs ports 80 and 443 open (no Cloud Firewall blocking) and both names resolving to the IP.'
     Write-Host '  - Troubleshooting table: infra/linode/DEPLOY.md'
     exit 2
   }
-  Ok 'healthy'
 
   Write-Host ''
   Write-Host 'Civic Flow is live on Akamai Cloud (Linode).' -ForegroundColor Green
-  Write-Host "  Citizen:   https://$Domain/"
-  Write-Host "  Ops:       https://$Domain/ops"
-  Write-Host "  Vendor:    https://$Domain/vendor"
-  Write-Host "  Workflow:  https://$Domain/workflow"
-  Write-Host "  Health:    https://$Domain/api/health"
+  Write-Host "  Citizen app:  https://$Domain/"
+  Write-Host "  City portal:  https://$CityDomain/   (demo PIN: city)"
+  Write-Host "  Health:       https://$Domain/api/health"
   Write-Host ''
   Write-Host 'Logs:    ssh -i <key> ' -NoNewline; Write-Host "$remote 'journalctl -u civicflow-api -f'"
   Write-Host 'Update:  re-run this script (add -SkipBuild if only backend code changed). Data is kept unless -ResetData.'

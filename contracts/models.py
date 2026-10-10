@@ -348,3 +348,41 @@ class TicketEventRow(BaseModel):
     devrev_id: Optional[str] = None
     text: str
     source: Literal["DevRev", "Civic Flow"]
+
+
+# ---- citizen app (GET /api/me/requests): one citizen's view of an issue they reported or confirmed
+class CitizenTimelineItem(BaseModel):
+    ts: str
+    label: str
+    detail: str = ""
+
+
+class CitizenDetected(BaseModel):
+    category: Category
+    severity: int = 3
+    is_hazard: bool = False
+    hazard_description: str = ""
+
+
+class CitizenRequest(BaseModel):
+    id: str                                  # cluster id
+    category: Category
+    title: str                               # "Streetlight out near 5201 Charlotte St"
+    address: Optional[str] = None
+    neighborhood: Optional[str] = None
+    district: Optional[str] = None
+    zones: list[str] = []
+    photo_url: Optional[str] = None
+    neighbors: int = 1                       # unique reporters on the issue, including you
+    status: Literal["reported", "assigned", "in_progress", "awaiting_verification", "fixed"] = "reported"
+    stage_label: str = "Reported"
+    ticket_id: Optional[str] = None
+    crew: Optional[str] = None
+    due: Optional[str] = None
+    priority_bucket: Bucket = "P4"
+    rationale: str = ""
+    detected: CitizenDetected
+    my_points: int = 0
+    created_at: str
+    updated_at: str
+    timeline: list[CitizenTimelineItem] = []

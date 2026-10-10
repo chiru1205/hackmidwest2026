@@ -27,8 +27,30 @@ const NODE_META: Record<AgentStep["node"], { label: string; icon: typeof Inbox }
   priority: { label: "Priority", icon: Gauge }, dispatch: { label: "Dispatch", icon: Send },
 };
 const ZERO: Stats = { total_reports: 0, unique_clusters: 0, duplicates_absorbed: 0, llm_calls_avoided: 0, open_clusters: 0, fixed_clusters: 0, tickets: 0, edge_hits: 0, edge_misses: 0, avg_edge_ms: 0 };
+/** Storm presets: a believable flood of reports of one kind (or several), simulated without AI calls. */
+interface StormLeg { category: Cluster["category"]; count: number; lat: number; lng: number; spread_m: number; users: number; rate_per_s: number }
+interface Storm { key: string; label: string; title: string; zoom: number; center: { lat: number; lng: number }; legs: StormLeg[] }
 const PLAZA = { lat: 39.042, lng: -94.595 };
-const STORY_TOTAL = 1243;
+const MIDTOWN = { lat: 39.06, lng: -94.59 };
+const BRUSH_CREEK = { lat: 39.0388, lng: -94.5952 };
+const CENTRAL = { lat: 39.055, lng: -94.585 };
+const STORMS: Storm[] = [
+  { key: "potholes", label: "Potholes", title: "Pothole storm at the Plaza", zoom: 13.2, center: PLAZA,
+    legs: [{ category: "pothole", count: 1243, lat: PLAZA.lat, lng: PLAZA.lng, spread_m: 50, users: 400, rate_per_s: 80 }] },
+  { key: "streetlights", label: "Streetlights", title: "Streetlight outages after a storm", zoom: 12.4, center: MIDTOWN,
+    legs: [{ category: "streetlight_out", count: 600, lat: MIDTOWN.lat, lng: MIDTOWN.lng, spread_m: 1800, users: 300, rate_per_s: 80 }] },
+  { key: "flooding", label: "Flooding", title: "Brush Creek flash flood", zoom: 13.2, center: BRUSH_CREEK,
+    legs: [{ category: "flooding", count: 500, lat: BRUSH_CREEK.lat, lng: BRUSH_CREEK.lng, spread_m: 450, users: 250, rate_per_s: 70 }] },
+  { key: "mixed", label: "Mixed", title: "A rough night across the city", zoom: 11.8, center: CENTRAL,
+    legs: [
+      { category: "pothole", count: 300, lat: PLAZA.lat, lng: PLAZA.lng, spread_m: 90, users: 150, rate_per_s: 90 },
+      { category: "streetlight_out", count: 200, lat: CENTRAL.lat, lng: CENTRAL.lng, spread_m: 1500, users: 120, rate_per_s: 90 },
+      { category: "flooding", count: 150, lat: BRUSH_CREEK.lat, lng: BRUSH_CREEK.lng, spread_m: 450, users: 90, rate_per_s: 90 },
+      { category: "illegal_dumping", count: 80, lat: CENTRAL.lat, lng: CENTRAL.lng, spread_m: 1500, users: 50, rate_per_s: 90 },
+      { category: "graffiti", count: 60, lat: CENTRAL.lat, lng: CENTRAL.lng, spread_m: 1500, users: 40, rate_per_s: 90 },
+    ] },
+];
+const stormTotal = (st: Storm) => st.legs.reduce((n, l) => n + l.count, 0);
 
 /* ---------------- feed ---------------- */
 type FeedKind = "new" | "merge" | "fixed" | "assigned" | "ticket" | "info" | "devrev";
@@ -74,7 +96,7 @@ function mergeFeed(feed: FeedItem[], ev: DevRevEvent[]): FeedItem[] {
   return [...dr, ...kept].sort((a, b) => (+new Date(b.ts) || 0) - (+new Date(a.ts) || 0)).slice(0, 14);
 }
 
-type Story = { phase: "resetting" | "running" | "done"; baseUnique: number; baseReports: number; done: number } | null;
+type Story = { storm: Storm; phase: "resetting" | "running" | "done"; baseUnique: number; baseReports: number; done: number; leg: number; before: number } | null;
 
 export default function Ops() {
   const [clusters, setClusters] = useState<Map<string, Cluster>>(new Map());
@@ -90,7 +112,6 @@ export default function Ops() {
   const drRefresh = useRef(dr.refresh); drRefresh.current = dr.refresh;
   const [loadErr, setLoadErr] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-  const [simBusy, setSimBusy] = useState(false);
   const [actErr, setActErr] = useState<string | null>(null);
   const [district, setDistrict] = useState("");
   const [flags, setFlags] = useState<GeoFlags>(() => {
@@ -128,8 +149,20 @@ export default function Ops() {
     if (e.type === "report.received" && typeof d.lat === "number") mapRef.current?.spawn(d.lat, d.lng);
     if (e.type === "stats.updated" && d.stats) setStats(d.stats);
     if (e.type === "simulate.progress") {
-      setSim(d.done >= d.total ? null : { done: d.done, total: d.total });
-      setStory((s) => (s && s.phase !== "resetting" ? { ...s, done: d.done, phase: d.done >= d.total ? "done" : "running" } : s));
+      const finished = d.done >= d.total;
+      setSim(finished ? null : { done: d.done, total: d.total });
+      const cur = storyRef.current;
+      if (cur && cur.phase !== "resetting" && d.total === cur.storm.legs[cur.leg].count) {
+        if (finished && cur.leg + 1 < cur.storm.legs.length) {
+          const next = cur.leg + 1;
+          const nxt = { ...cur, leg: next, before: cur.before + cur.storm.legs[cur.leg].count, done: 0, phase: "running" as const };
+          storyRef.current = nxt;
+          setStory(nxt);
+          void api.simulate(cur.storm.legs[next]).catch((e) => setActErr(String((e as Error).message ?? e)));
+        } else {
+          setStory({ ...cur, done: d.done, phase: finished ? "done" : "running" });
+        }
+      }
     }
     if (e.type === "agent.node") litRef.current = { ...litRef.current, [d.node as AgentStep["node"]]: { ...(d as AgentStep), at: Date.now() } };
     else if (e.type !== "report.received" && e.type !== "stats.updated" && e.type !== "simulate.progress") pendingFeed.current.push(e);
@@ -176,29 +209,21 @@ export default function Ops() {
   const health = useAsync<Health>(() => api.health(), []);
   useEffect(() => { const t = setInterval(health.reload, 15000); return () => clearInterval(t); }, [health.reload]);
 
-  async function simulate() {
-    setSimBusy(true); setActErr(null);
-    try {
-      await api.simulate({ count: 200, lat: PLAZA.lat, lng: PLAZA.lng, spread_m: 3500, category: "pothole", users: 60, rate_per_s: 40 });
-      setSim({ done: 0, total: 200 });
-    } catch (e) { setActErr(String((e as Error).message ?? e)); }
-    finally { setSimBusy(false); }
-  }
   async function reset() {
     setActErr(null);
     try { await api.reset(); setSelected(null); setStory(null); await load(); mapRef.current?.fit(); } catch (e) { setActErr(String((e as Error).message ?? e)); }
   }
-  async function runStory() {
+  async function runStory(storm: Storm) {
     setActErr(null); setSelected(null);
-    setStory({ phase: "resetting", baseUnique: 0, baseReports: 0, done: 0 });
+    setStory({ storm, phase: "resetting", baseUnique: 0, baseReports: 0, done: 0, leg: 0, before: 0 });
     try {
       await api.reset();
       await load();
       const base = await api.stats();
-      setStory({ phase: "running", baseUnique: base.unique_clusters, baseReports: base.total_reports, done: 0 });
-      mapRef.current?.flyTo(PLAZA.lat, PLAZA.lng, 13.2);
-      await api.simulate({ count: STORY_TOTAL, lat: PLAZA.lat, lng: PLAZA.lng, spread_m: 120, category: "pothole", users: 400, rate_per_s: 80 });
-      setSim({ done: 0, total: STORY_TOTAL });
+      setStory({ storm, phase: "running", baseUnique: base.unique_clusters, baseReports: base.total_reports, done: 0, leg: 0, before: 0 });
+      mapRef.current?.flyTo(storm.center.lat, storm.center.lng, storm.zoom);
+      await api.simulate(storm.legs[0]);
+      setSim({ done: 0, total: storm.legs[0].count });
     } catch (e) { setActErr(String((e as Error).message ?? e)); setStory(null); }
   }
   useEffect(() => { if (story?.phase === "done") { const t = setTimeout(() => mapRef.current?.fit(), 1200); return () => clearTimeout(t); } }, [story?.phase]);
@@ -206,7 +231,7 @@ export default function Ops() {
   const shownFeed = useMemo(() => mergeFeed(feed, dr.events), [feed, dr.events]);
   const h = health.data;
   const sel = selected ? clusters.get(selected) ?? null : null;
-  const busy = !!sim || story?.phase === "resetting";
+  const busy = !!sim || story?.phase === "resetting" || story?.phase === "running";
 
   return (
     <DevRevCtx.Provider value={dr.byCluster}>
@@ -216,7 +241,7 @@ export default function Ops() {
           <OpsMap ref={mapRef} clusters={list} selected={selected} onSelect={setSelected} geo={geo} flags={flags} />
           <LayerControl flags={flags} onChange={setFlags} ready={!!geo} />
 
-          <KpiBar stats={stats} loading={loading} busy={busy} sim={sim} onStory={runStory} onSim={simulate} onReset={reset} simBusy={simBusy} onAnalytics={() => setAnalyticsOpen(true)} onOrders={() => setOrdersOpen(true)} />
+          <KpiBar stats={stats} loading={loading} busy={busy} sim={sim} story={story} onStory={runStory} onReset={reset} onAnalytics={() => setAnalyticsOpen(true)} onOrders={() => setOrdersOpen(true)} />
           <AnalyticsPanel open={analyticsOpen} onClose={() => setAnalyticsOpen(false)} />
           <WorkOrdersPanel open={ordersOpen} onClose={() => setOrdersOpen(false)} board={dr.board} onPick={(id) => setSelected(id)} />
 
@@ -266,15 +291,15 @@ export default function Ops() {
 }
 
 /* ---------------- KPI bar ---------------- */
-function KpiBar({ stats, loading, busy, sim, simBusy, onStory, onSim, onReset, onAnalytics, onOrders }: {
-  stats: Stats; loading: boolean; busy: boolean; sim: { done: number; total: number } | null; simBusy: boolean;
-  onStory: () => void; onSim: () => void; onReset: () => void; onAnalytics: () => void; onOrders: () => void;
+function KpiBar({ stats, loading, busy, sim, story, onStory, onReset, onAnalytics, onOrders }: {
+  stats: Stats; loading: boolean; busy: boolean; sim: { done: number; total: number } | null; story: Story;
+  onStory: (s: Storm) => void; onReset: () => void; onAnalytics: () => void; onOrders: () => void;
 }) {
-  const items: { label: string; value: number; icon: typeof Inbox; dec?: number; suffix?: string; tone?: string }[] = [
+  const items: { label: string; value: number; icon: typeof Inbox; dec?: number; suffix?: string; tone?: string; hint?: string }[] = [
     { label: "Reports", value: stats.total_reports, icon: Inbox },
     { label: "Unique issues", value: stats.unique_clusters, icon: MapPin, tone: "primary" },
     { label: "Dupes absorbed", value: stats.duplicates_absorbed, icon: Layers },
-    { label: "LLM calls avoided", value: stats.llm_calls_avoided, icon: Zap },
+    { label: "Work orders avoided (est.)", value: stats.duplicates_absorbed, icon: Zap, hint: "Estimate: each duplicate report would otherwise have triggered its own dispatch or triage." },
     { label: "Tickets", value: stats.tickets, icon: TicketIcon },
     { label: "Geo cache", value: stats.avg_edge_ms, icon: Gauge, dec: 1, suffix: " ms" },
   ];
@@ -286,17 +311,22 @@ function KpiBar({ stats, loading, busy, sim, simBusy, onStory, onSim, onReset, o
       </div>
       <div className="ops-kpis__grid">
         {items.map((k) => (
-          <div key={k.label} className={`ops-kpi ${k.tone ? `is-${k.tone}` : ""}`}>
+          <div key={k.label} className={`ops-kpi ${k.tone ? `is-${k.tone}` : ""}`} title={k.hint}>
             <div className="ops-kpi__label"><k.icon size={14} strokeWidth={1.75} aria-hidden />{k.label}</div>
             {loading ? <Skeleton width={72} height={28} /> : <AnimatedNumber value={k.value} decimals={k.dec} suffix={k.suffix} className="ops-kpi__value" />}
           </div>
         ))}
       </div>
       <div className="ops-kpis__actions">
-        <Button icon={<Play />} onClick={onStory} disabled={busy}>Run the story</Button>
-        <Button variant="secondary" size="sm" onClick={onSim} loading={simBusy} disabled={busy} icon={<Radio />}>
-          {sim ? `${sim.done}/${sim.total}` : "Simulate"}
-        </Button>
+        <div className="ops-storms" role="group" aria-label="Run the story: choose a storm">
+          <span className="ops-storms__label"><Play size={12} strokeWidth={2} aria-hidden /> Run the story{sim ? ` (${sim.done}/${sim.total})` : ""}</span>
+          <div className="ops-storms__seg">
+            {STORMS.map((st) => (
+              <button key={st.key} type="button" className={`ops-storms__btn ${story?.storm.key === st.key ? "is-on" : ""}`} onClick={() => onStory(st)} disabled={busy}
+                title={`Reset the city, then simulate ${stormTotal(st).toLocaleString()} reports: ${st.title}. No AI calls.`}>{st.label}</button>
+            ))}
+          </div>
+        </div>
         <Button variant="secondary" size="sm" icon={<Workflow />} onClick={onOrders}>Work orders</Button>
         <Button variant="secondary" size="sm" icon={<BarChart3 />} onClick={onAnalytics}>Analytics</Button>
         <Tip label="Reset the demo"><IconButton variant="ghost" icon={<RotateCcw />} label="Reset demo" onClick={onReset} disabled={busy} /></Tip>
@@ -309,14 +339,15 @@ function Tip({ children }: { label: string; children: React.ReactNode }) { retur
 /* ---------------- story ---------------- */
 function StoryCard({ story, stats, onClose }: { story: NonNullable<Story>; stats: Stats; onClose: () => void }) {
   const resetting = story.phase === "resetting";
-  const reports = resetting ? 0 : story.phase === "done" ? STORY_TOTAL : Math.min(STORY_TOTAL, Math.max(story.done, stats.total_reports - story.baseReports, 0));
+  const total = stormTotal(story.storm);
+  const reports = resetting ? 0 : story.phase === "done" ? total : Math.min(total, Math.max(story.before + story.done, stats.total_reports - story.baseReports, 0));
   const issues = resetting ? 0 : Math.max(0, stats.unique_clusters - story.baseUnique);
   const absorbed = Math.max(0, reports - issues);
   return (
     <motion.div className="ops-story" initial={{ opacity: 0, y: -12, scale: 0.97 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: -8 }} transition={spring.soft} role="status" aria-live="polite">
       <Card tone="glass" padding="md">
         <div className="ops-story__head">
-          <span className="t-eyebrow">{story.phase === "resetting" ? "Resetting the city" : story.phase === "running" ? "Plaza pothole, live" : "Collapsed by dedup"}</span>
+          <span className="t-eyebrow">{story.phase === "resetting" ? "Resetting the city" : story.phase === "running" ? `${story.storm.title}, live` : "Collapsed by dedup"}</span>
           <IconButton variant="ghost" size="sm" icon={<X />} label="Dismiss" onClick={onClose} />
         </div>
         <div className="ops-story__nums">
@@ -325,7 +356,7 @@ function StoryCard({ story, stats, onClose }: { story: NonNullable<Story>; stats
           <div><AnimatedNumber value={issues} ms={500} className="ops-story__big is-accent" /><span className="ops-story__cap">{issues === 1 ? "issue" : "issues"}</span></div>
         </div>
         {story.phase !== "done" ? (
-          <ProgressBar value={reports} max={STORY_TOTAL} height={4} label="Simulation progress" />
+          <ProgressBar value={reports} max={total} height={4} label="Simulation progress" />
         ) : (
           <div className="ops-story__done">
             <span><b className="t-num">{absorbed.toLocaleString()}</b> duplicates absorbed</span>

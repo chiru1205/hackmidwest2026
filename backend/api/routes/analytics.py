@@ -4,12 +4,13 @@ from __future__ import annotations
 import asyncio
 import logging
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 
 from backend.integrations.devrev import analytics
 from .. import store
+from ..auth import require_staff
 
-router = APIRouter()
+router = APIRouter(dependencies=[Depends(require_staff)])
 log = logging.getLogger("civicflow.analytics")
 
 LABELS = {

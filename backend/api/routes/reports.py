@@ -5,7 +5,7 @@ import json
 import os
 from typing import Optional
 
-from fastapi import APIRouter, File, Form, Header, HTTPException, UploadFile
+from fastapi import APIRouter, Depends, File, Form, Header, HTTPException, UploadFile
 from pydantic import BaseModel
 
 from contracts.models import (AgentStep, AIUsage, CategorySuggestion, Cluster, ClusterDetail, NearbyResult, ReportResult, TimelineEntry)
@@ -13,6 +13,7 @@ from backend.engine.geo import haversine_m
 from backend.integrations.ai import suggest as ai_suggest, usage as ai_usage
 
 from .. import adapters, edge, pipeline, store
+from ..auth import require_staff
 
 router = APIRouter()
 
@@ -52,7 +53,7 @@ async def confirm(cluster_id: str, body: ConfirmBody, x_user_id: str = Header("u
                                         c.category, "", None, None, confirm_cluster_id=cluster_id)
 
 
-@router.get("/nearby", response_model=NearbyResult)
+@router.get("/nearby", response_model=NearbyResult, dependencies=[Depends(require_staff)])
 async def nearby(lat: float, lng: float, category: Optional[str] = None, radius_m: float = 100.0):
     found, info = edge.lookup(lat, lng, radius_m)
     out = []
@@ -65,7 +66,7 @@ async def nearby(lat: float, lng: float, category: Optional[str] = None, radius_
     return NearbyResult(clusters=[c for _, c in out], edge=info)
 
 
-@router.get("/clusters", response_model=list[Cluster])
+@router.get("/clusters", response_model=list[Cluster], dependencies=[Depends(require_staff)])
 async def list_clusters(status: Optional[str] = None, min_priority: float = 0.0, limit: int = 200):
     cs = [c for c in store.clusters.values()
           if (not status or c.status == status) and c.priority >= min_priority]
@@ -73,7 +74,7 @@ async def list_clusters(status: Optional[str] = None, min_priority: float = 0.0,
     return cs[:limit]
 
 
-@router.get("/clusters/{cluster_id}", response_model=ClusterDetail)
+@router.get("/clusters/{cluster_id}", response_model=ClusterDetail, dependencies=[Depends(require_staff)])
 async def cluster_detail(cluster_id: str):
     c = store.clusters.get(cluster_id)
     if c is None:
@@ -94,6 +95,6 @@ async def suggest_category(text: str = ""):
     return CategorySuggestion(**(await ai_suggest.suggest(text)))
 
 
-@router.get("/ai-usage", response_model=AIUsage)
+@router.get("/ai-usage", response_model=AIUsage, dependencies=[Depends(require_staff)])
 async def get_ai_usage():
     return AIUsage(**ai_usage.snapshot())

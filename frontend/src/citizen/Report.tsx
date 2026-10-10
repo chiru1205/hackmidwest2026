@@ -1,21 +1,21 @@
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { AnimatePresence, motion } from "framer-motion";
-import { Camera, Check, ImagePlus, LocateFixed, MapPinOff, RotateCcw, School, Send, ShieldAlert, Siren, TriangleAlert, Users } from "lucide-react";
-import type { Category, Cluster, EdgeInfo, ReportResult } from "@contracts";
+import { Camera, Check, ImagePlus, LocateFixed, MapPinOff, RotateCcw, School, Send, ShieldAlert, Siren, TriangleAlert } from "lucide-react";
+import type { Category, ReportResult } from "@contracts";
 import { useSearchParams } from "react-router-dom";
 import { api, fetchGeofence, type GeofenceInfo, type GeoZone } from "../lib/api";
 import { CATEGORIES, PRESETS, catLabel } from "../lib/const";
 import { compressImage } from "../lib/image";
-import { AvatarStack, Button, Pill, PriorityBadge, TicketId, spring } from "../components/ui";
-import { CatIcon, EdgePill, NEIGHBOR_NAMES, Photo, photoFor, shortAddr } from "./common";
+import { Button, Pill, spring } from "../components/ui";
+import { CatIcon } from "./common";
 import { useOverlayRoot } from "./overlay";
 import { useLoc } from "./loc";
 import PinMap from "./PinMap";
 import Reveal from "./Reveal";
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
-const SCAN_STEPS = ["Reading the photo", "Checking for neighbor reports", "Scoring priority", "Dispatching a crew"];
+const SCAN_STEPS = ["Reading the photo", "Checking the area", "Scoring priority", "Dispatching a crew"];
 const SEVERITY = ["Minor", "Noticeable", "Real problem", "Serious", "Dangerous"];
 
 export default function Report() {
@@ -30,9 +30,6 @@ export default function Report() {
   const [severity, setSeverity] = useState(3);
   const [photo, setPhoto] = useState<Blob | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
-  const [nearby, setNearby] = useState<Cluster[]>([]);
-  const [nearLoaded, setNearLoaded] = useState(false);
-  const [edge, setEdge] = useState<EdgeInfo | null>(null);
   const [explicit, setExplicit] = useState(false);
   const [sugg, setSugg] = useState<{ category: Category; confidence: number; source: string } | null>(null);
   const [scanning, setScanning] = useState(false);
@@ -41,20 +38,6 @@ export default function Report() {
   const [error, setError] = useState<string | null>(null);
   const camRef = useRef<HTMLInputElement>(null);
   const libRef = useRef<HTMLInputElement>(null);
-
-  const loadNearby = () =>
-    api.nearby(loc.lat, loc.lng, category).then((r) => { setNearby(r.clusters); setEdge(r.edge); setNearLoaded(true); })
-      .catch(() => { setNearby([]); setEdge(null); setNearLoaded(true); });
-
-  // live nearby check, debounced; served from the in-memory geo cache
-  useEffect(() => {
-    let live = true;
-    const t = setTimeout(() => {
-      api.nearby(loc.lat, loc.lng, category).then((r) => { if (live) { setNearby(r.clusters); setEdge(r.edge); setNearLoaded(true); } })
-        .catch(() => { if (live) { setNearby([]); setEdge(null); setNearLoaded(true); } });
-    }, 300);
-    return () => { live = false; clearTimeout(t); };
-  }, [loc.lat, loc.lng, category]);
 
   // geofence lookup for the chosen spot: debounced, last result kept while the next one loads
   useEffect(() => {
@@ -106,9 +89,7 @@ export default function Report() {
     () => api.submitReport({ lat: loc.lat, lng: loc.lng, accuracy_m: loc.accuracy_m, category, note, severity, photo, demoOverride: demoOn }),
     () => { setNote(""); setPhoto(null); setPreview(null); },
   );
-  const meToo = (c: Cluster) => run(() => api.confirm(c.id, loc.lat, loc.lng, loc.accuracy_m));
 
-  const best = nearby[0];
   const accuracyBad = loc.accuracy_m > 100;
   const srcLabel = loc.source === "gps" ? "GPS" : loc.source === "demo" ? "Demo location" : "Pinned";
 
@@ -116,7 +97,6 @@ export default function Report() {
     <div className="cz-page cz-report">
       <header className="cz-head">
         <h1 className="cz-title">See something?<br />Snap it.</h1>
-        <EdgePill edge={edge} />
       </header>
 
       {/* camera hero */}
@@ -161,7 +141,7 @@ export default function Report() {
         <div className="cz-loc__row">
           <span className="cz-loc__icon"><LocateFixed size={18} strokeWidth={1.75} aria-hidden /></span>
           <div className="cz-loc__txt">
-            <b>{geo?.in_service_area ? (geo.neighborhood ?? best?.neighborhood ?? "Your location") : outside ? "Outside Kansas City" : (best?.neighborhood ?? "Your location")}{best?.address ? ` · ${shortAddr(best.address)}` : ""}</b>
+            <b>{geo?.in_service_area ? (geo.neighborhood ?? "Your location") : outside ? "Outside Kansas City" : "Your location"}</b>
             <span className="t-mono">{loc.lat.toFixed(4)}, {loc.lng.toFixed(4)}</span>
           </div>
           <Pill variant={accuracyBad ? "hazard" : "success"} size="sm" dot={loc.source === "gps" ? "pulse" : true}>
@@ -184,7 +164,7 @@ export default function Report() {
             </div>
           </div>
         )}
-        <PinMap lat={loc.lat} lng={loc.lng} onPin={setPin} clusters={nearby} />
+        <PinMap lat={loc.lat} lng={loc.lng} onPin={setPin} />
         <div className="cz-loc__hint t-caption">Drag the pin or tap the map to fix the spot.</div>
       </section>
 
@@ -200,35 +180,6 @@ export default function Report() {
           ))}
         </div>
       </section>
-
-      {/* nearby */}
-      <AnimatePresence initial={false}>
-        {best && (
-          <motion.section key={best.id} className="cz-near" role="status" aria-label="Already reported nearby"
-            initial={{ opacity: 0, y: 12, scale: 0.98 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: -8 }} transition={spring.soft}>
-            <div className="cz-near__top">
-              <Photo src={photoFor(best)} cat={best.category} className="cz-near__photo" />
-              <div className="cz-near__info">
-                <span className="cz-near__eyebrow"><span className="cz-livedot" aria-hidden /> Already reported nearby</span>
-                <b className="cz-near__count t-num">{best.reporter_count.toLocaleString("en-US")} {best.reporter_count === 1 ? "neighbor" : "neighbors"}</b>
-                <div className="cz-near__meta">
-                  <PriorityBadge bucket={best.bucket} size="sm" />
-                  <TicketId id={best.ticket_id} />
-                </div>
-                <div className="cz-near__who">
-                  <AvatarStack names={NEIGHBOR_NAMES} total={best.reporter_count} max={3} size={28} />
-                </div>
-              </div>
-            </div>
-            <Button block size="lg" loading={scanning} icon={<Users />} onClick={() => meToo(best)}>
-              Me too <span className="cz-xp">+5 XP</span>
-            </Button>
-          </motion.section>
-        )}
-      </AnimatePresence>
-      {!best && nearLoaded && (
-        <div className="cz-first" role="status"><span className="cz-first__dot" aria-hidden /> Nobody has reported this here yet. You could be the first responder.</div>
-      )}
 
       {/* note + severity */}
       <section>
@@ -263,8 +214,8 @@ export default function Report() {
       )}
 
       <div className="cz-sendbar">
-        <Button size="lg" block variant={best ? "secondary" : "primary"} loading={scanning} disabled={blocked} icon={<Send />} onClick={submit}>
-          {best ? "Report it separately" : "Send report"}
+        <Button size="lg" block variant="primary" loading={scanning} disabled={blocked} icon={<Send />} onClick={submit}>
+          Send report
         </Button>
         {blocked && <p className="cz-sendbar__why t-caption">Move the pin inside Kansas City to send a report.</p>}
       </div>
@@ -274,7 +225,7 @@ export default function Report() {
           {scanning && <Scan key="scan" preview={preview} step={scanStep} />}
         </AnimatePresence>, overlay)}
       {overlay && result && createPortal(
-        <Reveal result={result} onClose={() => { setResult(null); loadNearby(); }} />, overlay)}
+        <Reveal result={result} onClose={() => setResult(null)} />, overlay)}
     </div>
   );
 }

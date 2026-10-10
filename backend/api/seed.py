@@ -27,8 +27,38 @@ OTHER_CATS = ["streetlight_out", "sidewalk_damage", "manhole_cover", "road_debri
 HOTSPOT = (39.0420, -94.5950)
 POTHOLE_PICS = [f"/photos/seed/pothole_{i:02d}.jpg" for i in range(1, 15)]
 AFTER_PICS = [f"/photos/seed/after_{i:02d}.jpg" for i in range(1, 7)]
-OTHER_PICS = {"manhole_cover": "/photos/seed/manhole_01.jpg", "sidewalk_damage": "/photos/seed/sidewalk_01.jpg",
-              "road_debris": "/photos/seed/debris_01.jpg"}
+_P = "/photos/seed/"
+OTHER_PICS = {
+    "manhole_cover": [_P + "manhole_01.jpg"], "road_debris": [_P + "debris_01.jpg"],
+    "sidewalk_damage": [_P + "sidewalk_01.jpg", _P + "sidewalk_02.jpg"],
+    "streetlight_out": [_P + f"streetlight_{i:02d}.jpg" for i in (1, 2, 3)],
+    "flooding": [_P + f"flooding_{i:02d}.jpg" for i in (1, 2, 3)],
+    "illegal_dumping": [_P + f"dumping_{i:02d}.jpg" for i in (1, 2, 3)],
+    "downed_tree": [_P + f"tree_{i:02d}.jpg" for i in (1, 2)],
+    "graffiti": [_P + f"graffiti_{i:02d}.jpg" for i in (1, 2)],
+    "traffic_signal": [_P + "signal_01.jpg"],
+}
+
+# Hero scenarios: one strong, believable issue per city service line, beside the Plaza pothole hotspot.
+# Real Kansas City spots inside the service area; zones (school / hospital) and districts come from the geofence data.
+HEROES = [
+    {"id": "c_hero_light", "cat": "streetlight_out", "lat": 39.0607, "lng": -94.6026, "address": None, "reporters": 23,
+     "sev": 4, "hazard": True, "haz": "Lamp out on a school route; the crossing is dark at dusk.",
+     "photo": _P + "streetlight_01.jpg", "age_d": 1.1, "status": "assigned"},
+    {"id": "c_hero_flood", "cat": "flooding", "lat": 39.0388, "lng": -94.5952, "address": "Ward Pkwy near W 47th St (Brush Creek)",
+     "reporters": 340, "sev": 5, "hazard": True,
+     "haz": "Street flooded curb to curb; cars are stalling and water is approaching storefronts.",
+     "photo": _P + "flooding_01.jpg", "age_d": 1.5, "status": "assigned"},
+    {"id": "c_hero_dump", "cat": "illegal_dumping", "lat": 39.0905, "lng": -94.5538, "address": "Vacant lot on Prospect Ave near E 15th St", "reporters": 9,
+     "sev": 2, "hazard": False, "haz": "", "photo": _P + "dumping_01.jpg", "age_d": 3.5, "status": "in_progress"},
+    {"id": "c_hero_tree", "cat": "downed_tree", "lat": 38.9902, "lng": -94.6066, "address": "State Line Rd near W 75th St", "reporters": 31,
+     "sev": 5, "hazard": True, "haz": "Large tree across both lanes; the road is blocked to traffic.",
+     "photo": _P + "tree_01.jpg", "age_d": 1.2, "status": "assigned"},
+    {"id": "c_hero_walk", "cat": "sidewalk_damage", "lat": 39.0494, "lng": -94.5917, "address": "Wornall Rd near W 44th St", "reporters": 6,
+     "sev": 3, "hazard": False, "haz": "", "photo": _P + "sidewalk_02.jpg", "age_d": 2.5, "status": "assigned"},
+    {"id": "c_hero_graf", "cat": "graffiti", "lat": 39.0722, "lng": -94.5712, "address": "Troost Ave near E 27th St (bus shelter)", "reporters": 4,
+     "sev": 1, "hazard": False, "haz": "", "photo": _P + "graffiti_01.jpg", "age_d": 6.0, "status": "assigned"},
+]
 
 
 def _load_points() -> list[dict]:
@@ -93,27 +123,31 @@ def seed(n_clusters: int = 60) -> None:
     pts = pts[:n_clusters]
     total_reporters = 0
     specs = [{"p": p, "hot": False} for p in pts]
+    for h in reversed(HEROES):
+        specs.insert(0, {"p": {"lat": h["lat"], "lng": h["lng"], "address": h["address"], "neighborhood": None},
+                         "hot": False, "hero": h})
     specs.insert(0, {"p": {"lat": HOTSPOT[0], "lng": HOTSPOT[1], "address": "Country Club Plaza, Wornall Rd",
                            "neighborhood": "Plaza"}, "hot": True})
 
     for k, s in enumerate(specs):
-        p, hot = s["p"], s["hot"]
-        cat = "pothole" if hot or rnd.random() < 0.65 else rnd.choice(OTHER_CATS)
+        p, hot, hero = s["p"], s["hot"], s.get("hero")
+        pinned = hot or hero is not None
+        cat = hero["cat"] if hero else ("pothole" if hot or rnd.random() < 0.38 else rnd.choice(OTHER_CATS))
         lat, lng = p["lat"], p["lng"]
-        if cat != "pothole" and not hot:
+        if cat != "pothole" and not pinned:
             lat += rnd.uniform(-0.0003, 0.0003)
             lng += rnd.uniform(-0.0003, 0.0003)
-        reporters = 211 if hot else rnd.choice([1, 1, 1, 2, 3, 4, 6, 9, 14, 25, 48, 90])
-        age_d = 1.0 if hot else rnd.uniform(0.3, 5)
+        reporters = hero["reporters"] if hero else 211 if hot else rnd.choice([1, 1, 1, 2, 3, 4, 6, 9, 14, 25, 48, 90])
+        age_d = hero["age_d"] if hero else 1.0 if hot else rnd.uniform(0.3, 5)
         first = now - timedelta(days=age_d)
-        sev = 4 if hot else rnd.choice([1, 2, 3, 3, 3, 4, 4, 5])
-        hazard = True if hot else (sev >= 4 and rnd.random() < 0.4)
+        sev = hero["sev"] if hero else 4 if hot else rnd.choice([1, 2, 3, 3, 3, 4, 4, 5])
+        hazard = hero["hazard"] if hero else True if hot else (sev >= 4 and rnd.random() < 0.4)
         c = Cluster(
-            id="c_hotspot" if hot else f"c_seed{k:03d}", category=cat, lat=lat, lng=lng, severity=sev,
+            id=hero["id"] if hero else "c_hotspot" if hot else f"c_seed{k:03d}", category=cat, lat=lat, lng=lng, severity=sev,
             is_hazard=hazard,
-            hazard_description=("Deep pothole next to a school crossing; drivers swerve into the bike lane."
+            hazard_description=(hero["haz"] if hero else "Deep pothole next to a school crossing; drivers swerve into the bike lane."
                                 if hot else ("Reported as a safety hazard" if hazard else "")),
-            reporter_count=reporters, report_count=reporters + (rnd.randint(0, 5) if not hot else 40),
+            reporter_count=reporters, report_count=reporters + (rnd.randint(0, 5) if not pinned else 40 if hot else reporters // 5),
             location_crit=0.8 if hot else places.location_crit(lat, lng),
             neighborhood=p.get("neighborhood") or places.neighborhood_for(lat, lng),
             address=p.get("address") or places.address_for(lat, lng), simulated=True,
@@ -122,7 +156,9 @@ def seed(n_clusters: int = 60) -> None:
         places.apply_geo(c)                                    # district, zones, zone-boosted location_crit
         c.priority, c.bucket = priority.compute_priority(c, now)
         sla = DUE_DAYS[c.bucket]
-        if hot:
+        if hero:
+            age_d = hero["age_d"]
+        elif hot:
             age_d = sla - 1.2                      # due in about 29 hours
         elif k in OVERDUE:
             age_d = sla + rnd.uniform(0.6, 1.8)    # deliberately overdue
@@ -137,21 +173,26 @@ def seed(n_clusters: int = 60) -> None:
         t = adapters.create_ticket(c, adapters.ticket_title(c), adapters.ticket_body(c), c.vendor)
         c.ticket_id = t.id
         fixed_at = None
-        if not hot and k in FIXED:
+        if hero and hero["status"] == "in_progress":
+            adapters.set_stage(t.id, "work_in_progress")
+            c.status = "in_progress"
+        elif not pinned and k in FIXED:
             adapters.set_stage(t.id, "work_in_progress")
             adapters.set_stage(t.id, "resolved")
             c.status = "fixed"
             fixed_at = now - timedelta(days=rnd.uniform(0.2, 2.5))
             c.fixed_at = _iso(fixed_at)
-        elif not hot and k in IN_PROGRESS:
+        elif not pinned and k in IN_PROGRESS:
             adapters.set_stage(t.id, "work_in_progress")
             c.status = "in_progress"
-        if hot:
+        if hero:
+            c.photo_url = hero["photo"]
+        elif hot:
             c.photo_url = POTHOLE_PICS[0]
         elif cat == "pothole" and rnd.random() < 0.8:
             c.photo_url = POTHOLE_PICS[1 + (k % 13)]
-        elif cat in OTHER_PICS and rnd.random() < 0.7:
-            c.photo_url = OTHER_PICS[cat]
+        elif cat in OTHER_PICS and rnd.random() < 0.85:
+            c.photo_url = OTHER_PICS[cat][k % len(OTHER_PICS[cat])]
         store.save_cluster(c)
         tl = [{"ts": _iso(first), "label": "Reported", "detail": f"{reporters} reporters (seeded)"},
               {"ts": _iso(first + timedelta(minutes=rnd.randint(3, 40))), "label": "Ticket created",
@@ -162,9 +203,9 @@ def seed(n_clusters: int = 60) -> None:
             after_url = AFTER_PICS[k % len(AFTER_PICS)]
             tl.append({"ts": _iso(fixed_at), "label": "Fixed by vendor", "detail": f"After photo: {after_url}"})
         store.meta_set(f"tl:{c.id}", json.dumps(tl))
-        n_rep = 20 if hot else 1
+        n_rep = 20 if hot else min(reporters, 12) if hero else 1
         for i in range(n_rep):
-            uid = user_ids[i % len(user_ids)] if hot else rnd.choice(user_ids)
+            uid = user_ids[i % len(user_ids)] if pinned else rnd.choice(user_ids)
             store.insert_report(Report(
                 id=f"r_{c.id}_{i}", cluster_id=c.id, user_id=uid, lat=lat, lng=lng, category=cat,
                 note="seeded", kind="first" if i == 0 else "confirm", simulated=True,

@@ -1,10 +1,12 @@
 """Geofence lookups: which neighborhood/district/zones a point is in, and the map layers."""
 from __future__ import annotations
 
-from fastapi import APIRouter, Response
+from fastapi import APIRouter, Depends, Response
 
 from contracts.models import GeoInfo
 from backend.engine import geofence
+
+from ..auth import require_staff
 
 router = APIRouter()
 
@@ -14,7 +16,7 @@ async def get_geofence(lat: float, lng: float):
     return geofence.geofence(lat, lng)
 
 
-@router.get("/geofence/layers")
+@router.get("/geofence/layers", dependencies=[Depends(require_staff)])
 async def get_layers(response: Response):
     response.headers["Cache-Control"] = "public, max-age=3600"
     return geofence.layers()

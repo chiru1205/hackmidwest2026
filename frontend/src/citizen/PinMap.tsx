@@ -1,17 +1,13 @@
 import { useEffect, useRef } from "react";
 import maplibregl from "maplibre-gl";
-import type { Cluster } from "@contracts";
 
-const COLOR: Record<string, string> = { P1: "#E5484D", P2: "#F97316", P3: "#F5B301", P4: "#8A97AD" };
+interface Props { lat: number; lng: number; onPin: (lat: number, lng: number) => void }
 
-interface Props { lat: number; lng: number; onPin: (lat: number, lng: number) => void; clusters?: Cluster[] }
-
-/** Compact map: the pin is draggable, tapping the map moves it. Panning is off so the page still scrolls under a thumb. */
-export default function PinMap({ lat, lng, onPin, clusters = [] }: Props) {
+/** Compact map showing only the citizen's own pin (no other issues): the pin is draggable, tapping the map moves it. Panning is off so the page still scrolls under a thumb. */
+export default function PinMap({ lat, lng, onPin }: Props) {
   const el = useRef<HTMLDivElement>(null);
   const map = useRef<maplibregl.Map | null>(null);
   const marker = useRef<maplibregl.Marker | null>(null);
-  const dots = useRef<maplibregl.Marker[]>([]);
   const onPinRef = useRef(onPin);
   onPinRef.current = onPin;
 
@@ -40,19 +36,6 @@ export default function PinMap({ lat, lng, onPin, clusters = [] }: Props) {
     marker.current?.setLngLat([lng, lat]);
     map.current?.easeTo({ center: [lng, lat], duration: 400 });
   }, [lat, lng]);
-
-  useEffect(() => {
-    const m = map.current;
-    if (!m) return;
-    dots.current.forEach((d) => d.remove());
-    dots.current = clusters.slice(0, 20).map((c) => {
-      const d = document.createElement("div");
-      const s = 14 + Math.min(14, Math.log2(1 + c.reporter_count) * 2.6);
-      d.className = "cz-dot";
-      d.style.cssText = `width:${s}px;height:${s}px;background:${c.status === "fixed" ? "#12B981" : COLOR[c.bucket]}`;
-      return new maplibregl.Marker({ element: d }).setLngLat([c.lng, c.lat]).addTo(m);
-    });
-  }, [clusters]);
 
   return <div ref={el} className="cz-minimap" role="application" aria-label="Map. Drag the pin or tap to adjust the location" />;
 }

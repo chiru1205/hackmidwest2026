@@ -1,4 +1,4 @@
-# Starts Civic Flow: the API (port 8000) and the web app (port 5173), each in its own window, then opens the browser.
+# Starts Civic Flow: the API (port 8000) and the citizen app (5173) and the city portal (5174), each in its own window, then opens the browser.
 # Run:  .\start.ps1            (first time on a new machine? run .\setup.ps1 instead)
 # Options:  -NoBrowser   do not open the browser
 param([switch]$NoBrowser)
@@ -19,9 +19,11 @@ if (-not (Test-Path (Join-Path $root '.env'))) { Copy-Item (Join-Path $root '.en
 function Port-Busy($p) { return [bool](Get-NetTCPConnection -LocalPort $p -State Listen -ErrorAction SilentlyContinue) }
 if (Port-Busy 8000) { Write-Host "Port 8000 is already in use. Run .\stop.ps1 first (or the app is already running)." -ForegroundColor Yellow; exit 1 }
 if (Port-Busy 5173) { Write-Host "Port 5173 is already in use. Run .\stop.ps1 first (or the app is already running)." -ForegroundColor Yellow; exit 1 }
+if (Port-Busy 5174) { Write-Host "Port 5174 is already in use. Run .\stop.ps1 first (or the app is already running)." -ForegroundColor Yellow; exit 1 }
 
 Start-Process powershell -WorkingDirectory $root -ArgumentList '-NoExit', '-Command', "`$host.UI.RawUI.WindowTitle='Civic Flow API'; & '$py' -m uvicorn backend.api.main:app --port 8000"
-Start-Process powershell -WorkingDirectory (Join-Path $root 'frontend') -ArgumentList '-NoExit', '-Command', "`$host.UI.RawUI.WindowTitle='Civic Flow Web'; npm.cmd run dev -- --port 5173"
+Start-Process powershell -WorkingDirectory (Join-Path $root 'frontend') -ArgumentList '-NoExit', '-Command', "`$host.UI.RawUI.WindowTitle='Civic Flow Citizen'; npm.cmd run dev:citizen"
+Start-Process powershell -WorkingDirectory (Join-Path $root 'frontend') -ArgumentList '-NoExit', '-Command', "`$host.UI.RawUI.WindowTitle='Civic Flow City'; npm.cmd run dev:city"
 
 Write-Host "Starting... waiting for the API to come up (the first start seeds the demo data)." -ForegroundColor Gray
 $up = $false
@@ -33,10 +35,8 @@ if (-not $up) { Write-Host "The API did not answer in 40 seconds. Look at the 'C
 
 Write-Host ""
 Write-Host "Civic Flow is running." -ForegroundColor Green
-Write-Host "  Citizen:   http://localhost:5173/"
-Write-Host "  Ops:       http://localhost:5173/ops"
-Write-Host "  Vendor:    http://localhost:5173/vendor"
-Write-Host "  Workflow:  http://localhost:5173/workflow"
+Write-Host "  Citizen app:  http://localhost:5173/"
+Write-Host "  City portal:  http://localhost:5174/   (PIN: city)"
 Write-Host "  API check: http://localhost:8000/api/health"
 Write-Host "  Stop it with:  .\stop.ps1" -ForegroundColor Gray
 if (-not $NoBrowser) { Start-Process 'http://localhost:5173/' }

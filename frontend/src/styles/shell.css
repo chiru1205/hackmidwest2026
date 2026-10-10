@@ -87,3 +87,30 @@
 .kit-grid { display: grid; gap: var(--s-6); }
 .kit-row { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s-3); }
 .kit-cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: var(--s-4); align-items: start; }
+
+/* ---------- roles: city badge, sign out, gate ---------- */
+.app-role-badge { display: inline-flex; align-items: center; gap: 6px; height: 26px; padding: 0 10px; border-radius: var(--r-pill); background: color-mix(in srgb, var(--primary) 10%, transparent); color: var(--primary-text); font: 600 var(--fs-12)/1 var(--font-ui); white-space: nowrap; }
+.app-role-badge svg { width: 14px; height: 14px; stroke-width: 1.75; }
+.app-signout { display: inline-flex; align-items: center; gap: 6px; height: 36px; padding: 0 var(--s-3); border: 0; border-radius: var(--r-pill); background: transparent; color: var(--muted); font: 600 var(--fs-14)/1 var(--font-ui); cursor: pointer; }
+.app-signout:hover { background: var(--surface-2); color: var(--text); }
+.app-signout svg { width: 16px; height: 16px; stroke-width: 1.75; }
+button.app-menu__item { border: 0; background: transparent; width: 100%; cursor: pointer; text-align: left; }
+@media (max-width: 900px) { .app-signout, .app-role-badge { display: none; } }
+
+.gate { min-height: 100dvh; display: grid; place-items: center; padding: var(--s-5); background: var(--bg); }
+.gate__card { width: min(400px, 100%); display: grid; gap: var(--s-2); padding: 32px; border-radius: 16px; background: var(--surface); box-shadow: var(--shadow-2, 0 12px 40px -12px rgba(11,27,51,.25)), 0 0 0 1px var(--line); }
+.gate__brand { display: flex; align-items: center; gap: 10px; margin-bottom: var(--s-3); }
+.gate__h { margin: 0; font: 700 24px/1.2 var(--font-display); letter-spacing: -.02em; }
+.gate__p { margin: 0 0 var(--s-3); color: var(--muted); font: 400 var(--fs-14)/1.45 var(--font-ui); }
+.gate__label { font: 600 13px/1 var(--font-ui); }
+.gate__field { display: flex; align-items: center; gap: 8px; height: 48px; padding: 0 var(--s-3); border-radius: var(--r-md); background: var(--surface-2); box-shadow: inset 0 0 0 1px var(--line); }
+.gate__field:focus-within { box-shadow: inset 0 0 0 2px var(--primary); }
+.gate__field.is-err { box-shadow: inset 0 0 0 2px #D92D20; }
+.gate__field svg { width: 18px; height: 18px; color: var(--muted); flex: none; }
+.gate__field input { flex: 1; min-width: 0; border: 0; outline: 0; background: transparent; color: var(--text); font: 500 16px/1 var(--font-ui); }
+.gate__hint, .gate__err { margin: 0; font: 400 13px/1.4 var(--font-ui); color: var(--muted); }
+.gate__err { color: #D92D20; }
+.gate__btn { margin-top: var(--s-2); height: 48px; border: 0; border-radius: var(--r-md); background: var(--primary); color: #fff; font: 600 15px/1 var(--font-ui); cursor: pointer; }
+.gate__btn:disabled { opacity: .5; cursor: default; }
+.gate__field input { height: 100%; padding: 0; border: 0; border-radius: 0; box-shadow: none !important; background: transparent !important; outline: 0 !important; }
+.gate__field input::-ms-reveal { display: none; }

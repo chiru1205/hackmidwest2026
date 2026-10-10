@@ -29,10 +29,8 @@ If it says "Still missing ... open a NEW PowerShell window", do exactly that and
 ## 3. Use the app
 | Page | Address |
 |---|---|
-| Citizen app | http://localhost:5173/ |
-| Operations (city) | http://localhost:5173/ops |
-| Vendor work orders | http://localhost:5173/vendor |
-| Workflow | http://localhost:5173/workflow |
+| Citizen app (phone-style) | http://localhost:5173/ |
+| City portal (Operations, Vendors, Workflow; PIN `city`) | http://localhost:5174/ |
 
 A good first try: open **Ops** and press **Run the story**. Then open **Workflow** and press **Send a sample report**.
 
@@ -79,21 +77,20 @@ Setup asks for these. To add or change one later, open the file `.env` in Notepa
 | `winget` not found | Install Git, Python 3.12 and Node.js (LTS) by hand from their websites, then run setup again |
 
 ## Demo script (3 minutes)
-1. **Ops** (`/ops`): open the **Analytics** panel. Point out the work-order numbers (from DevRev) and the "Reports and AI" numbers (reports vs unique issues, geo cache hit rate, calls per AI model).
-2. **Citizen** (`/`): choose Report, take or pick a pothole photo, leave the category on "other", type a short note. Watch the suggestion chip, then submit.
-3. **Reveal**: the photo is read by the vision model (AWS Bedrock), checked against nearby reports (geo cache, then Akamai embeddings in the unclear band), scored for priority, and turned into one work order. The priority explanation upgrades a few seconds later.
-4. **Vendor** (`/vendor`): start the job, then mark it fixed. The DevRev chip shows the live ticket (`TKT-n`).
-5. **DevRev**: open the ticket to show the same work order and its stage.
-6. **Ops** again: the Analytics panel refreshes (about 15 s) with the new ticket and resolved time.
-7. **Geofence: outside the area**: on the Report screen, pick a spot outside Kansas City (for example St. Louis from the demo location list). The app shows "outside the Kansas City service area" and blocks Send. Real city neighborhood and council district boundaries come from KCMO open data.
-8. **Geofence: school-zone boost**: pick a spot inside a school zone (150 m) or hospital zone (250 m), for example Notre Dame de Sion School (39.05767, -94.57903). The reveal shows the zone chip, location criticality goes to 1.0 and the priority explanation says "inside a school zone". In Ops, turn on the "Priority zones" map layer to see the circles.
-9. **Geofence: district routing**: report a pothole in District 4, then one in District 5 or 6. Districts 1-4 go to KC Road Crew Co. and Districts 5-6 to Southside Pavement & Walk (a fictional second crew). The district and zones also appear in the work order and in the DevRev ticket footer; use the District filter in Ops and Vendor.
-10. **DevRev case flow** (`/workflow`): this is the live work-order board, backed by real DevRev tickets. Press **Send a sample report** (or report from `/`). Watch the new card appear in **Assigned** with its `TKT-n` number within a few seconds.
-11. **Act on the ticket**: select the card to open its journey (Civic Flow steps next to DevRev's own history). Press **Start work** (the card moves to In progress, and DevRev goes to work_in_progress), then **Request verification** (Awaiting verification; this stage is kept by Civic Flow, DevRev stays at work_in_progress and gets a comment), then **Approve and resolve** with a short note as evidence (DevRev resolved, XP paid). Approving without a note or photo is refused. **Escalate** raises the severity one level and **Reopen** puts it back in the queue.
-12. **Change it inside DevRev**: open the same ticket in the DevRev app and move its stage. Within about 5-10 seconds the board card moves and the Activity strip shows the change. If `DEVREV_WEB_BASE` is set in `.env` (for example `https://app.devrev.ai/<org>/works`), **Open in DevRev** appears in the journey panel.
-13. **Ops work orders**: on `/ops` press **Work orders** for DevRev totals, the stage funnel and the overdue and escalated lists. Queue rows, map popovers and the drawer carry a DevRev chip with the stage and ticket number, and DevRev events appear in the Live feed.
+Two screens. **Phone = citizen app** (`/`, local `localhost:5173`, deployed `https://<domain>/`). **Laptop or projector = city portal** (local `localhost:5174` via `npm run dev:city`, deployed `https://city.<domain>/`). Sign in to the portal with the PIN **city**. Citizens never see other people's reports, tickets, ops or analytics; the PIN is demo-level, not real security.
+
+1. **Frame it (20 s)**, city portal `/ops`: Kansas City gets about 167,000 requests a year (see the City impact panel). One storm, many reports, one ticket per issue. Click **Streetlights**, then **Flooding** under *Run the story*: hundreds of reports collapse into a few dozen issues, and the KPI bar shows **Work orders avoided (est.)**. Reset (circular arrow) when done.
+2. **Streetlight near a school (60 s)**, phone: Report, take or pick a streetlight photo, pin the spot near Gordon Parks Elementary or Notre Dame de Sion School (39.05767, -94.57903). Send. The reveal shows the zone boost, the priority and why, the crew and the due date. On the laptop the card appears in the queue within seconds.
+3. **Neighbors count (20 s)**: the phone shows no map and no "already reported" card before you send. After sending, open **My requests**: "You + N neighbors" grows as others report the same issue (use a second phone or the storm). The detail page shows the timeline and why this priority.
+4. **Flooding (30 s)**, laptop: the Brush Creek flooding issue (340 reporters) sits at P1 with the drainage crew; flooding dedups within 300 m, potholes within a few metres. Different issue types, same engine.
+5. **DevRev case flow (50 s)**, laptop `/workflow`: press **Send a sample report**; a new card lands in *Assigned* with its `TKT-n`. Select it, **Start work**, **Request verification**, **Approve and resolve** with a note. Then change the same ticket inside DevRev and watch the board follow within 5-10 s.
+6. **Close with a pothole (20 s)**: on the phone, a pothole at the Plaza joins the existing 211-reporter hotspot; My requests now says "N neighbors reported this", and the **Fixed!** toast appears on the phone once the crew's work is approved.
+
+Geofence extras if asked: pick St. Louis from the demo locations (blocked, outside the service area); schools (150 m) and hospitals (250 m) boost priority; Districts 1-4 route to KC Road Crew Co., 5-6 to Southside Pavement & Walk.
 
 Badge art in Profile is generated once with Akamai image generation. Re-create it with `.venv\Scripts\python scripts\gen_badges.py` (paced at one image every 12 s because of the team rate limit).
 
 ## Deploy to Akamai Cloud (Linode)
 To put the app on a public HTTPS address (one Ubuntu VM, no Docker), follow [infra/linode/DEPLOY.md](infra/linode/DEPLOY.md). In short: create a Linode, then run `powershell -ExecutionPolicy Bypass -File infra/linode/deploy.ps1 -Ip <ip>`.
+
+The deploy now serves two hostnames: the citizen app at `https://<domain>/` and the city staff portal at `https://city.<domain>/` (demo PIN `city`, server env `CITY_TOKEN`). Details: infra/linode/DEPLOY.md.

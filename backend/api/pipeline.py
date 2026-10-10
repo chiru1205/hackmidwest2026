@@ -183,8 +183,14 @@ async def submit_report(user_id: str, lat: float, lng: float, accuracy_m: float 
                     ctx.step("judge", "done", (time.perf_counter() - t0) * 1000,
                              semantic.summary(sem["sim"], sem["verdict"]), EMBED_MODEL)
                 else:
-                    j = await adapters.judge_dedup(report, pool, decision["scores"], ctx.emit)
-                    used_llm = True
+                    if simulated:    # simulated storms never call an AI model: use the rule judge
+                        best = max(pool, key=lambda c: decision["scores"].get(c.id, 0), default=None)
+                        ok = best is not None and decision["scores"].get(best.id, 0) >= 0.6
+                        j = {"decision": "merge" if ok else "new", "cluster_id": best.id if ok else None,
+                             "reason": "rule judge (simulated report)"}
+                    else:
+                        j = await adapters.judge_dedup(report, pool, decision["scores"], ctx.emit)
+                    used_llm = not simulated
                     if j.get("decision") == "merge" and j.get("cluster_id") in store.clusters:
                         decision = {**decision, "action": "merge", "cluster": store.clusters[j["cluster_id"]]}
                     else:
@@ -235,7 +241,9 @@ def _merge(c: Cluster, report: Report, has_photo: bool, severity: int, hazard: b
     c.priority, c.bucket = priority.compute_priority(c, datetime.now(timezone.utc))
     milestone = new_user and priority.is_milestone(c.reporter_count)
     bucket_changed = c.bucket != old_bucket
-    if bucket_changed:
+    # a rationale written for one reporter ("single-reporter ...") is wrong once neighbors join: fall back to the data-driven text
+    stale_single = new_user and "single" in (c.rationale or "").lower() and "report" in (c.rationale or "").lower()
+    if bucket_changed or stale_single:
         c.rationale = _template_rationale(c)
     store.save_cluster(c)
     store.insert_report(report)

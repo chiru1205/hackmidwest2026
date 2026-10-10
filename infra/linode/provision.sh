@@ -5,7 +5,9 @@
 #   bash provision.sh                              # default: <ip-with-dashes>.sslip.io
 #
 # deploy.ps1 uploads these into /root/cf-stage before calling this script:
-#   web.tgz  (built frontend)   env  (server .env)   -> installed if present
+#   web.tgz  (citizen app) -> /opt/civicflow/web      webcity.tgz (city portal) -> /opt/civicflow/web-city
+#   env  (server .env)   -> installed if present
+# Two sites: https://$DOMAIN/ (citizen) and https://city.$DOMAIN/ (city staff portal).
 # and extracts the app tarball into /opt/civicflow (so this file lives in /opt/civicflow/infra/linode/).
 set -euo pipefail
 
@@ -54,6 +56,9 @@ else
   log "Using DOMAIN=$DOMAIN (its DNS A record must point at this server)"
 fi
 printf '%s' "$DOMAIN" | grep -Eq '^[A-Za-z0-9]([A-Za-z0-9.-]*[A-Za-z0-9])?$' || die "DOMAIN '$DOMAIN' looks invalid."
+CITY_DOMAIN="${CITY_DOMAIN:-city.${DOMAIN}}"
+printf '%s' "$CITY_DOMAIN" | grep -Eq '^[A-Za-z0-9]([A-Za-z0-9.-]*[A-Za-z0-9])?$' || die "CITY_DOMAIN '$CITY_DOMAIN' looks invalid."
+log "City portal host: $CITY_DOMAIN (must resolve to this server too)"
 
 # ---------------------------------------------------------------- packages
 log "Installing base packages"
@@ -118,9 +123,9 @@ fi
 # ---------------------------------------------------------------- user and directories
 log "Creating user and directories"
 id civic >/dev/null 2>&1 || useradd --system --home-dir "$APP" --shell /usr/sbin/nologin civic
-mkdir -p "$APP/web" "$APP/data/photos"
+mkdir -p "$APP/web" "$APP/web-city" "$APP/data/photos"
 chown -R civic:civic "$APP/data"
-chmod 755 "$APP" "$APP/web"
+chmod 755 "$APP" "$APP/web" "$APP/web-city"
 chmod -R a+rX "$APP/backend" "$APP/contracts" "$APP/scripts" "$APP/infra" 2>/dev/null || true
 
 # ---------------------------------------------------------------- frontend and .env from staging
@@ -131,7 +136,15 @@ if [ -f "$STAGE/web.tgz" ]; then
   [ -f "$APP/web/index.html" ] || die "web.tgz did not contain index.html."
   chmod -R a+rX "$APP/web"
 fi
-[ -d "$APP/web" ] && [ -f "$APP/web/index.html" ] || warn "No frontend in $APP/web yet (index.html missing)."
+if [ -f "$STAGE/webcity.tgz" ]; then
+  log "Installing built city portal"
+  find "$APP/web-city" -mindepth 1 -delete
+  tar -xzf "$STAGE/webcity.tgz" -C "$APP/web-city"
+  [ -f "$APP/web-city/index.html" ] || die "webcity.tgz did not contain index.html."
+  chmod -R a+rX "$APP/web-city"
+fi
+[ -f "$APP/web/index.html" ] || warn "No citizen app in $APP/web yet (index.html missing)."
+[ -f "$APP/web-city/index.html" ] || warn "No city portal in $APP/web-city yet (index.html missing)."
 
 PREV_ENV=""
 if [ -f "$APP/.env" ]; then PREV_ENV="$(mktemp)"; cp "$APP/.env" "$PREV_ENV"; fi
@@ -144,6 +157,12 @@ if [ -f "$STAGE/env" ]; then
       line="$(grep -m1 "^${k}=" "$PREV_ENV" || true)"
       [ -n "$line" ] && printf '%s\n' "$line" >> "$APP/.env"
     done
+  fi
+  # Keep the staff token across redeploys when the new .env does not set one; default for the demo.
+  if ! grep -q '^CITY_TOKEN=' "$APP/.env"; then
+    line=""
+    [ -n "$PREV_ENV" ] && line="$(grep -m1 '^CITY_TOKEN=' "$PREV_ENV" || true)"
+    printf '%s\n' "${line:-CITY_TOKEN=civicflow-city-demo}" >> "$APP/.env"
   fi
 fi
 [ -n "$PREV_ENV" ] && rm -f "$PREV_ENV"
@@ -172,9 +191,9 @@ log "Installing systemd unit"
 install -m 644 "$SRC/civicflow-api.service" /etc/systemd/system/civicflow-api.service
 
 # ---------------------------------------------------------------- Caddy
-log "Configuring Caddy for $DOMAIN"
+log "Configuring Caddy for $DOMAIN and $CITY_DOMAIN (one certificate per name; the first takes up to a minute each)"
 mkdir -p /etc/caddy
-sed "s|{\$DOMAIN}|${DOMAIN}|g" "$SRC/Caddyfile.template" > /etc/caddy/Caddyfile
+sed -e "s|{\$DOMAIN}|${DOMAIN}|g" -e "s|{\$CITY_DOMAIN}|${CITY_DOMAIN}|g" "$SRC/Caddyfile.template" > /etc/caddy/Caddyfile
 
 # Optional basic auth for /api/admin/* (only when CITY_PASS_HASH is set in .env).
 CITY_USER_V="$(grep -m1 '^CITY_USER=' "$APP/.env" | cut -d= -f2- | tr -d '\r"'"'"' ' || true)"
@@ -230,7 +249,8 @@ echo
 echo "=============================================================="
 echo " Civic Flow provisioned"
 echo "=============================================================="
-echo " Site:            https://$DOMAIN/"
+echo " Citizen app:     https://$DOMAIN/"
+echo " City portal:     https://$CITY_DOMAIN/   (PIN: city)"
 echo " API (local):     $API_OK  (http://127.0.0.1:8000/api/health)"
 echo " Key-value:       ${KV_SERVICE:-none} ($(systemctl is-active "${KV_SERVICE:-none}" 2>/dev/null || echo unknown))"
 echo " API service:     $(systemctl is-active civicflow-api || true)"

@@ -1,13 +1,14 @@
 """Admin: simulate, reset, flags."""
 from __future__ import annotations
 
-from fastapi import APIRouter, Body
+from fastapi import APIRouter, Body, Depends
 
 from contracts.models import Flags, SimulateRequest
 
+from ..auth import require_staff
 from .. import adapters, config, edge, events, pipeline, seed, simulate, store
 
-router = APIRouter()
+router = APIRouter(dependencies=[Depends(require_staff)])
 
 
 @router.post("/admin/simulate")
