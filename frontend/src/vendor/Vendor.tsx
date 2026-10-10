@@ -11,6 +11,7 @@ import Detail, { StagePill } from "./Detail";
 import { GeoChips, districtOf, zonesOf } from "../ops/geo";
 import { CategoryIcon, Photo } from "./parts";
 import { applyOverride, dueInfo, isOverdue, placeOf, stageOf, titleOf, type Override } from "./util";
+import { pinFresh } from "../lib/fresh";
 import "./vendor.css";
 
 const VENDORS = ["KC Road Crew Co.", "BrightLine Lighting", "GreenLeaf Urban Services"];
@@ -80,7 +81,7 @@ export default function Vendor() {
     return m;
   }, [all]);
 
-  const visible = useMemo(() => {
+  const visibleAll = useMemo(() => {
     const needle = q.trim().toLowerCase();
     const rows = forVendor.filter((o) => {
       const s = stageOf(o);
@@ -94,12 +95,15 @@ export default function Vendor() {
       }
       return true;
     });
-    return rows.sort((a, b) => {
+    rows.sort((a, b) => {
       const ra = stageOf(a) === "resolved" ? 1 : 0, rb = stageOf(b) === "resolved" ? 1 : 0;
       if (ra !== rb) return ra - rb;
       return sort === "due" ? +new Date(a.due) - +new Date(b.due) : b.cluster.priority - a.cluster.priority;
     });
+    return pinFresh(rows, (o) => o.cluster.last_reported_at, (o) => o.cluster.id, (o) => o.cluster.simulated || stageOf(o) === "resolved");
   }, [forVendor, filter, q, sort, now]);
+  const visible = visibleAll.rows;
+  const fresh = visibleAll.fresh;
 
   useEffect(() => { setLimit(PAGE); }, [vendor, district, filter, q, sort]);
 
@@ -231,7 +235,7 @@ export default function Vendor() {
                     <button data-id={c.id} role="option" aria-selected={on} tabIndex={on || (!effId && i === 0) ? 0 : -1} className={`vd-row ${on ? "is-on" : ""}`} onClick={() => select(c.id, true)}>
                       <Photo src={c.photo_url} category={c.category} alt="" size="sm" />
                       <span className="vd-row__main">
-                        <span className="vd-row__title">{titleOf(c)}</span>
+                        <span className="vd-row__title">{fresh.has(c.id) && <b className="vd-new">New</b>}{titleOf(c)}</span>
                         <span className="vd-row__meta">
                           <TicketId id={o.ticket?.id ?? c.ticket_id} devrev={devrevOf(o.ticket)} />
                           <PriorityBadge bucket={c.bucket} size="sm" />

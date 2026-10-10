@@ -19,6 +19,7 @@ import AnalyticsPanel from "./Analytics";
 import { CAT_ICON, Photo, cleanAddress, fmtClock } from "./util";
 import { DevRevChip, DevRevCtx, WorkOrdersPanel, useDevRev, type DevRevEvent } from "./devrev";
 import { useDevRevTicket } from "./devrev";
+import { pinFresh } from "../lib/fresh";
 import "./ops.css";
 
 const NODES: AgentStep["node"][] = ["intake", "dedup", "judge", "priority", "dispatch"];
@@ -205,7 +206,8 @@ export default function Ops() {
   const allList = useMemo(() => [...clusters.values()], [clusters]);
   const districts = useMemo(() => [...new Set(allList.map(districtOf).filter((d): d is string => !!d))].sort((a, b) => a.localeCompare(b, undefined, { numeric: true })), [allList]);
   const list = useMemo(() => (district ? allList.filter((c) => districtOf(c) === district) : allList), [allList, district]);
-  const queue = useMemo(() => list.filter((c) => c.status !== "fixed").sort((a, b) => b.priority - a.priority).slice(0, 30), [list]);
+  const queueView = useMemo(() => pinFresh(list.filter((c) => c.status !== "fixed").sort((a, b) => b.priority - a.priority), (c) => c.last_reported_at, (c) => c.id, (c) => c.simulated), [list]);
+  const queue = useMemo(() => queueView.rows.slice(0, 30), [queueView]);
   const health = useAsync<Health>(() => api.health(), []);
   useEffect(() => { const t = setInterval(health.reload, 15000); return () => clearInterval(t); }, [health.reload]);
 
@@ -258,7 +260,7 @@ export default function Ops() {
                 <Drawer key="drawer" cluster={sel} onClose={() => setSelected(null)} />
               ) : (
                 <motion.div key="queue" className="ops-right__stack" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.15 }}>
-                  <Queue queue={queue} loading={loading} error={loadErr} retry={() => void load()} selected={selected} onSelect={setSelected} districts={districts} district={district} onDistrict={setDistrict} />
+                  <Queue queue={queue} fresh={queueView.fresh} loading={loading} error={loadErr} retry={() => void load()} selected={selected} onSelect={setSelected} districts={districts} district={district} onDistrict={setDistrict} />
                   <Impact stats={stats} />
                 </motion.div>
               )}
@@ -450,8 +452,8 @@ function LayerControl({ flags, onChange, ready }: { flags: GeoFlags; onChange: (
   );
 }
 
-function Queue({ queue, loading, error, retry, selected, onSelect, districts, district, onDistrict }: {
-  queue: Cluster[]; loading: boolean; error: string | null; retry: () => void; selected: string | null; onSelect: (id: string) => void;
+function Queue({ queue, fresh, loading, error, retry, selected, onSelect, districts, district, onDistrict }: {
+  queue: Cluster[]; fresh: Set<string>; loading: boolean; error: string | null; retry: () => void; selected: string | null; onSelect: (id: string) => void;
   districts: string[]; district: string; onDistrict: (d: string) => void;
 }) {
   const drMap = useContext(DevRevCtx);
@@ -483,7 +485,7 @@ function Queue({ queue, loading, error, retry, selected, onSelect, districts, di
             >
               <Photo url={c.photo_url} category={c.category} className="ops-qrow__photo" />
               <span className="ops-qrow__body">
-                <span className="ops-qrow__top"><b>{catLabel(c.category)}</b><PriorityBadge bucket={c.bucket} size="sm" /></span>
+                <span className="ops-qrow__top"><b>{fresh.has(c.id) && <i className="ops-new">New</i>}{catLabel(c.category)}</b><PriorityBadge bucket={c.bucket} size="sm" /></span>
                 <span className="ops-qrow__addr">{cleanAddress(c)}</span>
                 {(c.neighborhood || districtOf(c) || zonesOf(c).length > 0) && <GeoChips c={c} max={1} className="ops-qrow__geo" />}
                 <span className="ops-qrow__meta">

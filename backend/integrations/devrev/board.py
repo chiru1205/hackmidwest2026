@@ -138,6 +138,9 @@ def make_ticket(w: dict, cf_id: str, meta: dict, cluster, now: datetime) -> dict
     }
 
 
+FRESH_S = 600  # a ticket younger than this is pinned to the top of its column
+
+
 def _cf_by_cluster() -> dict[str, str]:
     m: dict[str, str] = {}
     for r in raw_rows():  # newest first; keep the newest ticket per cluster
@@ -150,7 +153,7 @@ def assemble(tickets: list[dict], source: str, now: datetime) -> dict:
     for k in STAGE_KEYS:
         ts = [t for t in tickets if t["stage_key"] == k]
         if k != "resolved":
-            ts.sort(key=lambda t: (SEV_RANK.get(t["severity"], 2), t["age_s"]))
+            ts.sort(key=lambda t: (0 if t["age_s"] < FRESH_S else 1, SEV_RANK.get(t["severity"], 2), t["age_s"]))  # just-submitted tickets first
         avg = sum(t["age_s"] for t in ts) / len(ts) if ts else None
         stages.append({"key": k, "label": LABELS[k], "count": len(ts), "avg_age_s": avg, "tickets": ts[:PER_STAGE]})
     opened = [t for t in tickets if t["stage_key"] != "resolved"]
