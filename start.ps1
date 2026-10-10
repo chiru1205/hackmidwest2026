@@ -21,13 +21,13 @@ if (Port-Busy 8000) { Write-Host "Port 8000 is already in use. Run .\stop.ps1 fi
 if (Port-Busy 5173) { Write-Host "Port 5173 is already in use. Run .\stop.ps1 first (or the app is already running)." -ForegroundColor Yellow; exit 1 }
 
 Start-Process powershell -WorkingDirectory $root -ArgumentList '-NoExit', '-Command', "`$host.UI.RawUI.WindowTitle='Civic Flow API'; & '$py' -m uvicorn backend.api.main:app --port 8000"
-Start-Process powershell -WorkingDirectory (Join-Path $root 'frontend') -ArgumentList '-NoExit', '-Command', "`$host.UI.RawUI.WindowTitle='Civic Flow Web'; npm run dev -- --port 5173"
+Start-Process powershell -WorkingDirectory (Join-Path $root 'frontend') -ArgumentList '-NoExit', '-Command', "`$host.UI.RawUI.WindowTitle='Civic Flow Web'; npm.cmd run dev -- --port 5173"
 
 Write-Host "Starting... waiting for the API to come up (the first start seeds the demo data)." -ForegroundColor Gray
 $up = $false
 for ($i = 0; $i -lt 40; $i++) {
   Start-Sleep -Seconds 1
-  try { $h = Invoke-RestMethod -Uri 'http://localhost:8000/api/health' -TimeoutSec 2; if ($h.status -eq 'ok') { $up = $true; break } } catch { }
+  try { $h = Invoke-RestMethod -Uri 'http://127.0.0.1:8000/api/health' -TimeoutSec 2; if ($h.status -eq 'ok') { $up = $true; break } } catch { }
 }
 if (-not $up) { Write-Host "The API did not answer in 40 seconds. Look at the 'Civic Flow API' window for the error." -ForegroundColor Red; exit 1 }
 

@@ -162,7 +162,7 @@ if (-not $SkipAgents) {
 Step "Installing the web app packages"
 Push-Location (Join-Path $root 'frontend')
 try {
-  & npm install --no-audit --no-fund 2>&1 | Out-Host
+  & npm.cmd install --no-audit --no-fund 2>&1 | Out-Host
   if ($LASTEXITCODE -ne 0) { Fail "npm install failed."; exit 1 }
 } finally { Pop-Location }
 Ok "Web app packages installed"
