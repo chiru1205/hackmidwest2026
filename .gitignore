@@ -3,18 +3,40 @@
 .env.*
 !.env.example
 *.pem
+*.key
 
 # dependencies and builds
 node_modules/
 dist/
+build/
 .venv/
+venv/
 __pycache__/
 *.pyc
-.pytest_cache/
+*.tsbuildinfo
+.vite/
+.cache/
 
-# local runtime data
+# test and coverage output
+.pytest_cache/
+coverage/
+.coverage
+
+# local runtime data (recreated on first start)
 data/civicflow.db*
 data/photos/*
 !data/photos/seed/
 *.log
+
+# editor and OS files
+.idea/
+.vscode/
+*.swp
+*~
 .DS_Store
+Thumbs.db
+
+# scratch files
+*.tmp
+*.bak
+scratch*
