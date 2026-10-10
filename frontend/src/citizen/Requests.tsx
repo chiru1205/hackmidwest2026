@@ -1,12 +1,14 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
-import { Camera, ChevronRight, HardHat, PartyPopper, Users } from "lucide-react";
+import { ChevronRight, HardHat, PartyPopper, Users } from "lucide-react";
 import { timeAgo } from "../lib/const";
-import { buttonClass, EmptyState, ErrorState, PriorityBadge, Skeleton, SkeletonText, TicketId, item, list, spring } from "../components/ui";
+import { buttonClass, ErrorState, PriorityBadge, Skeleton, SkeletonText, TicketId, item, list, spring } from "../components/ui";
 import { CatIcon, Photo } from "./common";
 import { StageStepper } from "./stages";
-import { useFixedToasts, useMyRequests } from "./requestsApi";
+import { useFixedToasts } from "./requestsApi";
+import { useMyRequests } from "./requestsStore";
+import { YourReportMini } from "./YourReport";
 
 export const neighborsLine = (n: number) =>
   n <= 1 ? "Only you have reported this so far" : `${n.toLocaleString("en-US")} neighbors reported this`;
@@ -54,12 +56,18 @@ export default function Requests() {
       )}
       {error && !data && <ErrorState message={error} onRetry={reload} />}
       {data && data.length === 0 && (
-        <EmptyState
-          icon={<Camera aria-hidden />}
-          title="No requests yet"
-          description="Report a pothole, a broken light or anything else in the city. You can follow it here until it is fixed."
-          action={<Link to={{ pathname: "/", search }} className={buttonClass("primary", "md")}>Report an issue</Link>}
-        />
+        <div className="cz-empty" data-testid="requests-empty">
+          <svg className="cz-empty__art" viewBox="0 0 160 120" width="160" height="120" aria-hidden>
+            <circle cx="80" cy="64" r="50" fill="var(--primary)" opacity=".08" />
+            <rect x="46" y="30" width="68" height="64" rx="10" fill="var(--surface)" stroke="var(--primary)" strokeWidth="2" />
+            <path d="M58 52h44M58 64h30M58 76h36" stroke="var(--primary)" strokeWidth="3" strokeLinecap="round" opacity=".45" />
+            <circle cx="116" cy="34" r="16" fill="var(--primary)" />
+            <path d="M116 27v14M109 34h14" stroke="#fff" strokeWidth="3" strokeLinecap="round" />
+          </svg>
+          <h2 className="cz-empty__t">No requests yet</h2>
+          <p className="cz-empty__d">Report your first issue. You can follow it here until it is fixed.</p>
+          <Link to={{ pathname: "/", search }} className={buttonClass("primary", "lg")}>Report an issue</Link>
+        </div>
       )}
       {data && data.length > 0 && (
         <motion.ul className="cz-stack" variants={list} initial="hidden" animate="show">
@@ -92,6 +100,7 @@ export default function Requests() {
                     <ChevronRight size={16} strokeWidth={1.75} className="cz-rcard__go" aria-hidden />
                   </div>
                   <StageStepper status={c.status} compact />
+                  <YourReportMini r={c} />
                   <div className="cz-rcard__foot">
                     <span><Users size={14} strokeWidth={1.75} aria-hidden /> {neighborsLine(c.neighbors)}</span>
                     {c.crew && <span><HardHat size={14} strokeWidth={1.75} aria-hidden /> {c.crew}</span>}

@@ -44,7 +44,7 @@ export interface ReportResult {
   outcome: Outcome; message: string; report_id?: string | null; cluster?: Cluster | null;
   neighbors: number; points_awarded: number; xp_total: number; level: string;
   priority_before?: number | null; priority_after?: number | null; ticket?: Ticket | null;
-  edge?: EdgeInfo | null; reject_reason?: string | null; steps: AgentStep[];
+  edge?: EdgeInfo | null; reject_reason?: string | null; steps: AgentStep[]; my_photo_url?: string | null;
 }
 export interface NearbyResult { clusters: Cluster[]; edge: EdgeInfo }
 export interface TimelineEntry { ts: string; label: string; detail: string }
@@ -99,7 +99,7 @@ export interface BoardTicket {
 export interface BoardStage { key: StageKey; label: string; count: number; avg_age_s: number | null; tickets: BoardTicket[] }
 export interface Board {
   source: "devrev" | "local board"; as_of: string; stages: BoardStage[];
-  totals: { open: number; overdue: number; escalated: number; resolved: number; median_ttr: string | null };
+  totals: { open: number; overdue: number; escalated: number; resolved: number; median_ttr: string | null; unsynced?: number };
 }
 export interface JourneyStep {
   ts: string; source: "civicflow" | "devrev";
@@ -120,11 +120,12 @@ export interface CitizenTimelineItem { ts: string; label: string; detail: string
 export type CitizenStatus = "reported" | "assigned" | "in_progress" | "awaiting_verification" | "fixed";
 export interface CitizenRequest {
   id: string; category: Category; title: string; address?: string | null; neighborhood?: string | null;
-  district?: string | null; zones: string[]; photo_url?: string | null; neighbors: number;
+  district?: string | null; zones: string[]; photo_url?: string | null; my_photo_url?: string | null; issue_photo_url?: string | null; neighbors: number;
   status: CitizenStatus;
   stage_label: "Reported" | "Crew assigned" | "Work in progress" | "Awaiting verification" | "Fixed";
   ticket_id?: string | null; crew?: string | null; due?: string | null; priority_bucket: Bucket;
   rationale: string;
   detected: { category: Category; severity: number; is_hazard: boolean; hazard_description: string };
   my_points: number; created_at: string; updated_at: string; timeline: CitizenTimelineItem[];
+  my_note?: string | null; my_category?: Category | null; my_severity?: number | null; my_reported_at?: string | null;
 }

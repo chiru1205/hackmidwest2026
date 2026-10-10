@@ -34,6 +34,11 @@ def _badges(u) -> list[Badge]:
     return [Badge(id=i, name=n, description=d, earned=bool(e)) for i, n, d, e in defs]
 
 
+def _display_name(u) -> str:
+    """Seeded users keep their names; a device-generated user (name == id) is just 'You'."""
+    return "You" if u["name"] == u["id"] else u["name"]
+
+
 def _my_clusters(uid: str) -> list[Cluster]:
     rows = store.q("SELECT DISTINCT cluster_id FROM reports WHERE user_id=?", (uid,))
     cs = [store.clusters[r["cluster_id"]] for r in rows if r["cluster_id"] in store.clusters]
@@ -100,22 +105,44 @@ def _citizen_request(c: Cluster, uid: str) -> CitizenRequest:
         title = label
     pts = store.q("SELECT COALESCE(SUM(points),0) AS p FROM ledger WHERE user_id=? AND cluster_id=?", (uid, c.id))
     tl = _timeline(c)
+    mine = store.q("SELECT json_extract(data,'$.photo_url') AS photo_url FROM reports WHERE user_id=? AND cluster_id=? AND json_extract(data,'$.photo_url') IS NOT NULL ORDER BY created_at DESC LIMIT 1", (uid, c.id))
+    my_photo = mine[0]["photo_url"] if mine else None
+    last = store.q("SELECT data FROM reports WHERE user_id=? AND cluster_id=? ORDER BY created_at DESC LIMIT 1", (uid, c.id))
+    try:
+        my_rep = json.loads(last[0]["data"]) if last else {}
+    except (KeyError, TypeError, ValueError):
+        my_rep = {}
+    my_at = my_rep.get("created_at")
+    if my_at:
+        you = CitizenTimelineItem(ts=my_at, label="You reported this")
+        try:
+            early = datetime.fromisoformat(my_at.replace("Z", "+00:00")) <= datetime.fromisoformat(tl[0].ts.replace("Z", "+00:00")) + timedelta(seconds=5)
+        except Exception:
+            early = False
+        if early:
+            tl.insert(0, you)
+        else:
+            idx = next((i for i, t in enumerate(tl) if t.ts > my_at), len(tl))
+            tl.insert(idx, you)
     return CitizenRequest(
         id=c.id, category=c.category, title=title, address=c.address, neighborhood=c.neighborhood,
-        district=c.district, zones=list(c.zones or []), photo_url=c.photo_url, neighbors=max(1, c.reporter_count),
+        district=c.district, zones=list(c.zones or []), photo_url=my_photo or c.photo_url, my_photo_url=my_photo,
+        issue_photo_url=c.photo_url, neighbors=max(1, c.reporter_count),
         status=status, stage_label=STAGE_LABEL[status], ticket_id=c.ticket_id, crew=c.vendor, due=_due(c),
         priority_bucket=c.bucket, rationale=c.rationale,
         detected=CitizenDetected(category=c.category, severity=c.severity, is_hazard=c.is_hazard,
                                  hazard_description=c.hazard_description),
         my_points=int(pts[0]["p"]) if pts else 0, created_at=c.first_reported_at,
-        updated_at=max([c.last_reported_at] + [i.ts for i in tl]), timeline=tl)
+        updated_at=max([c.last_reported_at] + [i.ts for i in tl]), timeline=tl,
+        my_note=(my_rep.get("note") or "").strip() or None, my_category=my_rep.get("category"),
+        my_severity=None, my_reported_at=my_at)
 
 
 @router.get("/me", response_model=Profile)
 async def me(x_user_id: str = Header("u_you")):
     u = store.ensure_user(x_user_id)
     level, nxt = xp.level_for(u["xp"])
-    return Profile(user_id=u["id"], name=u["name"], neighborhood=u["neighborhood"], xp=u["xp"], level=level,
+    return Profile(user_id=u["id"], name=_display_name(u), neighborhood=u["neighborhood"], xp=u["xp"], level=level,
                    next_level_xp=nxt, streak_weeks=u["streak_weeks"], reports=u["reports"],
                    confirmations=u["confirmations"], fixed=u["fixed"], badges=_badges(u))
 
@@ -141,7 +168,9 @@ async def my_request(cluster_id: str, x_user_id: str = Header("u_you")):
 
 @router.get("/leaderboard", response_model=list[LeaderboardEntry])
 async def leaderboard(scope: str = "users", x_user_id: str = Header("u_you")):
-    rows = store.q("SELECT * FROM users WHERE id NOT LIKE 'sim_%' ORDER BY xp DESC LIMIT 25")
-    return [LeaderboardEntry(rank=i + 1, name=r["name"], xp=r["xp"], reports=r["reports"] + r["confirmations"],
+    rows = store.q("SELECT * FROM users WHERE id NOT LIKE 'sim_%' ORDER BY xp DESC LIMIT 200")
+    # device-generated users with no points are not ranked (unless it is the caller); they never show a raw id
+    rows = [r for r in rows if r["name"] != r["id"] or r["xp"] > 0 or r["id"] == x_user_id][:25]
+    return [LeaderboardEntry(rank=i + 1, name=("You" if r["id"] == x_user_id else "A neighbor") if r["name"] == r["id"] else r["name"], xp=r["xp"], reports=r["reports"] + r["confirmations"],
                              neighborhood=r["neighborhood"] or "", is_you=r["id"] == x_user_id)
             for i, r in enumerate(rows)]

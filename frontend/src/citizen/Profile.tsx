@@ -6,6 +6,8 @@ import { api } from "../lib/api";
 import { useAsync } from "../lib/hooks";
 import { AnimatedNumber, Avatar, EmptyState, ErrorState, Pill, ProgressRing, Skeleton, item, list, spring } from "../components/ui";
 import { levelSpan } from "./common";
+import { startNewCitizen } from "../lib/auth";
+import { resetRequestsStore } from "./requestsStore";
 
 const BADGE: Record<string, { icon: typeof Camera; tone: string }> = {
   first_report: { icon: Camera, tone: "blue" },
@@ -104,6 +106,11 @@ export default function Profile() {
           </section>
         </>
       )}
+
+      <section className="cz-newcit" aria-label="Demo identity">
+        <p className="t-caption">This device is a separate citizen with its own requests. Want a clean slate for a demo?</p>
+        <button type="button" className="cz-newcit__btn" onClick={() => { startNewCitizen(); resetRequestsStore(); window.location.assign("/"); }}>Start as a new citizen</button>
+      </section>
 
       <section aria-labelledby="cz-lb">
         <h2 className="cz-sec" id="cz-lb">Neighborhood leaderboard</h2>

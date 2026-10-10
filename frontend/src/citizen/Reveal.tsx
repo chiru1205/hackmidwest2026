@@ -125,13 +125,13 @@ function PriorityMeter({ before, after, bucket }: { before: number | null; after
   );
 }
 
-export default function Reveal({ result, onClose }: { result: ReportResult; onClose: () => void }) {
+export default function Reveal({ result, onClose, onSee, localPhoto }: { result: ReportResult; onClose: () => void; onSee?: (id: string) => void; localPhoto?: string | null }) {
   const reduced = useReducedMotion();
   const merged = result.outcome === "merged";
   const rejected = result.outcome === "rejected";
   const outside = rejected && result.reject_reason === "outside_service_area";
-  const alreadyCounted = merged && result.points_awarded === 0;
   const others = Math.max(0, result.neighbors - 1);
+  const alreadyCounted = merged && (result.points_awarded === 0 || others === 0);
   const c = result.cluster;
   const [why, setWhy] = useState<string | null>(c?.rationale ?? null);
   const [whyKey, setWhyKey] = useState(0);
@@ -233,6 +233,9 @@ export default function Reveal({ result, onClose }: { result: ReportResult; onCl
                     <p className="cz-rv__sub">
                       {merged ? (alreadyCounted ? result.message : "Your voice joined an issue that is already on the map. One ticket, one crew.") : "A brand new issue is on the map and a ticket is on its way to a crew."}
                     </p>
+                    {(localPhoto || result.my_photo_url) && (
+                      <span className="cz-rv__mine"><img src={localPhoto ?? result.my_photo_url ?? ""} alt="" /> Your photo</span>
+                    )}
                   </motion.div>
 
                   <motion.div variants={item} className="cz-rv__card">
@@ -315,7 +318,14 @@ export default function Reveal({ result, onClose }: { result: ReportResult; onCl
 
       {stage >= 1 && (
         <motion.div className="cz-rv__foot" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ ...spring.soft, delay: 0.5 }}>
-          <Button size="lg" block onClick={onClose} autoFocus>{rejected ? "Back to the report" : "Done"}</Button>
+          {rejected || !c || !onSee ? (
+            <Button size="lg" block onClick={onClose} autoFocus>{rejected ? "Back to the report" : "Done"}</Button>
+          ) : (
+            <div className="cz-rv__btns">
+              <Button size="lg" block onClick={() => onSee(c.id)} autoFocus>See my request</Button>
+              <Button size="lg" block variant="secondary" onClick={onClose}>Report another</Button>
+            </div>
+          )}
         </motion.div>
       )}
     </motion.div>

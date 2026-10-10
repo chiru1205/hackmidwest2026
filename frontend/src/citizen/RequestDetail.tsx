@@ -6,7 +6,9 @@ import { ErrorState, PriorityBadge, Skeleton, SkeletonText, TicketId, item, list
 import { CatIcon, Photo } from "./common";
 import { StageStepper } from "./stages";
 import { districtLabel, neighborsLine } from "./Requests";
-import { useMyRequest, type CitizenRequest } from "./requestsApi";
+import { type CitizenRequest } from "./requestsApi";
+import { useMyRequest } from "./requestsStore";
+import { YourReport, fmtWhen } from "./YourReport";
 
 const fmtDue = (iso: string) => {
   const d = new Date(iso);
@@ -38,7 +40,11 @@ export default function RequestDetail() {
       {r && (
         <motion.div className="cz-rd__stack" variants={list} initial="hidden" animate="show">
           <motion.div variants={item}>
-            <Photo src={r.photo_url} cat={r.category} className="cz-rd__photo" alt={r.title} />
+            <Photo src={r.photo_url} cat={r.category} className="cz-rd__photo" alt={r.title}>
+              {r.my_photo_url && r.issue_photo_url && r.issue_photo_url !== r.my_photo_url && (
+                <span className="cz-rd__issue"><i style={{ backgroundImage: `url(${r.issue_photo_url})` }} />Issue photo</span>
+              )}
+            </Photo>
           </motion.div>
 
           <motion.header variants={item} className="cz-rd__head">
@@ -50,6 +56,8 @@ export default function RequestDetail() {
               {r.ticket_id && <TicketId id={r.ticket_id} />}
             </div>
           </motion.header>
+
+          <motion.div variants={item}><YourReport r={r} /></motion.div>
 
           <motion.section variants={item} className="cz-card cz-rd__card" aria-label="Progress">
             <StageStepper status={r.status} />
@@ -87,7 +95,7 @@ export default function RequestDetail() {
                 <li key={i}>
                   <span className={`cz-timeline__dot ${i === r.timeline.length - 1 ? "is-last" : ""}`} />
                   <div><b>{t.label}</b><span>{t.detail}</span></div>
-                  <time>{fmtTime(t.ts)}<br />{timeAgo(t.ts)}</time>
+                  <time>{fmtWhen(t.ts) || fmtTime(t.ts)}<br />{timeAgo(t.ts)}</time>
                 </li>
               ))}
             </ol>

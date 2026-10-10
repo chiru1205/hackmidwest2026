@@ -1,0 +1,18 @@
+{
+  "_note": "Demo baseline for the DevRev Workflow board. Ids are the deterministic seeded cluster ids (c_hotspot, c_hero_*, c_seedNNN). stage: queued | assigned | in_progress | awaiting_verification | resolved. awaiting_verification is our own flag; DevRev stays work_in_progress.",
+  "tickets": [
+    {"cluster_id": "c_hotspot",    "title": "Pothole - Country Club Plaza (211 reporters)", "category": "pothole",         "district": "District 6", "severity": "high",    "stage": "queued"},
+    {"cluster_id": "c_hero_flood", "title": "Flooding - Ward Pkwy near W 47th St",          "category": "flooding",        "district": "District 6", "severity": "blocker", "stage": "queued"},
+    {"cluster_id": "c_hero_light", "title": "Streetlight out - school route (Volker)",      "category": "streetlight_out", "district": "District 4", "severity": "high",    "stage": "assigned"},
+    {"cluster_id": "c_hero_tree",  "title": "Downed tree - State Line Rd near W 75th St",   "category": "downed_tree",     "district": "District 6", "severity": "high",    "stage": "assigned"},
+    {"cluster_id": "c_seed029",    "title": "Traffic signal - Verona Hills",                "category": "traffic_signal",  "district": "District 6", "severity": "high",    "stage": "queued"},
+    {"cluster_id": "c_hero_walk",  "title": "Sidewalk damage - Wornall Rd near hospital",   "category": "sidewalk_damage", "district": "District 6", "severity": "medium",  "stage": "in_progress"},
+    {"cluster_id": "c_hero_dump",  "title": "Illegal dumping - Prospect Ave vacant lot",    "category": "illegal_dumping", "district": "District 3", "severity": "low",     "stage": "in_progress"},
+    {"cluster_id": "c_seed033",    "title": "Pothole - Sterling Acres",                     "category": "pothole",         "district": "District 3", "severity": "high",    "stage": "in_progress"},
+    {"cluster_id": "c_seed015",    "title": "Streetlight out - Shoal Creek",                "category": "streetlight_out", "district": "District 1", "severity": "medium",  "stage": "awaiting_verification"},
+    {"cluster_id": "c_hero_graf",  "title": "Graffiti - Troost Ave bus shelter",            "category": "graffiti",        "district": "District 3", "severity": "low",     "stage": "awaiting_verification"},
+    {"cluster_id": "c_seed009",    "title": "Illegal dumping - Tower Homes",                "category": "illegal_dumping", "district": "District 6", "severity": "low",     "stage": "resolved"},
+    {"cluster_id": "c_seed014",    "title": "Pothole - Ravenwood-Somerset",                 "category": "pothole",         "district": "District 2", "severity": "low",     "stage": "resolved"},
+    {"cluster_id": "c_seed034",    "title": "Pothole - near a school zone (Countryside)",   "category": "pothole",         "district": "District 6", "severity": "medium",  "stage": "queued"}
+  ]
+}

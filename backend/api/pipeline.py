@@ -273,14 +273,17 @@ def _merge(c: Cluster, report: Report, has_photo: bool, severity: int, hazard: b
 
     others = c.reporter_count - 1
     nb = f"{others} neighbor{'s' if others != 1 else ''}"
-    if c.priority > before + 0.05 or bucket_changed:
+    if not new_user and others == 0:
+        msg = "You've already reported this spot. We've added your new photo and note."
+    elif c.priority > before + 0.05 or bucket_changed:
         msg = f"Already reported by {nb}. Your confirmation raised priority to {c.bucket}. +{points} XP"
     else:
         msg = f"Already reported by {nb}. It's {c.bucket} priority and in the queue. +{points} XP"
     total, level = _user_view(report.user_id, simulated)
     return ReportResult(outcome="merged", message=msg, report_id=report.id, cluster=c, neighbors=c.reporter_count,
                         points_awarded=points, xp_total=total, level=level, priority_before=round(before, 1),
-                        priority_after=round(c.priority, 1), ticket=ticket, edge=edge_info, steps=ctx.steps)
+                        priority_after=round(c.priority, 1), ticket=ticket, edge=edge_info, steps=ctx.steps,
+                        my_photo_url=report.photo_url)
 
 
 # ------------------------------------------------------------------ create
@@ -389,7 +392,7 @@ async def _finish_create(c: Cluster, report: Report, ctx: Ctx, simulated: bool, 
     return ReportResult(outcome="created", message=f"{prefix and 'Reopened issue. '}You're the first reporter! +{POINTS['first']} XP",
                         report_id=report.id, cluster=c, neighbors=1, points_awarded=POINTS["first"], xp_total=total,
                         level=level, priority_before=None, priority_after=round(c.priority, 1), ticket=ticket,
-                        edge=edge_info, steps=list(ctx.steps))
+                        edge=edge_info, steps=list(ctx.steps), my_photo_url=report.photo_url)
 
 
 def _save_trace(cluster_id: str, ctx: Ctx) -> None:

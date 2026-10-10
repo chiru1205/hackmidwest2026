@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { matchPath, Navigate, NavLink, useLocation, useSearchParams } from "react-router-dom";
+import { matchPath, Navigate, NavLink, useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Camera, ClipboardList, GitMerge, UserRound, Wrench, Cloud, Signal, BatteryFull, Wifi } from "lucide-react";
 import { api } from "../lib/api";
@@ -11,7 +11,8 @@ import { OverlayCtx } from "./overlay";
 import Report from "./Report";
 import Requests from "./Requests";
 import RequestDetail from "./RequestDetail";
-import { useFixedToasts, useMyRequests } from "./requestsApi";
+import { useFixedToasts } from "./requestsApi";
+import { useMyRequests, useRequestCount } from "./requestsStore";
 import Profile from "./Profile";
 import "./citizen.css";
 
@@ -26,7 +27,7 @@ function DemoPanel() {
   return (
     <div className="cz-demo" role="region" aria-label="Demo panel">
       <strong>Demo panel</strong>
-      <span className="t-caption t-mono">{loc.source} {loc.lat.toFixed(4)}, {loc.lng.toFixed(4)}</span>
+      <span className="t-caption t-mono">{loc ? `${loc.source} ${loc.lat.toFixed(4)}, ${loc.lng.toFixed(4)}` : "no location"}</span>
       <div className="cz-demo__row">{PRESETS.map((p) => <button key={p.name} onClick={() => override(p.lat, p.lng)}>{p.name}</button>)}</div>
       <div className="cz-demo__row">
         <button onClick={clearOverride}>Use GPS</button>
@@ -37,6 +38,7 @@ function DemoPanel() {
 
 function Tabs() {
   const { search } = useLocation();
+  const count = useRequestCount();
   const to = (p: string) => ({ pathname: p, search });
   const items = [
     { to: "/", label: "Report", icon: Camera, end: true },
@@ -52,6 +54,7 @@ function Tabs() {
               {isActive && <motion.span layoutId="cz-tab-ind" className="cz-tab__ind" transition={spring.snappy} />}
               <t.icon size={22} strokeWidth={1.75} aria-hidden />
               <span>{t.label}</span>
+              {t.to === "/requests" && count > 0 && <b className="cz-tab__badge" data-testid="tab-badge" aria-label={`${count} ${count === 1 ? "request" : "requests"}`}>{count}</b>}
             </>
           )}
         </NavLink>
@@ -108,6 +111,9 @@ export default function Citizen() {
   const scroller = useRef<HTMLDivElement>(null);
   const { pathname } = useLocation();
   useEffect(() => { scroller.current?.scrollTo({ top: 0 }); }, [pathname]);
+  const nav = useNavigate();
+  // ?newuser=1: the id was already regenerated when the app loaded (lib/auth); land on the Report screen
+  useEffect(() => { if (sp.get("newuser") === "1" && pathname !== "/") nav({ pathname: "/", search: "?newuser=1" }, { replace: true }); }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <LocProvider>

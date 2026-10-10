@@ -1,30 +1,39 @@
 import { useEffect, useRef, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import { createPortal } from "react-dom";
 import { AnimatePresence, motion } from "framer-motion";
-import { Camera, Check, ImagePlus, LocateFixed, MapPinOff, RotateCcw, School, Send, ShieldAlert, Siren, TriangleAlert } from "lucide-react";
+import { Camera, Check, ImagePlus, LoaderCircle, LocateFixed, MapPinOff, RefreshCw, RotateCcw, School, Send, ShieldAlert, Siren, TriangleAlert, X } from "lucide-react";
 import type { Category, ReportResult } from "@contracts";
-import { useSearchParams } from "react-router-dom";
 import { api, fetchGeofence, type GeofenceInfo, type GeoZone } from "../lib/api";
 import { CATEGORIES, PRESETS, catLabel } from "../lib/const";
-import { compressImage } from "../lib/image";
+import { compressImage, UnsupportedImageError } from "../lib/image";
 import { Button, Pill, spring } from "../components/ui";
 import { CatIcon } from "./common";
 import { useOverlayRoot } from "./overlay";
 import { useLoc } from "./loc";
 import PinMap from "./PinMap";
 import Reveal from "./Reveal";
+import { insertFromResult } from "./requestsStore";
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
-const SCAN_STEPS = ["Reading the photo", "Checking the area", "Scoring priority", "Dispatching a crew"];
+const SCAN_STEPS = ["Uploading your report", "Checking the area", "Scoring priority", "Dispatching a crew"];
 const SEVERITY = ["Minor", "Noticeable", "Real problem", "Serious", "Dangerous"];
 
+const fmtSize = (n: number) => (n >= 1048576 ? `${(n / 1048576).toFixed(1)} MB` : `${Math.max(1, Math.round(n / 1024))} KB`);
+const locHint = () => {
+  const ua = navigator.userAgent;
+  if (/iPhone|iPad|iPod/i.test(ua)) return "On iPhone: Settings > Privacy & Security > Location Services > Safari Websites > While Using.";
+  if (/Android/i.test(ua)) return "On Android: tap the lock icon in the address bar > Permissions > Location > Allow.";
+  return "On desktop: click the lock icon in the address bar and set Location to Allow, then tap Try again.";
+};
+
 export default function Report() {
-  const { loc, setPin, override } = useLoc();
-  const [sp] = useSearchParams();
+  const { loc, status, demoOn, mapCenter, setPin, override, clearOverride, retry, useMyLocation } = useLoc();
   const [geo, setGeo] = useState<GeofenceInfo | null>(null);
   const [presetsOpen, setPresetsOpen] = useState(false);
-  const demoOn = sp.get("demo") === "1" || loc.source === "override";
   const overlay = useOverlayRoot();
+  const nav = useNavigate();
+  const { search } = useLocation();
   const [category, setCategory] = useState<Category>("pothole");
   const [note, setNote] = useState("");
   const [severity, setSeverity] = useState(3);
@@ -34,6 +43,9 @@ export default function Report() {
   const [sugg, setSugg] = useState<{ category: Category; confidence: number; source: string } | null>(null);
   const [scanning, setScanning] = useState(false);
   const [scanStep, setScanStep] = useState(0);
+  const [photoInfo, setPhotoInfo] = useState<{ name: string; size: number } | null>(null);
+  const [photoErr, setPhotoErr] = useState<string | null>(null);
+  const [revealPhoto, setRevealPhoto] = useState<string | null>(null);
   const [result, setResult] = useState<ReportResult | null>(null);
   const [error, setError] = useState<string | null>(null);
   const camRef = useRef<HTMLInputElement>(null);
@@ -42,11 +54,12 @@ export default function Report() {
   // geofence lookup for the chosen spot: debounced, last result kept while the next one loads
   useEffect(() => {
     let live = true;
+    if (!loc) { setGeo(null); return () => { live = false; }; }
     const t = setTimeout(() => { fetchGeofence(loc.lat, loc.lng).then((g) => { if (live) setGeo(g); }); }, 400);
     return () => { live = false; clearTimeout(t); };
-  }, [loc.lat, loc.lng]);
+  }, [loc?.lat, loc?.lng]); // eslint-disable-line react-hooks/exhaustive-deps
   const outside = geo?.in_service_area === false;
-  const blocked = outside && !demoOn;
+  const blocked = !loc || (outside && !demoOn);
 
   // category suggestion from the note (endpoint may not exist yet: stay silent)
   useEffect(() => {
@@ -64,34 +77,56 @@ export default function Report() {
 
   useEffect(() => () => { if (preview) URL.revokeObjectURL(preview); }, [preview]);
 
+  useEffect(() => () => { if (revealPhoto) URL.revokeObjectURL(revealPhoto); }, [revealPhoto]);
+
   async function onFile(f: File | undefined) {
     if (!f) return;
-    const blob = await compressImage(f);
-    setPhoto(blob);
-    setPreview(URL.createObjectURL(blob));
+    setPhotoErr(null);
+    try {
+      const blob = await compressImage(f);
+      setPhoto(blob);
+      setPhotoInfo({ name: f.name || "photo.jpg", size: blob.size });
+      setPreview(URL.createObjectURL(blob));
+    } catch (e) {
+      setPhotoErr(e instanceof UnsupportedImageError ? e.message : "This photo format isn't supported here. Choose a JPEG or PNG, or take the photo with the camera.");
+    }
   }
+  const removePhoto = () => { setPhoto(null); setPreview(null); setPhotoInfo(null); setPhotoErr(null); };
 
   async function run(call: () => Promise<ReportResult>, after?: () => void) {
     setError(null); setScanning(true); setScanStep(0);
-    const tick = setInterval(() => setScanStep((s) => Math.min(SCAN_STEPS.length - 1, s + 1)), 380);
+    let done = false;   // on a slow network the steps wait at "Uploading" instead of pretending to finish
+    const tick = setInterval(() => setScanStep((s) => Math.min(done ? SCAN_STEPS.length - 1 : 0, s + 1)), 380);
     try {
-      const [res] = await Promise.all([call(), sleep(1500)]);
+      const [res] = await Promise.all([call().finally(() => { done = true; }), sleep(1500)]);
       setResult(res);
       after?.();
     } catch (e) {
-      setError(String((e as Error).message ?? e));
+      const m = String((e as Error).message ?? e);
+      setError(/failed to fetch|networkerror|load failed|network request/i.test(m) ? "We couldn't reach the server. Check your connection and try again. Your photo and details are kept." : m);
     } finally {
       clearInterval(tick); setScanning(false);
     }
   }
 
-  const submit = () => run(
-    () => api.submitReport({ lat: loc.lat, lng: loc.lng, accuracy_m: loc.accuracy_m, category, note, severity, photo, demoOverride: demoOn }),
-    () => { setNote(""); setPhoto(null); setPreview(null); },
-  );
+  const submit = () => {
+    if (!loc) return;
+    const sent = photo;
+    return run(
+      async () => {
+        const r = await api.submitReport({ lat: loc.lat, lng: loc.lng, accuracy_m: loc.accuracy_m, category, note, severity, photo, demoOverride: demoOn });
+        insertFromResult(r, { photo: sent, note, category, severity });
+        return r;
+      },
+      () => { setRevealPhoto(sent ? URL.createObjectURL(sent) : null); setNote(""); setPhoto(null); setPreview(null); setPhotoInfo(null); },
+    );
+  };
 
-  const accuracyBad = loc.accuracy_m > 100;
-  const srcLabel = loc.source === "gps" ? "GPS" : loc.source === "demo" ? "Demo location" : "Pinned";
+  const accuracyBad = !!loc && loc.accuracy_m > 100;
+  const srcLabel = loc?.source === "gps" ? "Your GPS" : loc?.source === "pin" ? "Pinned by you" : "Demo location";
+  const pinned = loc && (loc.source === "pin" || loc.source === "override") ? { lat: loc.lat, lng: loc.lng } : null;
+  const gpsDot = loc?.source === "gps" ? { lat: loc.lat, lng: loc.lng } : null;
+  const whyDisabled = !loc ? "Allow location or place the pin" : "Move the pin inside Kansas City to send a report.";
 
   return (
     <div className="cz-page cz-report">
@@ -136,18 +171,56 @@ export default function Report() {
         <input ref={libRef} type="file" accept="image/*" hidden onChange={(e) => { onFile(e.target.files?.[0]); e.target.value = ""; }} />
       </section>
 
+      {photoErr && (
+        <div className="cz-err" role="alert"><TriangleAlert size={18} strokeWidth={1.75} aria-hidden /><span>{photoErr}</span></div>
+      )}
+      {photoInfo && preview && (
+        <div className="cz-file" aria-label="Selected photo">
+          <Check size={14} strokeWidth={2.5} aria-hidden />
+          <span className="cz-file__name">{photoInfo.name}</span>
+          <span className="cz-file__size t-mono">{fmtSize(photoInfo.size)}</span>
+          <button type="button" className="cz-file__rm" onClick={removePhoto}><X size={14} strokeWidth={2} aria-hidden /> Remove photo</button>
+        </div>
+      )}
+
       {/* location */}
       <section className="cz-card cz-loc" aria-label="Location">
         <div className="cz-loc__row">
-          <span className="cz-loc__icon"><LocateFixed size={18} strokeWidth={1.75} aria-hidden /></span>
+          <span className="cz-loc__icon">{status === "locating" && !loc ? <LoaderCircle size={18} strokeWidth={1.75} className="cz-spin" aria-hidden /> : <LocateFixed size={18} strokeWidth={1.75} aria-hidden />}</span>
           <div className="cz-loc__txt">
-            <b>{geo?.in_service_area ? (geo.neighborhood ?? "Your location") : outside ? "Outside Kansas City" : "Your location"}</b>
-            <span className="t-mono">{loc.lat.toFixed(4)}, {loc.lng.toFixed(4)}</span>
+            {loc ? (
+              <>
+                <b>{geo?.in_service_area ? (geo.neighborhood ?? "Your location") : outside ? "Outside Kansas City" : "Your location"}</b>
+                <span className="t-mono">{loc.lat.toFixed(4)}, {loc.lng.toFixed(4)}</span>
+              </>
+            ) : status === "locating" ? (
+              <b role="status">Finding your location...</b>
+            ) : (
+              <b>Location is off</b>
+            )}
           </div>
-          <Pill variant={accuracyBad ? "hazard" : "success"} size="sm" dot={loc.source === "gps" ? "pulse" : true}>
-            {accuracyBad ? "Too imprecise" : `${srcLabel} ±${Math.max(1, Math.round(loc.accuracy_m))} m`}
-          </Pill>
+          {loc && (
+            <Pill variant={accuracyBad ? "hazard" : "success"} size="sm" dot={loc.source === "gps" ? "pulse" : true}>
+              {accuracyBad ? `Low accuracy ±${Math.round(loc.accuracy_m)} m` : loc.source === "gps" ? `${srcLabel} ±${Math.max(1, Math.round(loc.accuracy_m))} m` : srcLabel}
+            </Pill>
+          )}
         </div>
+        {!loc && status === "denied" && (
+          <div className="cz-out" role="alert">
+            <span className="cz-out__ic"><MapPinOff size={18} strokeWidth={1.75} aria-hidden /></span>
+            <div className="cz-out__txt">
+              <b>Location is off. Allow location in your browser, or place the pin on the map.</b>
+              <span>{locHint()}</span>
+              <button type="button" className="cz-out__btn" onClick={retry}><RefreshCw size={13} strokeWidth={2} aria-hidden /> Try again</button>
+            </div>
+          </div>
+        )}
+        {demoOn && (
+          <button type="button" className="cz-demochip" onClick={clearOverride}>Demo location active - tap to use real GPS</button>
+        )}
+        {loc && loc.source !== "gps" && !demoOn && (
+          <button type="button" className="cz-uselocbtn" onClick={useMyLocation}><LocateFixed size={14} strokeWidth={2} aria-hidden /> Use my location</button>
+        )}
         <GeoChips geo={geo} />
         {outside && (
           <div className="cz-out" role="status">
@@ -164,8 +237,8 @@ export default function Report() {
             </div>
           </div>
         )}
-        <PinMap lat={loc.lat} lng={loc.lng} onPin={setPin} />
-        <div className="cz-loc__hint t-caption">Drag the pin or tap the map to fix the spot.</div>
+        <PinMap center={mapCenter} pin={pinned} you={gpsDot} onPin={setPin} />
+        <div className="cz-loc__hint t-caption">Tap the map to place the pin, then drag it to fix the spot.</div>
       </section>
 
       {/* category */}
@@ -210,14 +283,15 @@ export default function Report() {
       </section>
 
       {error && (
-        <div className="cz-err" role="alert"><TriangleAlert size={18} strokeWidth={1.75} aria-hidden /><span>{error}</span></div>
+        <div className="cz-err" role="alert"><TriangleAlert size={18} strokeWidth={1.75} aria-hidden /><span>{error}</span>
+          <button type="button" className="cz-err__retry" onClick={submit}><RefreshCw size={13} strokeWidth={2} aria-hidden /> Retry</button></div>
       )}
 
       <div className="cz-sendbar">
         <Button size="lg" block variant="primary" loading={scanning} disabled={blocked} icon={<Send />} onClick={submit}>
           Send report
         </Button>
-        {blocked && <p className="cz-sendbar__why t-caption">Move the pin inside Kansas City to send a report.</p>}
+        {blocked && <p className="cz-sendbar__why t-caption">{whyDisabled}</p>}
       </div>
 
       {overlay && createPortal(
@@ -225,7 +299,7 @@ export default function Report() {
           {scanning && <Scan key="scan" preview={preview} step={scanStep} />}
         </AnimatePresence>, overlay)}
       {overlay && result && createPortal(
-        <Reveal result={result} onClose={() => setResult(null)} />, overlay)}
+        <Reveal result={result} localPhoto={revealPhoto} onClose={() => setResult(null)} onSee={(id) => { setResult(null); nav({ pathname: `/requests/${id}`, search }); }} />, overlay)}
     </div>
   );
 }

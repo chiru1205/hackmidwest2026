@@ -99,6 +99,8 @@ def fake_store(monkeypatch):
     def q(sql, params=()):
         if "FROM reports" in sql:
             uid = params[0]
+            if "json_extract" in sql:
+                return [Row(photo_url="/photos/r_mine.jpg")] if params[1] in owners.get(uid, []) else []
             if "DISTINCT" in sql:
                 return [Row(cluster_id=c) for c in owners.get(uid, [])]
             return [Row(x=1)] if params[1] in owners.get(uid, []) else []
@@ -123,6 +125,7 @@ def test_my_requests_scoped(client, fake_store):
     labels = [t["label"] for t in i["timeline"]]
     assert labels[0] == "Reported" and "Neighbors joined" in labels and "Crew assigned" in labels and "Work started" in labels
     assert "someone" not in json.dumps(i)          # no other citizen's text leaks
+    assert i["my_photo_url"] == "/photos/r_mine.jpg" and i["photo_url"] == "/photos/r_mine.jpg"   # the citizen sees their own photo
     assert client.get("/api/me/requests", headers={"X-User-Id": "u_nobody"}).json() == []
 
 

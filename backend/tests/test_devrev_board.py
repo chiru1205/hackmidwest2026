@@ -48,3 +48,40 @@ def test_assemble_totals():
     assert b["totals"] == {"open": 3, "overdue": 1, "escalated": 1, "resolved": 1, "median_ttr": "30s"}
     assert b["stages"][0]["tickets"][0]["id"] == "CF-1"  # most severe first
     assert b["stages"][1]["avg_age_s"] is None
+
+
+def test_plan_file_shape():
+    from backend.integrations.devrev import baseline
+    plan = baseline.load_plan()
+    assert len(plan) >= 12 and plan[0]["cluster_id"] == "c_hotspot" and plan[0]["stage"] == "queued"
+    assert len({t["cluster_id"] for t in plan}) == len(plan)
+    kinds = [t["stage"] for t in plan]
+    assert kinds.count("awaiting_verification") == 2 and kinds.count("resolved") == 2 and kinds.count("in_progress") == 3
+    assert all(t["stage"] in baseline.DEVREV_STAGE for t in plan)
+    # awaiting_verification is our own flag: DevRev itself stays work_in_progress
+    assert baseline.DEVREV_STAGE["awaiting_verification"] == "work_in_progress"
+
+
+def test_seed_ids_are_deterministic():
+    import re
+    from backend.api import seed
+    assert re.fullmatch(r"c_seed\d{3}", "c_seed%03d" % 7)
+    assert [h["id"] for h in seed.HEROES][0] == "c_hero_light"
+    from backend.integrations.devrev import baseline
+    assert all(t["cluster_id"] == "c_hotspot" or t["cluster_id"].startswith(("c_hero_", "c_seed")) for t in baseline.load_plan())
+
+
+def test_events_clear_all(tmp_path, monkeypatch):
+    from backend.integrations.devrev import events
+    monkeypatch.setenv("DB_PATH", str(tmp_path / "t.db"))
+    monkeypatch.setattr(events, "_ready", False)
+    events.record("stage", "CF-1", "TKT-1", "x")
+    events.set_meta("CF-1", awaiting=True)
+    events.clear_all()
+    assert events.recent() == [] and events.all_meta() == {}
+
+
+def test_restore_noop_when_not_live(monkeypatch):
+    from backend.integrations.devrev import baseline
+    monkeypatch.setenv("DEVREV_MODE", "mock")
+    assert baseline.restore(say=lambda *_: None)["updated"] == 0

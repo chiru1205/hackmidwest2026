@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect } from "react";
 import { authHeaders } from "../lib/auth";
 import { useToast } from "../components/ui";
 
@@ -13,6 +13,8 @@ export interface CitizenRequest {
   district: string | null;
   zones: string[];
   photo_url: string | null;
+  my_photo_url?: string | null;
+  issue_photo_url?: string | null;
   neighbors: number;
   status: RequestStatus;
   stage_label: string;
@@ -26,6 +28,10 @@ export interface CitizenRequest {
   created_at: string;
   updated_at: string;
   timeline: { ts: string; label: string; detail: string }[];
+  my_note?: string | null;
+  my_category?: string | null;
+  my_severity?: number | null;
+  my_reported_at?: string | null;
 }
 
 async function get<T>(path: string): Promise<T> {
@@ -43,33 +49,6 @@ export const fetchMyRequest = (id: string) => get<CitizenRequest>(`/api/me/reque
 
 export const STAGES = ["Reported", "Crew assigned", "Work in progress", "Awaiting verification", "Fixed"] as const;
 export const STAGE_INDEX: Record<string, number> = { reported: 0, assigned: 1, in_progress: 2, awaiting_verification: 3, fixed: 4 };
-
-/** Poll an async source every `ms`. Keeps the last good data on errors. */
-function usePoll<T>(fn: () => Promise<T>, ms: number, deps: unknown[]) {
-  const [data, setData] = useState<T | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [tick, setTick] = useState(0);
-  const fnRef = useRef(fn);
-  fnRef.current = fn;
-  useEffect(() => {
-    let live = true;
-    const run = () => fnRef.current()
-      .then((d) => { if (live) { setData(d); setError(null); } })
-      .catch((e) => { if (live) setError(String(e?.message ?? e)); })
-      .finally(() => { if (live) setLoading(false); });
-    setLoading(true);
-    run();
-    const t = setInterval(() => { if (!document.hidden) run(); }, ms);
-    return () => { live = false; clearInterval(t); };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [...deps, tick, ms]);
-  const reload = useCallback(() => setTick((t) => t + 1), []);
-  return { data, error, loading, reload };
-}
-
-export const useMyRequests = (ms = 5000) => usePoll(fetchMyRequests, ms, []);
-export const useMyRequest = (id: string, ms = 5000) => usePoll(() => fetchMyRequest(id), ms, [id]);
 
 const SEEN_KEY = "cf_fixed_seen";
 function readSeen(): string[] | null {

@@ -108,3 +108,15 @@ def record_external_stage(ticket_id: str, display: str | None, old: str | None, 
     label = display or ticket_id
     record(external_kind(old, new), ticket_id, display,
            f"{label} moved from {old or 'unknown'} to {new} in DevRev", "DevRev")
+
+
+def clear_all() -> None:
+    """Admin Reset: drop every saved ticket event and per-ticket flag (awaiting / escalated / evidence)."""
+    with _lock:
+        c = _db()
+        try:
+            c.execute("DELETE FROM ticket_events")
+            c.execute("DELETE FROM ticket_meta")
+            c.commit()
+        finally:
+            c.close()

@@ -185,6 +185,8 @@ def build(force: bool = False) -> dict:
             if t:
                 tickets.append(t)
         data = assemble(tickets, source, now)
+        mirrored = {w["ref"] for w in works} if source == "devrev" else set(cl)
+        data["totals"]["unsynced"] = len(set(cl) - mirrored)
         _cache.update(at=time.monotonic(), data=data)
         return data
 

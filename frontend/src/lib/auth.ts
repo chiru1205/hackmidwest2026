@@ -7,9 +7,56 @@ const CITY_TOKEN: string = (import.meta.env.VITE_CITY_TOKEN as string | undefine
 const STAFF_PIN = "city";
 const KEY = "cf_staff";
 
-export const userId = (): string => {
-  try { return localStorage.getItem("cf_user") || "u_you"; } catch { return "u_you"; }
+const USER_KEY = "cf_user";
+const newUserId = (): string => {
+  const b = new Uint8Array(4);
+  try { crypto.getRandomValues(b); } catch { for (let i = 0; i < 4; i++) b[i] = Math.floor(Math.random() * 256); }
+  return "u_" + Array.from(b, (x) => x.toString(16).padStart(2, "0")).join("");
 };
+
+let memUser: string | null = null;
+
+/** Identity for this device: a fresh random id on first load; ?user=<id> switches to a seeded demo user (persisted). */
+function initUser(): string {
+  let id: string | null = null;
+  try { id = localStorage.getItem(USER_KEY); } catch { /* ignore */ }
+  if (ROLE === "citizen") {
+    try {
+      const sp = new URLSearchParams(window.location.search);
+      const u = sp.get("user");
+      if (u && /^[A-Za-z0-9_-]{1,40}$/.test(u)) id = u;
+      else if (sp.get("newuser") === "1" && !sessionStorage.getItem("cf_newuser_done")) {
+        sessionStorage.setItem("cf_newuser_done", "1");
+        id = newUserId();
+        clearCitizenCaches();
+      }
+    } catch { /* ignore */ }
+  }
+  if (!id) id = ROLE === "city" ? "u_you" : newUserId();
+  try { localStorage.setItem(USER_KEY, id); } catch { /* ignore */ }
+  return id;
+}
+
+export const userId = (): string => {
+  if (memUser === null) memUser = initUser();
+  return memUser;
+};
+
+/** Forget everything cached for the current citizen on this device. */
+export function clearCitizenCaches(): void {
+  try {
+    ["cf_fixed_seen", "cf_loc", "cf_my_requests"].forEach((k) => localStorage.removeItem(k));
+    ["cf_loc", "cf_demo"].forEach((k) => sessionStorage.removeItem(k));
+  } catch { /* ignore */ }
+}
+
+/** Start over as a brand-new citizen (new id, empty caches). Returns the new id. */
+export function startNewCitizen(): string {
+  memUser = newUserId();
+  try { localStorage.setItem(USER_KEY, memUser); } catch { /* ignore */ }
+  clearCitizenCaches();
+  return memUser;
+}
 
 let memUnlocked = false;
 

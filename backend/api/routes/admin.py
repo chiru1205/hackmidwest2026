@@ -23,8 +23,15 @@ def do_reset(reseed: bool = True) -> None:
     adapters.reset_tickets()
     store.wipe()
     events.clear()
+    try:
+        from backend.integrations.devrev import baseline, events as dr_events
+        dr_events.clear_all()
+    except Exception:
+        baseline = None
     if reseed:
         seed.seed()
+        if baseline is not None:
+            baseline.schedule_restore()    # background; best effort; live mode only
     events.publish("reset", {})
     pipeline.publish_stats()
 

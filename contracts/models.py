@@ -123,6 +123,7 @@ class ReportResult(BaseModel):
     edge: Optional[EdgeInfo] = None
     reject_reason: Optional[str] = None
     steps: list[AgentStep] = []
+    my_photo_url: Optional[str] = None   # the caller's own uploaded photo for this report, if any
 
 
 class NearbyResult(BaseModel):
@@ -307,6 +308,7 @@ class BoardTotals(BaseModel):
     escalated: int = 0
     resolved: int = 0
     median_ttr: Optional[str] = None
+    unsynced: int = 0  # local issues not mirrored to DevRev
 
 
 class Board(BaseModel):
@@ -372,7 +374,9 @@ class CitizenRequest(BaseModel):
     neighborhood: Optional[str] = None
     district: Optional[str] = None
     zones: list[str] = []
-    photo_url: Optional[str] = None
+    photo_url: Optional[str] = None          # the caller's own photo when they have one, else the issue photo
+    my_photo_url: Optional[str] = None
+    issue_photo_url: Optional[str] = None    # the issue's original photo
     neighbors: int = 1                       # unique reporters on the issue, including you
     status: Literal["reported", "assigned", "in_progress", "awaiting_verification", "fixed"] = "reported"
     stage_label: str = "Reported"
@@ -386,3 +390,8 @@ class CitizenRequest(BaseModel):
     created_at: str
     updated_at: str
     timeline: list[CitizenTimelineItem] = []
+    # what the caller themselves reported on this issue (additive)
+    my_note: Optional[str] = None
+    my_category: Optional[Category] = None   # category stored with the caller's report (the server may have replaced the one they picked with what the photo showed)
+    my_severity: Optional[int] = None
+    my_reported_at: Optional[str] = None
