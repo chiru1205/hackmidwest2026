@@ -1,0 +1,2702 @@
+[
+ {
+  "lat": 39.041611,
+  "lng": -94.554695,
+  "address": "4656 Prospect Ave Kansas City 64130",
+  "neighborhood": "Plaza"
+ },
+ {
+  "lat": 39.217456,
+  "lng": -94.586579,
+  "address": "598 NW 68th St Kansas City 64118",
+  "neighborhood": "River Market"
+ },
+ {
+  "lat": 39.115699,
+  "lng": -94.527277,
+  "address": "335 N Elmwood Ave LL Kansas City 64123",
+  "neighborhood": "River Market"
+ },
+ {
+  "lat": 39.110922,
+  "lng": -94.557592,
+  "address": "1915 Lexington Ave Kansas City 64124",
+  "neighborhood": "River Market"
+ },
+ {
+  "lat": 38.890763,
+  "lng": -94.606657,
+  "address": "900 W Blue Ridge Blvd Kansas City 64145",
+  "neighborhood": "Waldo"
+ },
+ {
+  "lat": 39.232691,
+  "lng": -94.654567,
+  "address": "7641 N Lucerne Ct Kansas City 64151",
+  "neighborhood": "River Market"
+ },
+ {
+  "lat": 39.034857,
+  "lng": -94.589396,
+  "address": "5101 Wyandotte St Kansas City 64112",
+  "neighborhood": "Plaza"
+ },
+ {
+  "lat": 39.034036,
+  "lng": -94.4494,
+  "address": "11106 E 48th Ter Kansas City 64133",
+  "neighborhood": "Midtown"
+ },
+ {
+  "lat": 38.987112,
+  "lng": -94.594441,
+  "address": "7749 Wornall Rd Kansas City 64114",
+  "neighborhood": "Brookside"
+ },
+ {
+  "lat": 38.974851,
+  "lng": -94.591496,
+  "address": "8423 Boone Blvd Kansas City 64114",
+  "neighborhood": "Waldo"
+ },
+ {
+  "lat": 39.028612,
+  "lng": -94.56582,
+  "address": "5400 Highland Ave Kansas City 64110",
+  "neighborhood": "Plaza"
+ },
+ {
+  "lat": 39.240706,
+  "lng": -94.569817,
+  "address": "900 NE 81st St Kansas City 64118",
+  "neighborhood": "River Market"
+ },
+ {
+  "lat": 39.043199,
+  "lng": -94.573249,
+  "address": "4600 Troost Ave Kansas City 64110",
+  "neighborhood": "Plaza"
+ },
+ {
+  "lat": 38.992558,
+  "lng": -94.552876,
+  "address": "2920 E 74th St Kansas City 64132",
+  "neighborhood": "Brookside"
+ },
+ {
+  "lat": 39.034775,
+  "lng": -94.590714,
+  "address": "221 W 51st St Kansas City 64112",
+  "neighborhood": "Plaza"
+ },
+ {
+  "lat": 39.052146,
+  "lng": -94.456626,
+  "address": "3833 Hardy Ave Kansas City 64133",
+  "neighborhood": "Midtown"
+ },
+ {
+  "lat": 39.256183,
+  "lng": -94.631434,
+  "address": "8910 N Green Hills Rd Kansas City 64154",
+  "neighborhood": "River Market"
+ },
+ {
+  "lat": 39.101112,
+  "lng": -94.514248,
+  "address": "5801 E 9th St Kansas City 64126",
+  "neighborhood": "River Market"
+ },
+ {
+  "lat": 39.088261,
+  "lng": -94.586193,
+  "address": "2100 Wyandotte St Kansas City 64108",
+  "neighborhood": "Crossroads"
+ },
+ {
+  "lat": 39.24637,
+  "lng": -94.586921,
+  "address": "503 NW Barry Rd Kansas City 64118",
+  "neighborhood": "River Market"
+ },
+ {
+  "lat": 38.985653,
+  "lng": -94.605987,
+  "address": "7848 Ward Pkwy Kansas City 64114",
+  "neighborhood": "Waldo"
+ },
+ {
+  "lat": 39.173812,
+  "lng": -94.560997,
+  "address": "1400 NE 42nd Ter CONVENT Kansas City 64116",
+  "neighborhood": "River Market"
+ },
+ {
+  "lat": 38.947482,
+  "lng": -94.429233,
+  "address": "13313 E 95th Ter Kansas City 64138",
+  "neighborhood": "Waldo"
+ },
+ {
+  "lat": 39.210498,
+  "lng": -94.642641,
+  "address": "5353 NW 64th St Kansas City 64151",
+  "neighborhood": "River Market"
+ },
+ {
+  "lat": 39.095441,
+  "lng": -94.560848,
+  "address": "1800 E Truman Rd Kansas City 64127",
+  "neighborhood": "River Market"
+ },
+ {
+  "lat": 39.247887,
+  "lng": -94.470429,
+  "address": "8596 N Lewis Ave Kansas City 64157",
+  "neighborhood": "River Market"
+ },
+ {
+  "lat": 39.058948,
+  "lng": -94.595199,
+  "address": "3715 Summit St Kansas City 64111",
+  "neighborhood": "Westport"
+ },
+ {
+  "lat": 39.213597,
+  "lng": -94.517293,
+  "address": "5201 NE Pleasant Valley Rd Kansas City 64119",
+  "neighborhood": "River Market"
+ },
+ {
+  "lat": 39.089047,
+  "lng": -94.587321,
+  "address": "228 Southwest Blvd Kansas City 64108",
+  "neighborhood": "Crossroads"
+ },
+ {
+  "lat": 39.027256,
+  "lng": -94.522171,
+  "address": "5348 Hardesty Ave Kansas City 64130",
+  "neighborhood": "Plaza"
+ },
+ {
+  "lat": 38.937868,
+  "lng": -94.55027,
+  "address": "10400 Bales Ave Kansas City 64137",
+  "neighborhood": "Waldo"
+ },
+ {
+  "lat": 39.27101,
+  "lng": -94.603658,
+  "address": "9800 N Platte Purchase Dr Kansas City 64154",
+  "neighborhood": "River Market"
+ },
+ {
+  "lat": 38.935434,
+  "lng": -94.503503,
+  "address": "10404 Oakland Ave Kansas City 64134",
+  "neighborhood": "Waldo"
+ },
+ {
+  "lat": 38.99803,
+  "lng": -94.598127,
+  "address": "7145 Summit St Kansas City 64114",
+  "neighborhood": "Brookside"
+ },
+ {
+  "lat": 39.075028,
+  "lng": -94.552941,
+  "address": "2800 Prospect Ave Kansas City 64128",
+  "neighborhood": "Midtown"
+ },
+ {
+  "lat": 39.217276,
+  "lng": -94.619484,
+  "address": "6727 N Gower Ave Kansas City 64151",
+  "neighborhood": "River Market"
+ },
+ {
+  "lat": 38.997863,
+  "lng": -94.554362,
+  "address": "7045 Chestnut Ave Kansas City 64132",
+  "neighborhood": "Brookside"
+ },
+ {
+  "lat": 39.043602,
+  "lng": -94.440661,
+  "address": "11815 E 43rd St Kansas City 64133",
+  "neighborhood": "Midtown"
+ },
+ {
+  "lat": 39.071863,
+  "lng": -94.552097,
+  "address": "2616 E 30th St Kansas City 64128",
+  "neighborhood": "Midtown"
+ },
+ {
+  "lat": 39.053273,
+  "lng": -94.542784,
+  "address": "3947 Bales Ave Kansas City 64130",
+  "neighborhood": "Midtown"
+ },
+ {
+  "lat": 38.953547,
+  "lng": -94.582529,
+  "address": "9600 Holmes Rd Kansas City 64131",
+  "neighborhood": "Waldo"
+ },
+ {
+  "lat": 39.298752,
+  "lng": -94.574996,
+  "address": "401 NE 113th Ter Kansas City 64155",
+  "neighborhood": "River Market"
+ },
+ {
+  "lat": 39.216775,
+  "lng": -94.615806,
+  "address": "6738 NW Waukomis Dr Kansas City 64151",
+  "neighborhood": "River Market"
+ },
+ {
+  "lat": 39.252438,
+  "lng": -94.535065,
+  "address": "8718 N Cleveland Ave Kansas City 64156",
+  "neighborhood": "River Market"
+ },
+ {
+  "lat": 38.905909,
+  "lng": -94.584842,
+  "address": "12231 Holmes Rd Kansas City 64145",
+  "neighborhood": "Waldo"
+ },
+ {
+  "lat": 38.928996,
+  "lng": -94.540916,
+  "address": "4201 Grandview Rd Kansas City 64137",
+  "neighborhood": "Waldo"
+ },
+ {
+  "lat": 39.24515,
+  "lng": -94.465427,
+  "address": "8402 N Flintlock Rd Kansas City 64157",
+  "neighborhood": "River Market"
+ },
+ {
+  "lat": 39.208898,
+  "lng": -94.646739,
+  "address": "5701 NW 62nd Ter Kansas City 64151",
+  "neighborhood": "River Market"
+ },
+ {
+  "lat": 39.291105,
+  "lng": -94.473991,
+  "address": "8720 NE 110th St Kansas City 64157",
+  "neighborhood": "River Market"
+ },
+ {
+  "lat": 39.246066,
+  "lng": -94.575886,
+  "address": "8320 N Oak Trfy Kansas City 64118",
+  "neighborhood": "River Market"
+ },
+ {
+  "lat": 39.039545,
+  "lng": -94.585544,
+  "address": "4801 Main St 425 Kansas City 64112",
+  "neighborhood": "Plaza"
+ },
+ {
+  "lat": 39.114716,
+  "lng": -94.543537,
+  "address": "205 N Gladstone Blvd Kansas City 64123",
+  "neighborhood": "River Market"
+ },
+ {
+  "lat": 39.266615,
+  "lng": -94.630773,
+  "address": "4201 NW Old Stagecoach Rd Kansas City 64154",
+  "neighborhood": "River Market"
+ },
+ {
+  "lat": 39.101069,
+  "lng": -94.542765,
+  "address": "3231 E 10th St Kansas City 64127",
+  "neighborhood": "River Market"
+ },
+ {
+  "lat": 39.239668,
+  "lng": -94.634343,
+  "address": "8000 N London Dr Kansas City 64151",
+  "neighborhood": "River Market"
+ },
+ {
+  "lat": 39.034938,
+  "lng": -94.582945,
+  "address": "5060 Oak St Kansas City 64112",
+  "neighborhood": "Plaza"
+ },
+ {
+  "lat": 39.105026,
+  "lng": -94.515401,
+  "address": "5700 Independence Ave Kansas City 64123",
+  "neighborhood": "River Market"
+ },
+ {
+  "lat": 38.939051,
+  "lng": -94.580086,
+  "address": "901 E 104th St STE 110 Kansas City 64131",
+  "neighborhood": "Waldo"
+ },
+ {
+  "lat": 39.08291,
+  "lng": -94.504427,
+  "address": "6801 E 21st St Kansas City 64126",
+  "neighborhood": "Crossroads"
+ },
+ {
+  "lat": 39.249146,
+  "lng": -94.629762,
+  "address": "8549 N Green Hills Rd Kansas City 64154",
+  "neighborhood": "River Market"
+ },
+ {
+  "lat": 39.085197,
+  "lng": -94.592787,
+  "address": "701 Southwest Blvd Kansas City 64108",
+  "neighborhood": "Crossroads"
+ },
+ {
+  "lat": 39.03352,
+  "lng": -94.606063,
+  "address": "1439 W 51st St A-SAC Kansas City 64112",
+  "neighborhood": "Plaza"
+ },
+ {
+  "lat": 38.941607,
+  "lng": -94.596748,
+  "address": "400 W 103rd St Kansas City 64114",
+  "neighborhood": "Waldo"
+ },
+ {
+  "lat": 38.945325,
+  "lng": -94.596505,
+  "address": "401 W 101st St Kansas City 64114",
+  "neighborhood": "Waldo"
+ },
+ {
+  "lat": 39.041742,
+  "lng": -94.582678,
+  "address": "323 Emanuel Cleaver II Blvd 2G Kansas City 64112",
+  "neighborhood": "Plaza"
+ },
+ {
+  "lat": 39.245416,
+  "lng": -94.715023,
+  "address": "11605 NW Barry Rd Kansas City 64152",
+  "neighborhood": "River Market"
+ },
+ {
+  "lat": 39.091784,
+  "lng": -94.509407,
+  "address": "6217 E 16th St Kansas City 64126",
+  "neighborhood": "River Market"
+ },
+ {
+  "lat": 39.090643,
+  "lng": -94.517935,
+  "address": "5432 E 17th St Kansas City 64127",
+  "neighborhood": "River Market"
+ },
+ {
+  "lat": 39.097202,
+  "lng": -94.58892,
+  "address": "1400 Broadway Blvd Kansas City 64105",
+  "neighborhood": "River Market"
+ },
+ {
+  "lat": 39.020612,
+  "lng": -94.60253,
+  "address": "5900 Ward Pkwy Kansas City 64113",
+  "neighborhood": "Plaza"
+ },
+ {
+  "lat": 39.107499,
+  "lng": -94.586102,
+  "address": "210 W 5th St STE 309 Kansas City 64105",
+  "neighborhood": "River Market"
+ },
+ {
+  "lat": 39.219806,
+  "lng": -94.644576,
+  "address": "6851 N Park Plaza Dr Kansas City 64151",
+  "neighborhood": "River Market"
+ },
+ {
+  "lat": 38.997886,
+  "lng": -94.503071,
+  "address": "7124 E 70th St Kansas City 64133",
+  "neighborhood": "Brookside"
+ },
+ {
+  "lat": 39.002701,
+  "lng": -94.502788,
+  "address": "7201 E 67th St Kansas City 64133",
+  "neighborhood": "Brookside"
+ },
+ {
+  "lat": 38.985642,
+  "lng": -94.594511,
+  "address": "7835 Wornall Rd Kansas City 64114",
+  "neighborhood": "Brookside"
+ },
+ {
+  "lat": 38.950289,
+  "lng": -94.542809,
+  "address": "3909 Kings Hwy Kansas City 64137",
+  "neighborhood": "Waldo"
+ },
+ {
+  "lat": 39.158152,
+  "lng": -94.43942,
+  "address": "3615 N Kimball Dr Kansas City 64161",
+  "neighborhood": "River Market"
+ },
+ {
+  "lat": 39.043624,
+  "lng": -94.441385,
+  "address": "11719 E 43rd St Kansas City 64133",
+  "neighborhood": "Midtown"
+ },
+ {
+  "lat": 39.092523,
+  "lng": -94.505956,
+  "address": "1526 Bennington Ave Kansas City 64126",
+  "neighborhood": "River Market"
+ },
+ {
+  "lat": 39.2441,
+  "lng": -94.461221,
+  "address": "9901 NE Barry Rd Kansas City 64158",
+  "neighborhood": "River Market"
+ },
+ {
+  "lat": 39.186481,
+  "lng": -94.543857,
+  "address": "5102 NE Chouteau Trfy Kansas City 64119",
+  "neighborhood": "River Market"
+ },
+ {
+  "lat": 39.184556,
+  "lng": -94.575977,
+  "address": "4901 N Oak Trfy Kansas City 64118",
+  "neighborhood": "River Market"
+ },
+ {
+  "lat": 39.103829,
+  "lng": -94.537635,
+  "address": "702 Cleveland Ave Kansas City 64124",
+  "neighborhood": "River Market"
+ },
+ {
+  "lat": 39.095493,
+  "lng": -94.553824,
+  "address": "1419 Olive St Kansas City 64127",
+  "neighborhood": "River Market"
+ },
+ {
+  "lat": 39.08168,
+  "lng": -94.597511,
+  "address": "2533 Southwest Blvd Kansas City 64108",
+  "neighborhood": "Crossroads"
+ },
+ {
+  "lat": 39.122967,
+  "lng": -94.583193,
+  "address": "800 N Atlantic St Kansas City 64116",
+  "neighborhood": "River Market"
+ },
+ {
+  "lat": 39.102959,
+  "lng": -94.563414,
+  "address": "1550 E 9th St SOUTH TH Kansas City 64106",
+  "neighborhood": "River Market"
+ },
+ {
+  "lat": 39.103128,
+  "lng": -94.570131,
+  "address": "1027 E 9th St Kansas City 64106",
+  "neighborhood": "River Market"
+ },
+ {
+  "lat": 39.103149,
+  "lng": -94.570993,
+  "address": "1000 E 9th St Kansas City 64106",
+  "neighborhood": "River Market"
+ },
+ {
+  "lat": 39.103274,
+  "lng": -94.573324,
+  "address": "901 Charlotte St Kansas City 64106",
+  "neighborhood": "River Market"
+ },
+ {
+  "lat": 39.103367,
+  "lng": -94.576044,
+  "address": "817 Cherry St Kansas City 64106",
+  "neighborhood": "River Market"
+ },
+ {
+  "lat": 39.105471,
+  "lng": -94.580574,
+  "address": "618 Grand Blvd Kansas City 64106",
+  "neighborhood": "River Market"
+ },
+ {
+  "lat": 39.012698,
+  "lng": -94.552693,
+  "address": "2820 E 63rd St Kansas City 64130",
+  "neighborhood": "Brookside"
+ },
+ {
+  "lat": 39.250914,
+  "lng": -94.65475,
+  "address": "8551 N Boardwalk Ave Kansas City 64154",
+  "neighborhood": "River Market"
+ },
+ {
+  "lat": 39.044219,
+  "lng": -94.607148,
+  "address": "4607 State Line Rd Kansas City 64112",
+  "neighborhood": "Plaza"
+ },
+ {
+  "lat": 39.039032,
+  "lng": -94.505007,
+  "address": "7057 E 47th St Kansas City 64129",
+  "neighborhood": "Midtown"
+ },
+ {
+  "lat": 39.085932,
+  "lng": -94.580021,
+  "address": "2301 McGee St Kansas City 64108",
+  "neighborhood": "Crossroads"
+ },
+ {
+  "lat": 39.098529,
+  "lng": -94.542734,
+  "address": "3317 E 12th St Kansas City 64127",
+  "neighborhood": "River Market"
+ },
+ {
+  "lat": 39.073714,
+  "lng": -94.563983,
+  "address": "2901 Wayne Ave Kansas City 64109",
+  "neighborhood": "Midtown"
+ },
+ {
+  "lat": 39.010158,
+  "lng": -94.504045,
+  "address": "6301 Winchester Ave Kansas City 64133",
+  "neighborhood": "Brookside"
+ },
+ {
+  "lat": 39.02444,
+  "lng": -94.607634,
+  "address": "1257 W 57th St Kansas City 64113",
+  "neighborhood": "Plaza"
+ },
+ {
+  "lat": 38.965471,
+  "lng": -94.493773,
+  "address": "8035 Sycamore Ave Kansas City 64138",
+  "neighborhood": "Waldo"
+ },
+ {
+  "lat": 39.044828,
+  "lng": -94.591421,
+  "address": "4525 Broadway Kansas City 64111",
+  "neighborhood": "Plaza"
+ },
+ {
+  "lat": 39.236559,
+  "lng": -94.46206,
+  "address": "9600 NE 79th St Kansas City 64158",
+  "neighborhood": "River Market"
+ },
+ {
+  "lat": 38.945386,
+  "lng": -94.489921,
+  "address": "9815 Booth Ave Kansas City 64134",
+  "neighborhood": "Waldo"
+ },
+ {
+  "lat": 39.043974,
+  "lng": -94.607154,
+  "address": "4613 State Line Rd Kansas City 64112",
+  "neighborhood": "Plaza"
+ },
+ {
+  "lat": 39.230664,
+  "lng": -94.467369,
+  "address": "9501 NE 76th St Kansas City 64158",
+  "neighborhood": "River Market"
+ },
+ {
+  "lat": 39.094302,
+  "lng": -94.588704,
+  "address": "1626 Broadway Blvd Kansas City 64108",
+  "neighborhood": "Crossroads"
+ },
+ {
+  "lat": 38.974236,
+  "lng": -94.602769,
+  "address": "1013 W 85th St Kansas City 64114",
+  "neighborhood": "Waldo"
+ },
+ {
+  "lat": 39.104895,
+  "lng": -94.535083,
+  "address": "621 Myrtle Ave Kansas City 64124",
+  "neighborhood": "River Market"
+ },
+ {
+  "lat": 38.921367,
+  "lng": -94.588257,
+  "address": "11301 Oak St Kansas City 64131",
+  "neighborhood": "Waldo"
+ },
+ {
+  "lat": 39.245419,
+  "lng": -94.465682,
+  "address": "8402 N Flintlock Rd Kansas City 64157",
+  "neighborhood": "River Market"
+ },
+ {
+  "lat": 39.043847,
+  "lng": -94.607175,
+  "address": "4625 State Line Rd Kansas City 64112",
+  "neighborhood": "Plaza"
+ },
+ {
+  "lat": 39.245419,
+  "lng": -94.465682,
+  "address": "8402 N Flintlock Rd Kansas City 64157",
+  "neighborhood": "River Market"
+ },
+ {
+  "lat": 38.951244,
+  "lng": -94.491195,
+  "address": "8500 E 95th Ter Kansas City 64134",
+  "neighborhood": "Waldo"
+ },
+ {
+  "lat": 39.012488,
+  "lng": -94.554133,
+  "address": "2805 E 63rd St Kansas City 64132",
+  "neighborhood": "Brookside"
+ },
+ {
+  "lat": 39.032979,
+  "lng": -94.58142,
+  "address": "5104 Cherry St Kansas City 64110",
+  "neighborhood": "Plaza"
+ },
+ {
+  "lat": 39.046041,
+  "lng": -94.520058,
+  "address": "4343 Clary Blvd Kansas City 64130",
+  "neighborhood": "Midtown"
+ },
+ {
+  "lat": 39.247265,
+  "lng": -94.63179,
+  "address": "4400 NW Barry Rd Kansas City 64154",
+  "neighborhood": "River Market"
+ },
+ {
+  "lat": 39.267947,
+  "lng": -94.45116,
+  "address": "9701 N Ash Ave Kansas City 64157",
+  "neighborhood": "River Market"
+ },
+ {
+  "lat": 39.0341,
+  "lng": -94.582065,
+  "address": "5115 Oak St Kansas City 64110",
+  "neighborhood": "Plaza"
+ },
+ {
+  "lat": 39.024177,
+  "lng": -94.600106,
+  "address": "1001 W 57th St Kansas City 64113",
+  "neighborhood": "Plaza"
+ },
+ {
+  "lat": 39.027613,
+  "lng": -94.571198,
+  "address": "5437 Tracy Ave Kansas City 64110",
+  "neighborhood": "Plaza"
+ },
+ {
+  "lat": 38.980091,
+  "lng": -94.439612,
+  "address": "12104 E 78th Ter Kansas City 64138",
+  "neighborhood": "Brookside"
+ },
+ {
+  "lat": 39.247121,
+  "lng": -94.593911,
+  "address": "8401 N Madison Ave Kansas City 64155",
+  "neighborhood": "River Market"
+ },
+ {
+  "lat": 39.139116,
+  "lng": -94.530855,
+  "address": "1720 N Jackson Ave Kansas City 64120",
+  "neighborhood": "River Market"
+ },
+ {
+  "lat": 39.244751,
+  "lng": -94.490147,
+  "address": "7405 NE 84th Ter Kansas City 64157",
+  "neighborhood": "River Market"
+ },
+ {
+  "lat": 38.960794,
+  "lng": -94.498863,
+  "address": "7600 E 90th St Kansas City 64138",
+  "neighborhood": "Waldo"
+ },
+ {
+  "lat": 39.224773,
+  "lng": -94.652515,
+  "address": "6417 NW 72nd St Kansas City 64151",
+  "neighborhood": "River Market"
+ },
+ {
+  "lat": 39.039536,
+  "lng": -94.597462,
+  "address": "900 Ward Pkwy Kansas City 64112",
+  "neighborhood": "Plaza"
+ },
+ {
+  "lat": 39.109943,
+  "lng": -94.535417,
+  "address": "334 Myrtle Ave Kansas City 64124",
+  "neighborhood": "River Market"
+ },
+ {
+  "lat": 39.271268,
+  "lng": -94.602671,
+  "address": "9800 N Platte Purchase Dr Kansas City 64154",
+  "neighborhood": "River Market"
+ },
+ {
+  "lat": 39.032612,
+  "lng": -94.57668,
+  "address": "5201 Charlotte St Kansas City 64110",
+  "neighborhood": "Plaza"
+ },
+ {
+  "lat": 39.101487,
+  "lng": -94.549108,
+  "address": "2800 E 10th St Kansas City 64127",
+  "neighborhood": "River Market"
+ },
+ {
+  "lat": 39.112531,
+  "lng": -94.525337,
+  "address": "101 Van Brunt Blvd Kansas City 64123",
+  "neighborhood": "River Market"
+ },
+ {
+  "lat": 39.110746,
+  "lng": -94.524213,
+  "address": "301 Chelsea Ave Kansas City 64124",
+  "neighborhood": "River Market"
+ },
+ {
+  "lat": 39.10206,
+  "lng": -94.564253,
+  "address": "920 Paseo Kansas City 64106",
+  "neighborhood": "River Market"
+ },
+ {
+  "lat": 38.974416,
+  "lng": -94.595186,
+  "address": "8442 Wornall Rd Kansas City 64114",
+  "neighborhood": "Waldo"
+ },
+ {
+  "lat": 39.112531,
+  "lng": -94.525337,
+  "address": "101 Van Brunt Blvd Kansas City 64123",
+  "neighborhood": "River Market"
+ },
+ {
+  "lat": 38.99208,
+  "lng": -94.588544,
+  "address": "7500 Walnut St Kansas City 64114",
+  "neighborhood": "Brookside"
+ },
+ {
+  "lat": 39.088527,
+  "lng": -94.595165,
+  "address": "2048 West Pennway Kansas City 64108",
+  "neighborhood": "Crossroads"
+ },
+ {
+  "lat": 39.125216,
+  "lng": -94.586973,
+  "address": "610 N Richards Rd Kansas City 64116",
+  "neighborhood": "River Market"
+ },
+ {
+  "lat": 38.921575,
+  "lng": -94.589863,
+  "address": "217 E 113th St Kansas City 64114",
+  "neighborhood": "Waldo"
+ },
+ {
+  "lat": 39.011343,
+  "lng": -94.562011,
+  "address": "2121 E 63rd St BLD A Kansas City 64132",
+  "neighborhood": "Brookside"
+ },
+ {
+  "lat": 39.040252,
+  "lng": -94.602935,
+  "address": "4816 Terrace St Kansas City 64112",
+  "neighborhood": "Plaza"
+ },
+ {
+  "lat": 39.238824,
+  "lng": -94.65058,
+  "address": "6200 NW 79th St Kansas City 64151",
+  "neighborhood": "River Market"
+ },
+ {
+  "lat": 39.026163,
+  "lng": -94.592833,
+  "address": "411 W 56th St Kansas City 64113",
+  "neighborhood": "Plaza"
+ },
+ {
+  "lat": 39.206753,
+  "lng": -94.617223,
+  "address": "6150 N Britt Ave Kansas City 64151",
+  "neighborhood": "River Market"
+ },
+ {
+  "lat": 39.028623,
+  "lng": -94.503246,
+  "address": "6800 Crabapple Ln Kansas City 64129",
+  "neighborhood": "Plaza"
+ },
+ {
+  "lat": 39.267836,
+  "lng": -94.602815,
+  "address": "9600 N Platte Purchase Dr Kansas City 64154",
+  "neighborhood": "River Market"
+ },
+ {
+  "lat": 39.29736,
+  "lng": -94.682166,
+  "address": "11200 N Ambassador Dr Kansas City 64153",
+  "neighborhood": "River Market"
+ },
+ {
+  "lat": 38.997886,
+  "lng": -94.503071,
+  "address": "7124 E 70th St Kansas City 64133",
+  "neighborhood": "Brookside"
+ },
+ {
+  "lat": 39.001652,
+  "lng": -94.583093,
+  "address": "427 E 69th Ter Kansas City 64131",
+  "neighborhood": "Brookside"
+ },
+ {
+  "lat": 39.201298,
+  "lng": -94.630005,
+  "address": "5860 NW Prairie View Rd Kansas City 64151",
+  "neighborhood": "River Market"
+ },
+ {
+  "lat": 39.020765,
+  "lng": -94.602146,
+  "address": "5900 Ward Pkwy Kansas City 64113",
+  "neighborhood": "Plaza"
+ },
+ {
+  "lat": 39.177532,
+  "lng": -94.566028,
+  "address": "4616 N Forest Ave Kansas City 64116",
+  "neighborhood": "River Market"
+ },
+ {
+  "lat": 39.101529,
+  "lng": -94.605719,
+  "address": "1731 St Louis Ave Kansas City 64101",
+  "neighborhood": "River Market"
+ },
+ {
+  "lat": 39.270403,
+  "lng": -94.461488,
+  "address": "9423 NE 97th St Kansas City 64157",
+  "neighborhood": "River Market"
+ },
+ {
+  "lat": 39.101803,
+  "lng": -94.502939,
+  "address": "811 Ewing Ave Kansas City 64125",
+  "neighborhood": "River Market"
+ },
+ {
+  "lat": 39.094337,
+  "lng": -94.589036,
+  "address": "1626 Broadway Blvd Kansas City 64108",
+  "neighborhood": "Crossroads"
+ },
+ {
+  "lat": 39.270377,
+  "lng": -94.559801,
+  "address": "1608 NE 97th St Kansas City 64155",
+  "neighborhood": "River Market"
+ },
+ {
+  "lat": 38.979812,
+  "lng": -94.592533,
+  "address": "206 W 82nd St Kansas City 64114",
+  "neighborhood": "Waldo"
+ },
+ {
+  "lat": 38.979831,
+  "lng": -94.592853,
+  "address": "210 W 82nd St Kansas City 64114",
+  "neighborhood": "Waldo"
+ },
+ {
+  "lat": 39.050913,
+  "lng": -94.597037,
+  "address": "906 Westport Rd Kansas City 64111",
+  "neighborhood": "Westport"
+ },
+ {
+  "lat": 39.11596,
+  "lng": -94.562319,
+  "address": "1639 Guinotte Ave Kansas City 64120",
+  "neighborhood": "River Market"
+ },
+ {
+  "lat": 39.129527,
+  "lng": -94.489325,
+  "address": "1301 N Century Ave Kansas City 64120",
+  "neighborhood": "River Market"
+ },
+ {
+  "lat": 39.090357,
+  "lng": -94.505768,
+  "address": "1642 Bennington Ave Kansas City 64126",
+  "neighborhood": "River Market"
+ },
+ {
+  "lat": 39.081446,
+  "lng": -94.591661,
+  "address": "2517 Jefferson St Kansas City 64108",
+  "neighborhood": "Crossroads"
+ },
+ {
+  "lat": 39.084517,
+  "lng": -94.581086,
+  "address": "2380 McGee St Kansas City 64108",
+  "neighborhood": "Crossroads"
+ },
+ {
+  "lat": 39.246929,
+  "lng": -94.589353,
+  "address": "700 NW Barry Rd Kansas City 64155",
+  "neighborhood": "River Market"
+ },
+ {
+  "lat": 39.249669,
+  "lng": -94.538969,
+  "address": "3400 NE 85th Ter Kansas City 64156",
+  "neighborhood": "River Market"
+ },
+ {
+  "lat": 38.925494,
+  "lng": -94.565046,
+  "address": "2100 E Red Bridge Rd Kansas City 64131",
+  "neighborhood": "Waldo"
+ },
+ {
+  "lat": 39.236009,
+  "lng": -94.562997,
+  "address": "7801 N Lydia Ave Kansas City 64118",
+  "neighborhood": "River Market"
+ },
+ {
+  "lat": 39.072936,
+  "lng": -94.587559,
+  "address": "2940 Baltimore Ave Unit 1504 Kansas City 64108",
+  "neighborhood": "Midtown"
+ },
+ {
+  "lat": 39.057778,
+  "lng": -94.583694,
+  "address": "3814 Warwick Blvd Kansas City 64111",
+  "neighborhood": "Westport"
+ },
+ {
+  "lat": 39.245642,
+  "lng": -94.477344,
+  "address": "8585 NE Shoal Creek Valley Dr Kansas City 64157",
+  "neighborhood": "River Market"
+ },
+ {
+  "lat": 38.883149,
+  "lng": -94.607561,
+  "address": "1210 W 135th Ter Kansas City 64145",
+  "neighborhood": "Waldo"
+ },
+ {
+  "lat": 39.130276,
+  "lng": -94.503345,
+  "address": "6701 E Front St Kansas City 64120",
+  "neighborhood": "River Market"
+ },
+ {
+  "lat": 38.953303,
+  "lng": -94.559365,
+  "address": "9600 A Blue River Rd Kansas City 64131",
+  "neighborhood": "Waldo"
+ },
+ {
+  "lat": 39.13432,
+  "lng": -94.506967,
+  "address": "6300 Enterprise Rd STE 125 Kansas City 64120",
+  "neighborhood": "River Market"
+ },
+ {
+  "lat": 39.019006,
+  "lng": -94.55551,
+  "address": "5901 Prospect Ave Kansas City 64130",
+  "neighborhood": "Brookside"
+ },
+ {
+  "lat": 39.015264,
+  "lng": -94.556389,
+  "address": "6116 Prospect Ave Kansas City 64130",
+  "neighborhood": "Brookside"
+ },
+ {
+  "lat": 39.213597,
+  "lng": -94.517293,
+  "address": "5201 NE Pleasant Valley Rd Kansas City 64119",
+  "neighborhood": "River Market"
+ },
+ {
+  "lat": 39.140561,
+  "lng": -94.530594,
+  "address": "1815 N Chouteau Trfy Kansas City 64120",
+  "neighborhood": "River Market"
+ },
+ {
+  "lat": 39.012968,
+  "lng": -94.555781,
+  "address": "2600 E 63rd St Kansas City 64130",
+  "neighborhood": "Brookside"
+ },
+ {
+  "lat": 39.154728,
+  "lng": -94.461731,
+  "address": "9601 NE 34th St Kansas City 64161",
+  "neighborhood": "River Market"
+ },
+ {
+  "lat": 39.042818,
+  "lng": -94.59736,
+  "address": "4635 Madison Ave Kansas City 64112",
+  "neighborhood": "Plaza"
+ },
+ {
+  "lat": 39.105695,
+  "lng": -94.544148,
+  "address": "3037 Independence Blvd Kansas City 64124",
+  "neighborhood": "River Market"
+ },
+ {
+  "lat": 39.062026,
+  "lng": -94.560286,
+  "address": "3527 Euclid Ave Kansas City 64109",
+  "neighborhood": "Midtown"
+ },
+ {
+  "lat": 39.086499,
+  "lng": -94.601089,
+  "address": "1329 West Bluff Dr Kansas City 64102",
+  "neighborhood": "Crossroads"
+ },
+ {
+  "lat": 39.106301,
+  "lng": -94.592601,
+  "address": "911 W 8th St Kansas City 64101",
+  "neighborhood": "River Market"
+ },
+ {
+  "lat": 39.097298,
+  "lng": -94.584853,
+  "address": "106 W 14th St STE 1400 Kansas City 64105",
+  "neighborhood": "River Market"
+ },
+ {
+  "lat": 38.925442,
+  "lng": -94.577605,
+  "address": "1120 E Red Bridge Rd Kansas City 64131",
+  "neighborhood": "Waldo"
+ },
+ {
+  "lat": 38.853648,
+  "lng": -94.565459,
+  "address": "14801 Prospect Ave Kansas City 64147",
+  "neighborhood": "Waldo"
+ },
+ {
+  "lat": 39.229608,
+  "lng": -94.492791,
+  "address": "7507 N Eastern Ave CE Kansas City 64158",
+  "neighborhood": "River Market"
+ },
+ {
+  "lat": 39.185123,
+  "lng": -94.550331,
+  "address": "2415 NE Vivion Rd Kansas City 64118",
+  "neighborhood": "River Market"
+ },
+ {
+  "lat": 38.996994,
+  "lng": -94.506048,
+  "address": "7012 Ewing Ave Kansas City 64133",
+  "neighborhood": "Brookside"
+ },
+ {
+  "lat": 38.945895,
+  "lng": -94.582117,
+  "address": "10001 Holmes Rd Kansas City 64131",
+  "neighborhood": "Waldo"
+ },
+ {
+  "lat": 38.999416,
+  "lng": -94.59149,
+  "address": "114 W Gregory Blvd Kansas City 64113",
+  "neighborhood": "Brookside"
+ },
+ {
+  "lat": 39.245215,
+  "lng": -94.459747,
+  "address": "9700 NE Barry Rd Kansas City 64157",
+  "neighborhood": "River Market"
+ },
+ {
+  "lat": 39.028665,
+  "lng": -94.571397,
+  "address": "5404 Tracy Ave Kansas City 64110",
+  "neighborhood": "Plaza"
+ },
+ {
+  "lat": 39.238742,
+  "lng": -94.645305,
+  "address": "7830 N Mattox Ave Kansas City 64151",
+  "neighborhood": "River Market"
+ },
+ {
+  "lat": 39.217499,
+  "lng": -94.588828,
+  "address": "601 NW 68th St Kansas City 64118",
+  "neighborhood": "River Market"
+ },
+ {
+  "lat": 39.046142,
+  "lng": -94.441998,
+  "address": "11601 E US 40 Hwy 100 Kansas City 64133",
+  "neighborhood": "Midtown"
+ },
+ {
+  "lat": 39.092823,
+  "lng": -94.488441,
+  "address": "8011 E Truman Rd Kansas City 64126",
+  "neighborhood": "River Market"
+ },
+ {
+  "lat": 39.092322,
+  "lng": -94.581355,
+  "address": "1714 Grand Blvd Kansas City 64108",
+  "neighborhood": "Crossroads"
+ },
+ {
+  "lat": 39.130327,
+  "lng": -94.521534,
+  "address": "5101 E Front St Kansas City 64120",
+  "neighborhood": "River Market"
+ },
+ {
+  "lat": 39.02851,
+  "lng": -94.419841,
+  "address": "13511 E 51st St Kansas City 64133",
+  "neighborhood": "Midtown"
+ },
+ {
+  "lat": 39.086595,
+  "lng": -94.580459,
+  "address": "2121 McGee St Kansas City 64108",
+  "neighborhood": "Crossroads"
+ },
+ {
+  "lat": 38.844817,
+  "lng": -94.542767,
+  "address": "15415 Maxwell Ave Kansas City 64147",
+  "neighborhood": "Waldo"
+ },
+ {
+  "lat": 38.920625,
+  "lng": -94.497685,
+  "address": "11324 Sycamore Ter Kansas City 64134",
+  "neighborhood": "Waldo"
+ },
+ {
+  "lat": 39.026336,
+  "lng": -94.590569,
+  "address": "206 Westover Rd Kansas City 64113",
+  "neighborhood": "Plaza"
+ },
+ {
+  "lat": 39.031032,
+  "lng": -94.500094,
+  "address": "5126 Eastern Ave Kansas City 64129",
+  "neighborhood": "Plaza"
+ },
+ {
+  "lat": 38.989234,
+  "lng": -94.607412,
+  "address": "7701 State Line Rd Kansas City 64114",
+  "neighborhood": "Brookside"
+ },
+ {
+  "lat": 38.989471,
+  "lng": -94.604736,
+  "address": "1207 Meadow Lake Pkwy Kansas City 64114",
+  "neighborhood": "Brookside"
+ },
+ {
+  "lat": 38.988387,
+  "lng": -94.590072,
+  "address": "7704 Main St Kansas City 64114",
+  "neighborhood": "Brookside"
+ },
+ {
+  "lat": 38.98404,
+  "lng": -94.572466,
+  "address": "7900 Virginia Ave Kansas City 64131",
+  "neighborhood": "Brookside"
+ },
+ {
+  "lat": 39.019011,
+  "lng": -94.56622,
+  "address": "1700 E 59th Ter Kansas City 64110",
+  "neighborhood": "Plaza"
+ },
+ {
+  "lat": 38.951941,
+  "lng": -94.479454,
+  "address": "9000 E Bannister Rd Kansas City 64138",
+  "neighborhood": "Waldo"
+ },
+ {
+  "lat": 39.090147,
+  "lng": -94.505878,
+  "address": "1646 Bennington Ave Kansas City 64126",
+  "neighborhood": "River Market"
+ },
+ {
+  "lat": 38.998197,
+  "lng": -94.567113,
+  "address": "1701 E Gregory Blvd Kansas City 64131",
+  "neighborhood": "Brookside"
+ },
+ {
+  "lat": 39.071959,
+  "lng": -94.605057,
+  "address": "3043 Roanoke Rd Kansas City 64108",
+  "neighborhood": "Midtown"
+ },
+ {
+  "lat": 38.995085,
+  "lng": -94.541222,
+  "address": "3904 E 72nd Ter Kansas City 64132",
+  "neighborhood": "Brookside"
+ },
+ {
+  "lat": 39.217489,
+  "lng": -94.615294,
+  "address": "6738 NW Waukomis Dr Kansas City 64151",
+  "neighborhood": "River Market"
+ },
+ {
+  "lat": 39.01901,
+  "lng": -94.573917,
+  "address": "5925 Troost Ave Kansas City 64110",
+  "neighborhood": "Plaza"
+ },
+ {
+  "lat": 39.184873,
+  "lng": -94.549712,
+  "address": "2415 NE Vivion Rd Kansas City 64118",
+  "neighborhood": "River Market"
+ },
+ {
+  "lat": 39.245642,
+  "lng": -94.477344,
+  "address": "8585 NE Shoal Creek Valley Dr Kansas City 64157",
+  "neighborhood": "River Market"
+ },
+ {
+  "lat": 38.939253,
+  "lng": -94.596771,
+  "address": "350 W 104th Ter Kansas City 64114",
+  "neighborhood": "Waldo"
+ },
+ {
+  "lat": 39.015341,
+  "lng": -94.584875,
+  "address": "6200 McGee St Kansas City 64113",
+  "neighborhood": "Brookside"
+ },
+ {
+  "lat": 39.020399,
+  "lng": -94.4279,
+  "address": "13001 E 55th St Kansas City 64133",
+  "neighborhood": "Brookside"
+ },
+ {
+  "lat": 39.031125,
+  "lng": -94.501876,
+  "address": "7200 Eastwood Trfy Kansas City 64129",
+  "neighborhood": "Plaza"
+ },
+ {
+  "lat": 38.937333,
+  "lng": -94.502286,
+  "address": "7508 E 103rd Ter Kansas City 64134",
+  "neighborhood": "Waldo"
+ },
+ {
+  "lat": 39.104601,
+  "lng": -94.588231,
+  "address": "800 Broadway Blvd Kansas City 64105",
+  "neighborhood": "River Market"
+ },
+ {
+  "lat": 39.105079,
+  "lng": -94.514879,
+  "address": "5712 Independence Ave Kansas City 64123",
+  "neighborhood": "River Market"
+ },
+ {
+  "lat": 38.910246,
+  "lng": -94.598733,
+  "address": "517 W 119th Ter Kansas City 64145",
+  "neighborhood": "Waldo"
+ },
+ {
+  "lat": 38.900735,
+  "lng": -94.604476,
+  "address": "904 W 125th Ter Kansas City 64145",
+  "neighborhood": "Waldo"
+ },
+ {
+  "lat": 39.244527,
+  "lng": -94.488076,
+  "address": "8380 N Tullis Ave 300 Kansas City 64158",
+  "neighborhood": "River Market"
+ },
+ {
+  "lat": 39.078347,
+  "lng": -94.592001,
+  "address": "2600 West Pennway Kansas City 64108",
+  "neighborhood": "Crossroads"
+ },
+ {
+  "lat": 39.100262,
+  "lng": -94.544673,
+  "address": "1102 Benton Blvd Kansas City 64127",
+  "neighborhood": "River Market"
+ },
+ {
+  "lat": 39.062899,
+  "lng": -94.571469,
+  "address": "3501 Troost Ave Kansas City 64109",
+  "neighborhood": "Midtown"
+ },
+ {
+  "lat": 38.999066,
+  "lng": -94.584775,
+  "address": "333 E Gregory Blvd Kansas City 64114",
+  "neighborhood": "Brookside"
+ },
+ {
+  "lat": 39.213597,
+  "lng": -94.517293,
+  "address": "5201 NE Pleasant Valley Rd Kansas City 64119",
+  "neighborhood": "River Market"
+ },
+ {
+  "lat": 39.010325,
+  "lng": -94.387181,
+  "address": "6111 Lee's Summit Rd Kansas City 64136",
+  "neighborhood": "Brookside"
+ },
+ {
+  "lat": 38.925935,
+  "lng": -94.578839,
+  "address": "1100 E Red Bridge Rd Kansas City 64131",
+  "neighborhood": "Waldo"
+ },
+ {
+  "lat": 39.022485,
+  "lng": -94.432154,
+  "address": "12404 E 54th Ter Kansas City 64133",
+  "neighborhood": "Brookside"
+ },
+ {
+  "lat": 39.102544,
+  "lng": -94.55336,
+  "address": "855 Olive St Kansas City 64124",
+  "neighborhood": "River Market"
+ },
+ {
+  "lat": 39.08021,
+  "lng": -94.594393,
+  "address": "2601 Madison Ave Kansas City 64108",
+  "neighborhood": "Crossroads"
+ },
+ {
+  "lat": 39.244195,
+  "lng": -94.467049,
+  "address": "9239 NE M 152 Hwy Kansas City 64158",
+  "neighborhood": "River Market"
+ },
+ {
+  "lat": 39.086675,
+  "lng": -94.529091,
+  "address": "2011 Elmwood Ave Kansas City 64127",
+  "neighborhood": "Crossroads"
+ },
+ {
+  "lat": 38.953547,
+  "lng": -94.582529,
+  "address": "9600 Holmes Rd Kansas City 64131",
+  "neighborhood": "Waldo"
+ },
+ {
+  "lat": 39.296627,
+  "lng": -94.68335,
+  "address": "8800 NW 112th St 3RD-C Kansas City 64153",
+  "neighborhood": "River Market"
+ },
+ {
+  "lat": 39.001149,
+  "lng": -94.603887,
+  "address": "1202 W 70th Ter Kansas City 64113",
+  "neighborhood": "Brookside"
+ },
+ {
+  "lat": 39.226364,
+  "lng": -94.667752,
+  "address": "7501 NW 73rd St Kansas City 64152",
+  "neighborhood": "River Market"
+ },
+ {
+  "lat": 38.97465,
+  "lng": -94.492501,
+  "address": "8209 Blue Ridge Blvd Kansas City 64138",
+  "neighborhood": "Brookside"
+ },
+ {
+  "lat": 39.098217,
+  "lng": -94.577476,
+  "address": "417 E 13th St Kansas City 64106",
+  "neighborhood": "River Market"
+ },
+ {
+  "lat": 39.174457,
+  "lng": -94.576694,
+  "address": "4400 NE Carolane St Kansas City 64116",
+  "neighborhood": "River Market"
+ },
+ {
+  "lat": 38.914693,
+  "lng": -94.584487,
+  "address": "621 E 117th St Kansas City 64131",
+  "neighborhood": "Waldo"
+ },
+ {
+  "lat": 38.904517,
+  "lng": -94.582504,
+  "address": "12231 Charlotte St Kansas City 64146",
+  "neighborhood": "Waldo"
+ },
+ {
+  "lat": 39.244695,
+  "lng": -94.577608,
+  "address": "300 NE 83rd St Kansas City 64118",
+  "neighborhood": "River Market"
+ },
+ {
+  "lat": 38.945292,
+  "lng": -94.511781,
+  "address": "6701 E 99th St Kansas City 64134",
+  "neighborhood": "Waldo"
+ },
+ {
+  "lat": 38.937597,
+  "lng": -94.597581,
+  "address": "10466 Wornall Rd UNIT 101 Kansas City 64114",
+  "neighborhood": "Waldo"
+ },
+ {
+  "lat": 39.295935,
+  "lng": -94.575428,
+  "address": "11118 N Oak Trfy Kansas City 64155",
+  "neighborhood": "River Market"
+ },
+ {
+  "lat": 39.050506,
+  "lng": -94.59721,
+  "address": "903 Westport Rd Kansas City 64111",
+  "neighborhood": "Westport"
+ },
+ {
+  "lat": 39.285154,
+  "lng": -94.602413,
+  "address": "10608 N Bell St Kansas City 64154",
+  "neighborhood": "River Market"
+ },
+ {
+  "lat": 39.25888,
+  "lng": -94.558333,
+  "address": "9100 Maplewoods Pkwy Kansas City 64155",
+  "neighborhood": "River Market"
+ },
+ {
+  "lat": 39.295329,
+  "lng": -94.500298,
+  "address": "11135 NE Reinking Rd Kansas City 64156",
+  "neighborhood": "River Market"
+ },
+ {
+  "lat": 39.062799,
+  "lng": -94.589964,
+  "address": "3535 Broadway Blvd D Kansas City 64111",
+  "neighborhood": "Midtown"
+ },
+ {
+  "lat": 39.216855,
+  "lng": -94.618806,
+  "address": "3313 NW 68th St Kansas City 64151",
+  "neighborhood": "River Market"
+ },
+ {
+  "lat": 39.025657,
+  "lng": -94.573548,
+  "address": "5543 Troost Ave Kansas City 64110",
+  "neighborhood": "Plaza"
+ },
+ {
+  "lat": 38.973466,
+  "lng": -94.549048,
+  "address": "8431 Hickman Mills Dr Kansas City 64132",
+  "neighborhood": "Waldo"
+ },
+ {
+  "lat": 39.020103,
+  "lng": -94.505452,
+  "address": "6828 E 58th St Kansas City 64129",
+  "neighborhood": "Brookside"
+ },
+ {
+  "lat": 39.074552,
+  "lng": -94.589877,
+  "address": "400 W 31st St Kansas City 64108",
+  "neighborhood": "Midtown"
+ },
+ {
+  "lat": 39.097149,
+  "lng": -94.552409,
+  "address": "1307 Wabash Ave Kansas City 64127",
+  "neighborhood": "River Market"
+ },
+ {
+  "lat": 39.028285,
+  "lng": -94.420223,
+  "address": "13511 E 51st St Kansas City 64133",
+  "neighborhood": "Midtown"
+ },
+ {
+  "lat": 39.031105,
+  "lng": -94.501581,
+  "address": "7200 Eastwood Trfy Kansas City 64129",
+  "neighborhood": "Plaza"
+ },
+ {
+  "lat": 39.031159,
+  "lng": -94.501584,
+  "address": "7200 Eastwood Trfy Kansas City 64129",
+  "neighborhood": "Plaza"
+ },
+ {
+  "lat": 39.101225,
+  "lng": -94.511366,
+  "address": "6000 E 9th St Kansas City 64125",
+  "neighborhood": "River Market"
+ },
+ {
+  "lat": 39.098752,
+  "lng": -94.555485,
+  "address": "2211 E 12th St Kansas City 64127",
+  "neighborhood": "River Market"
+ },
+ {
+  "lat": 39.097819,
+  "lng": -94.525192,
+  "address": "4800 E 12th St Kansas City 64127",
+  "neighborhood": "River Market"
+ },
+ {
+  "lat": 39.20209,
+  "lng": -94.621822,
+  "address": "3500 NW 59th Ter Kansas City 64151",
+  "neighborhood": "River Market"
+ },
+ {
+  "lat": 39.031166,
+  "lng": -94.501818,
+  "address": "7200 Eastwood Trfy Kansas City 64129",
+  "neighborhood": "Plaza"
+ },
+ {
+  "lat": 39.115332,
+  "lng": -94.542943,
+  "address": "3217 Gladstone Blvd Kansas City 64123",
+  "neighborhood": "River Market"
+ },
+ {
+  "lat": 39.140483,
+  "lng": -94.520331,
+  "address": "5130 Deramus Ave B-059 Kansas City 64120",
+  "neighborhood": "River Market"
+ },
+ {
+  "lat": 39.091493,
+  "lng": -94.505686,
+  "address": "6600 E 16th Ter Kansas City 64126",
+  "neighborhood": "River Market"
+ },
+ {
+  "lat": 39.163251,
+  "lng": -94.531236,
+  "address": "3813 N Jackson Ave Kansas City 64117",
+  "neighborhood": "River Market"
+ },
+ {
+  "lat": 39.049765,
+  "lng": -94.588332,
+  "address": "4235 Baltimore Ave Kansas City 64111",
+  "neighborhood": "Westport"
+ },
+ {
+  "lat": 39.054459,
+  "lng": -94.549909,
+  "address": "3925 South Benton Ave Kansas City 64130",
+  "neighborhood": "Midtown"
+ },
+ {
+  "lat": 39.172698,
+  "lng": -94.561591,
+  "address": "1500 NE 42nd Ter Kansas City 64116",
+  "neighborhood": "River Market"
+ },
+ {
+  "lat": 39.190694,
+  "lng": -94.508356,
+  "address": "5324 N Wheeling Ave Kansas City 64119",
+  "neighborhood": "River Market"
+ },
+ {
+  "lat": 38.941796,
+  "lng": -94.59671,
+  "address": "400 W 103rd St Kansas City 64114",
+  "neighborhood": "Waldo"
+ },
+ {
+  "lat": 39.049531,
+  "lng": -94.587399,
+  "address": "20 W 43rd St Kansas City 64111",
+  "neighborhood": "Westport"
+ },
+ {
+  "lat": 39.110265,
+  "lng": -94.580654,
+  "address": "301 Grand Blvd Kansas City 64106",
+  "neighborhood": "River Market"
+ },
+ {
+  "lat": 39.109293,
+  "lng": -94.579672,
+  "address": "310 E 5th St Kansas City 64106",
+  "neighborhood": "River Market"
+ },
+ {
+  "lat": 39.031263,
+  "lng": -94.496564,
+  "address": "7609 Eastwood Trfy Kansas City 64129",
+  "neighborhood": "Plaza"
+ },
+ {
+  "lat": 39.051797,
+  "lng": -94.539024,
+  "address": "4021 Cleveland Ave Kansas City 64130",
+  "neighborhood": "Midtown"
+ },
+ {
+  "lat": 39.052728,
+  "lng": -94.558142,
+  "address": "4029 Brooklyn Ave Kansas City 64130",
+  "neighborhood": "Midtown"
+ },
+ {
+  "lat": 38.945426,
+  "lng": -94.596508,
+  "address": "400 W 101st St Kansas City 64114",
+  "neighborhood": "Waldo"
+ },
+ {
+  "lat": 39.060558,
+  "lng": -94.603706,
+  "address": "3700 Wyoming St Kansas City 64111",
+  "neighborhood": "Westport"
+ },
+ {
+  "lat": 39.063542,
+  "lng": -94.579781,
+  "address": "501 E Armour Blvd Kansas City 64109",
+  "neighborhood": "Midtown"
+ },
+ {
+  "lat": 39.091186,
+  "lng": -94.500564,
+  "address": "7013 E 16th Ter Kansas City 64126",
+  "neighborhood": "River Market"
+ },
+ {
+  "lat": 38.986957,
+  "lng": -94.553916,
+  "address": "2901 E 77th St Kansas City 64132",
+  "neighborhood": "Brookside"
+ },
+ {
+  "lat": 39.088089,
+  "lng": -94.524667,
+  "address": "1909 Poplar Ave Kansas City 64127",
+  "neighborhood": "Crossroads"
+ },
+ {
+  "lat": 39.106584,
+  "lng": -94.569111,
+  "address": "1120 Admiral Blvd Kansas City 64106",
+  "neighborhood": "River Market"
+ },
+ {
+  "lat": 39.188695,
+  "lng": -94.636707,
+  "address": "5112 N Green Hills Rd Kansas City 64151",
+  "neighborhood": "River Market"
+ },
+ {
+  "lat": 39.240706,
+  "lng": -94.569817,
+  "address": "900 NE 81st St Kansas City 64118",
+  "neighborhood": "River Market"
+ },
+ {
+  "lat": 38.913075,
+  "lng": -94.604301,
+  "address": "11901 Summit St Kansas City 64145",
+  "neighborhood": "Waldo"
+ },
+ {
+  "lat": 38.970823,
+  "lng": -94.411502,
+  "address": "8200 Rhinehart Rd Kansas City 64139",
+  "neighborhood": "Brookside"
+ },
+ {
+  "lat": 39.031124,
+  "lng": -94.501825,
+  "address": "7200 Eastwood Trfy Kansas City 64129",
+  "neighborhood": "Plaza"
+ },
+ {
+  "lat": 38.939755,
+  "lng": -94.470072,
+  "address": "10100 Raytown Rd Kansas City 64134",
+  "neighborhood": "Waldo"
+ },
+ {
+  "lat": 39.031123,
+  "lng": -94.501755,
+  "address": "7200 Eastwood Trfy Kansas City 64129",
+  "neighborhood": "Plaza"
+ },
+ {
+  "lat": 39.180025,
+  "lng": -94.494152,
+  "address": "7333 NE 48th St Kansas City 64117",
+  "neighborhood": "River Market"
+ },
+ {
+  "lat": 39.168063,
+  "lng": -94.494904,
+  "address": "7401 NE Parvin Rd Kansas City 64117",
+  "neighborhood": "River Market"
+ },
+ {
+  "lat": 38.941841,
+  "lng": -94.597064,
+  "address": "400 W 103rd St Kansas City 64114",
+  "neighborhood": "Waldo"
+ },
+ {
+  "lat": 39.249665,
+  "lng": -94.564244,
+  "address": "8520 N Virginia Ave Kansas City 64155",
+  "neighborhood": "River Market"
+ },
+ {
+  "lat": 39.049838,
+  "lng": -94.598764,
+  "address": "1009 W 43rd St Kansas City 64111",
+  "neighborhood": "Westport"
+ },
+ {
+  "lat": 39.168429,
+  "lng": -94.493752,
+  "address": "7300 NE Parvin Rd Kansas City 64117",
+  "neighborhood": "River Market"
+ },
+ {
+  "lat": 39.188087,
+  "lng": -94.514489,
+  "address": "5609 NE Vivion Rd Kansas City 64119",
+  "neighborhood": "River Market"
+ },
+ {
+  "lat": 38.916903,
+  "lng": -94.590946,
+  "address": "11609 Minor Dr Kansas City 64114",
+  "neighborhood": "Waldo"
+ },
+ {
+  "lat": 39.001841,
+  "lng": -94.592957,
+  "address": "7001 Brookside Rd Kansas City 64113",
+  "neighborhood": "Brookside"
+ },
+ {
+  "lat": 39.194456,
+  "lng": -94.486098,
+  "address": "7901 NE 56th St Kansas City 64119",
+  "neighborhood": "River Market"
+ },
+ {
+  "lat": 39.031161,
+  "lng": -94.501766,
+  "address": "7200 Eastwood Trfy Kansas City 64129",
+  "neighborhood": "Plaza"
+ },
+ {
+  "lat": 39.303255,
+  "lng": -94.560592,
+  "address": "1401 NE Cookingham Dr Kansas City 64155",
+  "neighborhood": "River Market"
+ },
+ {
+  "lat": 39.043578,
+  "lng": -94.440482,
+  "address": "4300 Moats Dr Kansas City 64133",
+  "neighborhood": "Midtown"
+ },
+ {
+  "lat": 39.226149,
+  "lng": -94.668693,
+  "address": "7206 N Congress Ave Kansas City 64152",
+  "neighborhood": "River Market"
+ },
+ {
+  "lat": 38.939128,
+  "lng": -94.596028,
+  "address": "350 W 104th Ter Kansas City 64114",
+  "neighborhood": "Waldo"
+ },
+ {
+  "lat": 39.049426,
+  "lng": -94.588288,
+  "address": "21 W 43rd St Kansas City 64111",
+  "neighborhood": "Westport"
+ },
+ {
+  "lat": 38.91295,
+  "lng": -94.605634,
+  "address": "11901 Madison Ave Kansas City 64145",
+  "neighborhood": "Waldo"
+ },
+ {
+  "lat": 39.031585,
+  "lng": -94.501929,
+  "address": "7200 Eastwood Trfy Kansas City 64129",
+  "neighborhood": "Plaza"
+ },
+ {
+  "lat": 38.952443,
+  "lng": -94.515322,
+  "address": "9500 Fremont Ave Kansas City 64134",
+  "neighborhood": "Waldo"
+ },
+ {
+  "lat": 38.925531,
+  "lng": -94.535604,
+  "address": "4705 E 110th St Kansas City 64137",
+  "neighborhood": "Waldo"
+ },
+ {
+  "lat": 38.999228,
+  "lng": -94.590904,
+  "address": "115 W Gregory Blvd Kansas City 64114",
+  "neighborhood": "Brookside"
+ },
+ {
+  "lat": 38.948599,
+  "lng": -94.516476,
+  "address": "9622 Beacon Ave Kansas City 64134",
+  "neighborhood": "Waldo"
+ },
+ {
+  "lat": 38.962814,
+  "lng": -94.596968,
+  "address": "9115 Washington St Kansas City 64114",
+  "neighborhood": "Waldo"
+ },
+ {
+  "lat": 39.050421,
+  "lng": -94.589511,
+  "address": "120 W 43rd St Kansas City 64111",
+  "neighborhood": "Westport"
+ },
+ {
+  "lat": 39.049402,
+  "lng": -94.588403,
+  "address": "21 W 43rd St Kansas City 64111",
+  "neighborhood": "Westport"
+ },
+ {
+  "lat": 38.941841,
+  "lng": -94.597064,
+  "address": "400 W 103rd St Kansas City 64114",
+  "neighborhood": "Waldo"
+ },
+ {
+  "lat": 38.941217,
+  "lng": -94.596397,
+  "address": "400 W 103rd St Kansas City 64114",
+  "neighborhood": "Waldo"
+ },
+ {
+  "lat": 38.941556,
+  "lng": -94.469188,
+  "address": "10056 Raytown Rd Kansas City 64134",
+  "neighborhood": "Waldo"
+ },
+ {
+  "lat": 38.9948,
+  "lng": -94.500881,
+  "address": "7401 E Gregory Blvd Kansas City 64133",
+  "neighborhood": "Brookside"
+ },
+ {
+  "lat": 39.244468,
+  "lng": -94.473892,
+  "address": "8754 NE 82nd Ter Kansas City 64158",
+  "neighborhood": "River Market"
+ },
+ {
+  "lat": 39.037814,
+  "lng": -94.58101,
+  "address": "425 Dr. Martin Luther King Jr. Blvd BLD S Kansas City 64110",
+  "neighborhood": "Plaza"
+ },
+ {
+  "lat": 38.93472,
+  "lng": -94.591455,
+  "address": "31 E 106th Ter Kansas City 64114",
+  "neighborhood": "Waldo"
+ },
+ {
+  "lat": 38.998054,
+  "lng": -94.584382,
+  "address": "401 E 71st Ter Kansas City 64131",
+  "neighborhood": "Brookside"
+ },
+ {
+  "lat": 38.913389,
+  "lng": -94.605871,
+  "address": "11825 Madison Ave Kansas City 64114",
+  "neighborhood": "Waldo"
+ },
+ {
+  "lat": 39.061948,
+  "lng": -94.560604,
+  "address": "3527 Euclid Ave Kansas City 64109",
+  "neighborhood": "Midtown"
+ },
+ {
+  "lat": 39.049401,
+  "lng": -94.58831,
+  "address": "21 W 43rd St Kansas City 64111",
+  "neighborhood": "Westport"
+ },
+ {
+  "lat": 38.890751,
+  "lng": -94.606629,
+  "address": "900 W Blue Ridge Blvd Kansas City 64145",
+  "neighborhood": "Waldo"
+ },
+ {
+  "lat": 38.942141,
+  "lng": -94.583522,
+  "address": "10210 Holmes Rd B S A Kansas City 64131",
+  "neighborhood": "Waldo"
+ },
+ {
+  "lat": 39.112234,
+  "lng": -94.564584,
+  "address": "1412 E 3rd St Kansas City 64106",
+  "neighborhood": "River Market"
+ },
+ {
+  "lat": 39.260726,
+  "lng": -94.656578,
+  "address": "9198 NW Skyview Ave SIGN Kansas City 64154",
+  "neighborhood": "River Market"
+ },
+ {
+  "lat": 39.030886,
+  "lng": -94.575891,
+  "address": "5301 Rockhill Rd Kansas City 64110",
+  "neighborhood": "Plaza"
+ },
+ {
+  "lat": 38.998949,
+  "lng": -94.591821,
+  "address": "7108 Wyandotte St Kansas City 64114",
+  "neighborhood": "Brookside"
+ },
+ {
+  "lat": 38.938581,
+  "lng": -94.599081,
+  "address": "411 W 104th St 103H Kansas City 64114",
+  "neighborhood": "Waldo"
+ },
+ {
+  "lat": 39.229577,
+  "lng": -94.492218,
+  "address": "7512 N Oakland Ave Kansas City 64158",
+  "neighborhood": "River Market"
+ },
+ {
+  "lat": 39.229985,
+  "lng": -94.491387,
+  "address": "7525 N Oakland Ave Kansas City 64158",
+  "neighborhood": "River Market"
+ },
+ {
+  "lat": 39.180954,
+  "lng": -94.586556,
+  "address": "100 NW Vivion Rd Kansas City 64116",
+  "neighborhood": "River Market"
+ },
+ {
+  "lat": 38.944128,
+  "lng": -94.468848,
+  "address": "9820 Raytown Rd Kansas City 64134",
+  "neighborhood": "Waldo"
+ },
+ {
+  "lat": 38.998927,
+  "lng": -94.577087,
+  "address": "908 E Gregory Blvd Kansas City 64131",
+  "neighborhood": "Brookside"
+ },
+ {
+  "lat": 39.230062,
+  "lng": -94.488821,
+  "address": "7805 NE 75th Ter Kansas City 64158",
+  "neighborhood": "River Market"
+ },
+ {
+  "lat": 39.009417,
+  "lng": -94.582938,
+  "address": "420 E 65th Ter Kansas City 64131",
+  "neighborhood": "Brookside"
+ },
+ {
+  "lat": 39.247646,
+  "lng": -94.544733,
+  "address": "2801 NE Barry Rd Kansas City 64156",
+  "neighborhood": "River Market"
+ },
+ {
+  "lat": 39.260726,
+  "lng": -94.656578,
+  "address": "9198 NW Skyview Ave SIGN Kansas City 64154",
+  "neighborhood": "River Market"
+ },
+ {
+  "lat": 39.243307,
+  "lng": -94.639906,
+  "address": "5201 NW 82nd Ter Kansas City 64151",
+  "neighborhood": "River Market"
+ },
+ {
+  "lat": 38.912923,
+  "lng": -94.607188,
+  "address": "11904 Jarboe St Kansas City 64145",
+  "neighborhood": "Waldo"
+ },
+ {
+  "lat": 39.281314,
+  "lng": -94.548958,
+  "address": "10396 N Olive St Kansas City 64155",
+  "neighborhood": "River Market"
+ },
+ {
+  "lat": 39.095538,
+  "lng": -94.564656,
+  "address": "1414 E Truman Rd Kansas City 64106",
+  "neighborhood": "River Market"
+ },
+ {
+  "lat": 38.9948,
+  "lng": -94.500881,
+  "address": "7401 E Gregory Blvd Kansas City 64133",
+  "neighborhood": "Brookside"
+ },
+ {
+  "lat": 39.041795,
+  "lng": -94.568422,
+  "address": "4632 Paseo Kansas City 64110",
+  "neighborhood": "Plaza"
+ },
+ {
+  "lat": 39.2467,
+  "lng": -94.657801,
+  "address": "8340 NW Roanridge Rd Kansas City 64151",
+  "neighborhood": "River Market"
+ },
+ {
+  "lat": 38.996933,
+  "lng": -94.569166,
+  "address": "1504 E 72nd St Kansas City 64131",
+  "neighborhood": "Brookside"
+ },
+ {
+  "lat": 38.912888,
+  "lng": -94.605369,
+  "address": "11901 Madison Ave Kansas City 64145",
+  "neighborhood": "Waldo"
+ },
+ {
+  "lat": 39.115298,
+  "lng": -94.564619,
+  "address": "1503 Guinotte Ave Kansas City 64120",
+  "neighborhood": "River Market"
+ },
+ {
+  "lat": 38.889903,
+  "lng": -94.606888,
+  "address": "13101 State Line Rd Kansas City 64145",
+  "neighborhood": "Waldo"
+ },
+ {
+  "lat": 39.089996,
+  "lng": -94.574711,
+  "address": "714 E 19th St Kansas City 64108",
+  "neighborhood": "Crossroads"
+ },
+ {
+  "lat": 39.216775,
+  "lng": -94.615806,
+  "address": "6738 NW Waukomis Dr Kansas City 64151",
+  "neighborhood": "River Market"
+ },
+ {
+  "lat": 39.049418,
+  "lng": -94.588275,
+  "address": "21 W 43rd St Kansas City 64111",
+  "neighborhood": "Westport"
+ },
+ {
+  "lat": 38.9402,
+  "lng": -94.468627,
+  "address": "10071 Raytown Rd Kansas City 64134",
+  "neighborhood": "Waldo"
+ },
+ {
+  "lat": 39.026429,
+  "lng": -94.551972,
+  "address": "5501 South Benton Ave Kansas City 64130",
+  "neighborhood": "Plaza"
+ },
+ {
+  "lat": 38.917641,
+  "lng": -94.590295,
+  "address": "213 E 115th Ter Kansas City 64114",
+  "neighborhood": "Waldo"
+ },
+ {
+  "lat": 39.056801,
+  "lng": -94.607344,
+  "address": "3927 State Line Rd Kansas City 64111",
+  "neighborhood": "Westport"
+ },
+ {
+  "lat": 38.890785,
+  "lng": -94.606651,
+  "address": "900 W Blue Ridge Blvd Kansas City 64145",
+  "neighborhood": "Waldo"
+ },
+ {
+  "lat": 39.071557,
+  "lng": -94.600204,
+  "address": "1220 W 31st St Kansas City 64108",
+  "neighborhood": "Midtown"
+ },
+ {
+  "lat": 38.999814,
+  "lng": -94.591807,
+  "address": "200 W Gregory Blvd Kansas City 64113",
+  "neighborhood": "Brookside"
+ },
+ {
+  "lat": 39.062793,
+  "lng": -94.557849,
+  "address": "2119 E 35th St Kansas City 64109",
+  "neighborhood": "Midtown"
+ },
+ {
+  "lat": 39.207591,
+  "lng": -94.605181,
+  "address": "2001 NW 62nd St Kansas City 64151",
+  "neighborhood": "River Market"
+ },
+ {
+  "lat": 38.912766,
+  "lng": -94.60406,
+  "address": "11901 Summit St Kansas City 64145",
+  "neighborhood": "Waldo"
+ },
+ {
+  "lat": 38.890097,
+  "lng": -94.607379,
+  "address": "13101 State Line Rd Kansas City 64145",
+  "neighborhood": "Waldo"
+ },
+ {
+  "lat": 38.995218,
+  "lng": -94.501037,
+  "address": "7400 E Gregory Blvd Kansas City 64133",
+  "neighborhood": "Brookside"
+ },
+ {
+  "lat": 38.994701,
+  "lng": -94.495398,
+  "address": "7811 E Gregory Blvd Kansas City 64133",
+  "neighborhood": "Brookside"
+ },
+ {
+  "lat": 38.947456,
+  "lng": -94.597755,
+  "address": "10000 Wornall Rd Kansas City 64114",
+  "neighborhood": "Waldo"
+ },
+ {
+  "lat": 39.130617,
+  "lng": -94.523046,
+  "address": "4925 E Front St Kansas City 64120",
+  "neighborhood": "River Market"
+ },
+ {
+  "lat": 39.026242,
+  "lng": -94.55181,
+  "address": "5501 South Benton Ave Kansas City 64130",
+  "neighborhood": "Plaza"
+ },
+ {
+  "lat": 39.034463,
+  "lng": -94.574951,
+  "address": "5101 Rockhill Rd Kansas City 64110",
+  "neighborhood": "Plaza"
+ },
+ {
+  "lat": 39.025129,
+  "lng": -94.54744,
+  "address": "5520 College Ave Kansas City 64130",
+  "neighborhood": "Plaza"
+ },
+ {
+  "lat": 38.912659,
+  "lng": -94.605258,
+  "address": "11901 Madison Ave Kansas City 64145",
+  "neighborhood": "Waldo"
+ },
+ {
+  "lat": 38.99478,
+  "lng": -94.591906,
+  "address": "201 W 73rd Ter Kansas City 64114",
+  "neighborhood": "Brookside"
+ },
+ {
+  "lat": 39.010192,
+  "lng": -94.556041,
+  "address": "6407 Prospect Ave Kansas City 64132",
+  "neighborhood": "Brookside"
+ },
+ {
+  "lat": 39.100787,
+  "lng": -94.581709,
+  "address": "1101 Walnut St BLDG Kansas City 64106",
+  "neighborhood": "River Market"
+ },
+ {
+  "lat": 38.955544,
+  "lng": -94.578102,
+  "address": "9500 Harrison St Kansas City 64131",
+  "neighborhood": "Waldo"
+ },
+ {
+  "lat": 38.871648,
+  "lng": -94.60519,
+  "address": "14151 Wyandotte St Kansas City 64145",
+  "neighborhood": "Waldo"
+ },
+ {
+  "lat": 39.173786,
+  "lng": -94.518812,
+  "address": "5212 NE 44th St Kansas City 64117",
+  "neighborhood": "River Market"
+ },
+ {
+  "lat": 39.208898,
+  "lng": -94.646739,
+  "address": "5701 NW 62nd Ter Kansas City 64151",
+  "neighborhood": "River Market"
+ },
+ {
+  "lat": 38.93521,
+  "lng": -94.606611,
+  "address": "1308 Carondelet Dr Kansas City 64114",
+  "neighborhood": "Waldo"
+ },
+ {
+  "lat": 39.042998,
+  "lng": -94.597007,
+  "address": "4635 Madison Ave Kansas City 64112",
+  "neighborhood": "Plaza"
+ },
+ {
+  "lat": 39.089047,
+  "lng": -94.587321,
+  "address": "228 Southwest Blvd Kansas City 64108",
+  "neighborhood": "Crossroads"
+ },
+ {
+  "lat": 38.947455,
+  "lng": -94.597757,
+  "address": "10000 Wornall Rd Kansas City 64114",
+  "neighborhood": "Waldo"
+ },
+ {
+  "lat": 38.939128,
+  "lng": -94.596028,
+  "address": "350 W 104th Ter Kansas City 64114",
+  "neighborhood": "Waldo"
+ },
+ {
+  "lat": 39.056599,
+  "lng": -94.539345,
+  "address": "3801 Cleveland Ave Kansas City 64128",
+  "neighborhood": "Midtown"
+ },
+ {
+  "lat": 39.056727,
+  "lng": -94.541664,
+  "address": "3801 Askew Ave Kansas City 64128",
+  "neighborhood": "Midtown"
+ },
+ {
+  "lat": 39.07633,
+  "lng": -94.601818,
+  "address": "2829 Southwest Blvd Kansas City 64108",
+  "neighborhood": "Midtown"
+ },
+ {
+  "lat": 38.992056,
+  "lng": -94.58955,
+  "address": "7501 Main St Kansas City 64114",
+  "neighborhood": "Brookside"
+ },
+ {
+  "lat": 39.235085,
+  "lng": -94.600903,
+  "address": "7728 N Platte Purchase Dr Kansas City 64151",
+  "neighborhood": "River Market"
+ },
+ {
+  "lat": 39.226149,
+  "lng": -94.668693,
+  "address": "7206 N Congress Ave Kansas City 64152",
+  "neighborhood": "River Market"
+ },
+ {
+  "lat": 39.184538,
+  "lng": -94.551533,
+  "address": "4933 N Park Ave Kansas City 64118",
+  "neighborhood": "River Market"
+ },
+ {
+  "lat": 39.184264,
+  "lng": -94.551864,
+  "address": "2401 NE Vivion Rd Kansas City 64118",
+  "neighborhood": "River Market"
+ },
+ {
+  "lat": 38.994527,
+  "lng": -94.606474,
+  "address": "7401 Wyoming St Kansas City 64114",
+  "neighborhood": "Brookside"
+ },
+ {
+  "lat": 39.170518,
+  "lng": -94.572506,
+  "address": "640 NE 42nd St Kansas City 64116",
+  "neighborhood": "River Market"
+ },
+ {
+  "lat": 39.244437,
+  "lng": -94.566728,
+  "address": "8248 N Troost Ave Kansas City 64118",
+  "neighborhood": "River Market"
+ },
+ {
+  "lat": 39.240515,
+  "lng": -94.569934,
+  "address": "821 NE 81st St Kansas City 64118",
+  "neighborhood": "River Market"
+ },
+ {
+  "lat": 38.913599,
+  "lng": -94.60154,
+  "address": "11718 Jefferson St Kansas City 64114",
+  "neighborhood": "Waldo"
+ },
+ {
+  "lat": 38.946309,
+  "lng": -94.596477,
+  "address": "320 W 100th Ter APT 207 Kansas City 64114",
+  "neighborhood": "Waldo"
+ },
+ {
+  "lat": 38.890827,
+  "lng": -94.606442,
+  "address": "880 W Blue Ridge Blvd Kansas City 64145",
+  "neighborhood": "Waldo"
+ },
+ {
+  "lat": 39.237058,
+  "lng": -94.534566,
+  "address": "3781 NE 79th Ter Kansas City 64119",
+  "neighborhood": "River Market"
+ },
+ {
+  "lat": 39.109594,
+  "lng": -94.55847,
+  "address": "345 Maple Blvd Kansas City 64124",
+  "neighborhood": "River Market"
+ },
+ {
+  "lat": 38.940404,
+  "lng": -94.469027,
+  "address": "10071 Raytown Rd Kansas City 64134",
+  "neighborhood": "Waldo"
+ },
+ {
+  "lat": 39.031054,
+  "lng": -94.448049,
+  "address": "11200 E 50th Ter Kansas City 64133",
+  "neighborhood": "Midtown"
+ },
+ {
+  "lat": 39.172134,
+  "lng": -94.57627,
+  "address": "4300 N Locust St Kansas City 64116",
+  "neighborhood": "River Market"
+ },
+ {
+  "lat": 39.170518,
+  "lng": -94.572506,
+  "address": "640 NE 42nd St Kansas City 64116",
+  "neighborhood": "River Market"
+ },
+ {
+  "lat": 39.031585,
+  "lng": -94.501929,
+  "address": "7200 Eastwood Trfy Kansas City 64129",
+  "neighborhood": "Plaza"
+ },
+ {
+  "lat": 38.912972,
+  "lng": -94.604522,
+  "address": "11900 Summit St Kansas City 64145",
+  "neighborhood": "Waldo"
+ },
+ {
+  "lat": 38.999611,
+  "lng": -94.593867,
+  "address": "7048 Wornall Rd Kansas City 64114",
+  "neighborhood": "Brookside"
+ },
+ {
+  "lat": 39.083608,
+  "lng": -94.591581,
+  "address": "2401 West Pennway Kansas City 64108",
+  "neighborhood": "Crossroads"
+ },
+ {
+  "lat": 39.260726,
+  "lng": -94.656578,
+  "address": "9198 NW Skyview Ave SIGN Kansas City 64154",
+  "neighborhood": "River Market"
+ },
+ {
+  "lat": 39.079357,
+  "lng": -94.591356,
+  "address": "2600 West Pennway Kansas City 64108",
+  "neighborhood": "Crossroads"
+ },
+ {
+  "lat": 39.212777,
+  "lng": -94.633808,
+  "address": "6512 N Anita Ave Kansas City 64151",
+  "neighborhood": "River Market"
+ },
+ {
+  "lat": 38.946144,
+  "lng": -94.596471,
+  "address": "400 W 101st St Kansas City 64114",
+  "neighborhood": "Waldo"
+ },
+ {
+  "lat": 38.999432,
+  "lng": -94.591502,
+  "address": "114 W Gregory Blvd Kansas City 64113",
+  "neighborhood": "Brookside"
+ },
+ {
+  "lat": 39.173507,
+  "lng": -94.520598,
+  "address": "5015 NE 44th St Kansas City 64117",
+  "neighborhood": "River Market"
+ },
+ {
+  "lat": 39.130617,
+  "lng": -94.523046,
+  "address": "4925 E Front St Kansas City 64120",
+  "neighborhood": "River Market"
+ },
+ {
+  "lat": 39.23907,
+  "lng": -94.534515,
+  "address": "8020 N Antioch Rd Kansas City 64119",
+  "neighborhood": "River Market"
+ },
+ {
+  "lat": 38.954203,
+  "lng": -94.582055,
+  "address": "648 E 96th St Kansas City 64131",
+  "neighborhood": "Waldo"
+ },
+ {
+  "lat": 38.973959,
+  "lng": -94.576909,
+  "address": "1025 E 84th Ter Kansas City 64131",
+  "neighborhood": "Waldo"
+ },
+ {
+  "lat": 38.948461,
+  "lng": -94.466202,
+  "address": "9521 Raytown Rd Kansas City 64134",
+  "neighborhood": "Waldo"
+ },
+ {
+  "lat": 38.945255,
+  "lng": -94.596809,
+  "address": "401 W 101st St Kansas City 64114",
+  "neighborhood": "Waldo"
+ },
+ {
+  "lat": 39.254455,
+  "lng": -94.553318,
+  "address": "2000 NE M 152 Hwy Kansas City 64155",
+  "neighborhood": "River Market"
+ },
+ {
+  "lat": 39.226553,
+  "lng": -94.668426,
+  "address": "7206 N Congress Ave Kansas City 64152",
+  "neighborhood": "River Market"
+ },
+ {
+  "lat": 39.226508,
+  "lng": -94.668431,
+  "address": "7206 N Congress Ave Kansas City 64152",
+  "neighborhood": "River Market"
+ },
+ {
+  "lat": 39.26848,
+  "lng": -94.451478,
+  "address": "9703 N Ash Ave Kansas City 64157",
+  "neighborhood": "River Market"
+ },
+ {
+  "lat": 39.05756,
+  "lng": -94.572627,
+  "address": "3800 Troost Ave Kansas City 64109",
+  "neighborhood": "Midtown"
+ },
+ {
+  "lat": 38.973852,
+  "lng": -94.576189,
+  "address": "8421 Troost Ave Kansas City 64131",
+  "neighborhood": "Waldo"
+ }
+]

@@ -1,0 +1,57 @@
+<mxfile host="app.diagrams.net" agent="Claude Code" version="24.0.0">
+  <diagram id="hl" name="High-level">
+    <mxGraphModel dx="1300" dy="700" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1300" pageHeight="700" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+
+        <mxCell id="t" value="&lt;b style=&quot;font-size:20px&quot;&gt;Civic Flow — High-Level Architecture&lt;/b&gt;&lt;br&gt;Thousands of citizen reports in, one prioritized ticket per unique issue out" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="40" y="10" width="900" height="50" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="u1" value="&lt;b&gt;Citizens&lt;/b&gt;&lt;br&gt;Phone app: snap, report, track, earn XP" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="40" y="110" width="220" height="90" as="geometry"/>
+        </mxCell>
+        <mxCell id="u2" value="&lt;b&gt;City Ops&lt;/b&gt;&lt;br&gt;Live map, priority queue, KPIs" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="40" y="270" width="220" height="90" as="geometry"/>
+        </mxCell>
+        <mxCell id="u3" value="&lt;b&gt;Vendors&lt;/b&gt;&lt;br&gt;Assigned jobs, mark fixed" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="40" y="430" width="220" height="90" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="pl" value="CIVIC FLOW PLATFORM — runs on Akamai Cloud" style="swimlane;startSize=34;fontStyle=1;fontSize=13;html=1;whiteSpace=wrap;rounded=1;fillColor=#e1f0ff;strokeColor=#0a6cc4;swimlaneFillColor=#ffffff;" vertex="1" parent="1">
+          <mxGeometry x="340" y="70" width="520" height="500" as="geometry"/>
+        </mxCell>
+        <mxCell id="m1" value="&lt;b&gt;App and API&lt;/b&gt;&lt;br&gt;receives reports, serves live updates" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=13;" vertex="1" parent="pl">
+          <mxGeometry x="30" y="55" width="460" height="75" as="geometry"/>
+        </mxCell>
+        <mxCell id="m2" value="&lt;b&gt;Dedup and Priority Engine&lt;/b&gt;&lt;br&gt;same pothole? merge it. How urgent? score it." style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=13;" vertex="1" parent="pl">
+          <mxGeometry x="30" y="165" width="460" height="85" as="geometry"/>
+        </mxCell>
+        <mxCell id="m3" value="&lt;b&gt;AI Agents (AWS Strands)&lt;/b&gt;&lt;br&gt;read photos, judge edge cases, create the ticket" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=13;" vertex="1" parent="pl">
+          <mxGeometry x="30" y="285" width="460" height="85" as="geometry"/>
+        </mxCell>
+        <mxCell id="m4" value="&lt;b&gt;Storage&lt;/b&gt;&lt;br&gt;photos, locations, reports, points" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=13;" vertex="1" parent="pl">
+          <mxGeometry x="30" y="405" width="460" height="70" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="x1" value="&lt;b&gt;AI models&lt;/b&gt;&lt;br&gt;AWS Bedrock (Claude, vision)&lt;br&gt;Akamai hosted inference" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="940" y="200" width="250" height="100" as="geometry"/>
+        </mxCell>
+        <mxCell id="x2" value="&lt;b&gt;DevRev&lt;/b&gt;&lt;br&gt;one ticket per unique issue, vendor assigned, status tracked" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="940" y="360" width="250" height="110" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="a1" value="report" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeWidth=2;fontSize=12;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="u1" target="m1"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="a2" value="monitor" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeWidth=2;fontSize=12;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="u2" target="m1"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="a3" value="mark fixed" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeWidth=2;fontSize=12;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="u3" target="m1"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="a4" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeWidth=2;" edge="1" parent="1" source="m1" target="m2"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="a5" value="new or unclear cases" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeWidth=2;fontSize=12;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="m2" target="m3"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="a6" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeWidth=2;" edge="1" parent="1" source="m3" target="m4"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="a7" value="analyze" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeWidth=2;fontSize=12;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="m3" target="x1"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="a8" value="create ticket" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeWidth=2;fontSize=12;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="m3" target="x2"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="a9" value="status updates" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeWidth=2;fontSize=12;dashed=1;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="x2" target="m1"><mxGeometry relative="1" as="geometry"/></mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

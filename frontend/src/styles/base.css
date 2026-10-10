@@ -1,0 +1,56 @@
+/* Reset, typography, focus, scrollbars, reduced motion. */
+*, *::before, *::after { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+html, body, #root { min-height: 100%; }
+html, body { height: 100%; }
+body {
+  margin: 0; background: var(--bg); color: var(--text);
+  font: 400 var(--fs-16)/var(--lh-16) var(--font-ui);
+  -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  overflow-x: hidden;
+}
+h1, h2, h3, h4 { font-family: var(--font-display); margin: 0; letter-spacing: -.015em; font-weight: 650; }
+p { margin: 0; }
+img, svg, video { display: block; max-width: 100%; }
+a { color: var(--primary-text); }
+button, input, select, textarea { font: inherit; color: inherit; }
+button { cursor: pointer; -webkit-tap-highlight-color: transparent; }
+button:disabled { cursor: not-allowed; }
+::selection { background: color-mix(in srgb, var(--primary) 28%, transparent); }
+
+/* focus: always visible for keyboard users */
+:focus { outline: none; }
+:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; border-radius: var(--r-xs); }
+input:focus-visible, textarea:focus-visible, select:focus-visible { outline: none; box-shadow: var(--ring); border-color: var(--primary); }
+
+/* ---------- type classes ---------- */
+.t-display { font-family: var(--font-display); font-size: var(--fs-40); line-height: var(--lh-40); font-weight: 700; letter-spacing: -.035em; }
+.t-display.xl { font-size: var(--fs-64); line-height: var(--lh-64); letter-spacing: -.045em; }
+.t-heading { font-family: var(--font-display); font-size: var(--fs-28); line-height: var(--lh-28); font-weight: 650; letter-spacing: -.025em; }
+.t-title { font-family: var(--font-display); font-size: var(--fs-20); line-height: var(--lh-20); font-weight: 600; letter-spacing: -.015em; }
+.t-body { font-size: var(--fs-14); line-height: var(--lh-14); }
+.t-body.lg { font-size: var(--fs-16); line-height: var(--lh-16); }
+.t-caption { font-size: var(--fs-12); line-height: var(--lh-12); color: var(--muted); }
+.t-eyebrow { font-size: var(--fs-12); line-height: var(--lh-12); font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.t-mono { font-family: var(--font-mono); font-size: .9em; letter-spacing: -.01em; }
+.t-num { font-family: var(--font-display); font-variant-numeric: tabular-nums lining-nums; letter-spacing: -.03em; font-weight: 700; }
+.mono { font-family: var(--font-mono); }
+.num { font-family: var(--font-display); font-variant-numeric: tabular-nums; }
+.muted { color: var(--muted); }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+/* ---------- scrollbars ---------- */
+* { scrollbar-width: thin; scrollbar-color: var(--line-strong) transparent; }
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-thumb { background: var(--line-strong); border-radius: 999px; border: 3px solid transparent; background-clip: content-box; }
+::-webkit-scrollbar-thumb:hover { background: var(--faint); background-clip: content-box; }
+::-webkit-scrollbar-track { background: transparent; }
+
+/* ---------- reduced motion ---------- */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: .001ms !important; animation-iteration-count: 1 !important;
+    transition-duration: .001ms !important; scroll-behavior: auto !important;
+  }
+}

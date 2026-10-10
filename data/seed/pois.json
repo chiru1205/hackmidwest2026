@@ -1,0 +1,17 @@
+[
+ {"name": "Lincoln College Preparatory Academy", "kind": "school", "lat": 39.0835, "lng": -94.5560, "approximate": true},
+ {"name": "Paseo Academy", "kind": "school", "lat": 39.0660, "lng": -94.5560, "approximate": true},
+ {"name": "Southwest Early College Campus", "kind": "school", "lat": 38.9970, "lng": -94.6080, "approximate": true},
+ {"name": "Border Star Montessori", "kind": "school", "lat": 39.0360, "lng": -94.5950, "approximate": true},
+ {"name": "Westport Middle School", "kind": "school", "lat": 39.0590, "lng": -94.5950, "approximate": true},
+ {"name": "Saint Luke's Hospital of Kansas City", "kind": "hospital", "lat": 39.0420, "lng": -94.5880, "approximate": true},
+ {"name": "Truman Medical Center Hospital Hill", "kind": "hospital", "lat": 39.0750, "lng": -94.5740, "approximate": true},
+ {"name": "Children's Mercy Hospital", "kind": "hospital", "lat": 39.0850, "lng": -94.5730, "approximate": true},
+ {"name": "University of Kansas Hospital (KCK)", "kind": "hospital", "lat": 39.0560, "lng": -94.6100, "approximate": true},
+ {"name": "Main St at 39th St", "kind": "arterial", "lat": 39.0560, "lng": -94.5850, "approximate": true},
+ {"name": "Troost Ave at 31st St", "kind": "arterial", "lat": 39.0740, "lng": -94.5710, "approximate": true},
+ {"name": "Ward Parkway at 47th St", "kind": "arterial", "lat": 39.0390, "lng": -94.5950, "approximate": true},
+ {"name": "State Line Rd at 75th St", "kind": "arterial", "lat": 38.9900, "lng": -94.6080, "approximate": true},
+ {"name": "Broadway at Westport Rd", "kind": "arterial", "lat": 39.0530, "lng": -94.5930, "approximate": true},
+ {"name": "Grand Blvd at 12th St", "kind": "arterial", "lat": 39.0990, "lng": -94.5810, "approximate": true}
+]

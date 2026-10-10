@@ -1,0 +1,5 @@
+[
+ {"name": "KC Road Crew Co.", "categories": ["pothole", "sidewalk_damage", "manhole_cover", "road_debris"], "phone": "816-555-0101"},
+ {"name": "BrightLine Lighting", "categories": ["streetlight_out", "traffic_signal"], "phone": "816-555-0102"},
+ {"name": "GreenLeaf Urban Services", "categories": ["downed_tree", "illegal_dumping", "graffiti", "flooding"], "phone": "816-555-0103"}
+]

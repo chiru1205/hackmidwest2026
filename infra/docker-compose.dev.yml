@@ -1,0 +1,16 @@
+# Local dev dependencies only. Run the API and the web app on your machine.
+#   docker compose -f infra/docker-compose.dev.yml up -d
+services:
+  valkey:
+    image: valkey/valkey:8
+    ports: ["6379:6379"]
+  postgres:
+    image: postgres:17
+    environment:
+      POSTGRES_USER: civicflow
+      POSTGRES_PASSWORD: civicflow
+      POSTGRES_DB: civicflow
+    ports: ["5432:5432"]
+    volumes: ["pgdata:/var/lib/postgresql/data"]
+volumes:
+  pgdata:

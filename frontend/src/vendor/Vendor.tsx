@@ -1,0 +1,248 @@
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { motion } from "framer-motion";
+import { Building2, CheckCheck, CircleDot, Clock, Inbox, Layers, Link2, PlayCircle, Search, TriangleAlert, Users } from "lucide-react";
+import type { VendorOrder } from "@contracts";
+import { api } from "../lib/api";
+import { useAsync, useEvents } from "../lib/hooks";
+import {
+  Avatar, EmptyState, ErrorState, Pill, PriorityBadge, SegmentedControl, Sheet, Skeleton, TicketId, devrevOf, useMediaQuery, useToast, list, item,
+} from "../components/ui";
+import Detail, { StagePill } from "./Detail";
+import { CategoryIcon, Photo } from "./parts";
+import { applyOverride, dueInfo, isOverdue, placeOf, stageOf, titleOf, type Override } from "./util";
+import "./vendor.css";
+
+const VENDORS = ["KC Road Crew Co.", "BrightLine Lighting", "GreenLeaf Urban Services"];
+type Filter = "all" | "open" | "progress" | "fixed" | "overdue";
+type Sort = "priority" | "due";
+const PAGE = 40;
+
+export default function Vendor() {
+  const orders = useAsync(() => api.vendorOrders(), []);
+  const health = useAsync(() => api.health(), []);
+  const toast = useToast();
+  const wide = useMediaQuery("(min-width: 1100px)");
+  const phone = useMediaQuery("(max-width: 640px)");
+
+  const [vendor, setVendor] = useState("");
+  const [filter, setFilter] = useState<Filter>("all");
+  const [sort, setSort] = useState<Sort>("priority");
+  const [q, setQ] = useState("");
+  const [selId, setSelId] = useState<string | null>(null);
+  const [open, setOpen] = useState(false);
+  const [limit, setLimit] = useState(PAGE);
+  const [ov, setOv] = useState<Record<string, Override>>({});
+  const listRef = useRef<HTMLUListElement>(null);
+
+  // live: any ticket/cluster change refreshes the list (debounced)
+  const timer = useRef<number>();
+  useEvents((e) => {
+    if (e.type === "ticket.updated" || e.type === "cluster.updated" || e.type === "cluster.created" || e.type === "reset") {
+      window.clearTimeout(timer.current);
+      timer.current = window.setTimeout(orders.reload, 1500);
+    }
+  });
+  useEffect(() => () => window.clearTimeout(timer.current), []);
+
+  const all = useMemo(() => {
+    const base = orders.data ?? [];
+    const ids = new Set(base.map((o) => o.cluster.id));
+    const extra = Object.values(ov).flatMap((v) => (v.snapshot && !ids.has(v.snapshot.cluster.id) ? [v.snapshot] : []));
+    return [...base, ...extra].map((o) => applyOverride(o, ov[o.cluster.id]));
+  }, [orders.data, ov]);
+
+  const forVendor = useMemo(() => (vendor ? all.filter((o) => o.cluster.vendor === vendor) : all), [all, vendor]);
+  const now = Date.now();
+  const counts = useMemo(() => {
+    const n = { all: forVendor.length, open: 0, progress: 0, fixed: 0, overdue: 0 };
+    forVendor.forEach((o) => {
+      const s = stageOf(o);
+      if (s === "queued") n.open++; else if (s === "in_progress") n.progress++; else n.fixed++;
+      if (isOverdue(o, now)) n.overdue++;
+    });
+    return n;
+  }, [forVendor, now]);
+  const vendorCounts = useMemo(() => {
+    const m: Record<string, number> = {};
+    all.forEach((o) => { if (stageOf(o) !== "resolved") m[o.cluster.vendor ?? ""] = (m[o.cluster.vendor ?? ""] ?? 0) + 1; });
+    return m;
+  }, [all]);
+
+  const visible = useMemo(() => {
+    const needle = q.trim().toLowerCase();
+    const rows = forVendor.filter((o) => {
+      const s = stageOf(o);
+      if (filter === "open" && s !== "queued") return false;
+      if (filter === "progress" && s !== "in_progress") return false;
+      if (filter === "fixed" && s !== "resolved") return false;
+      if (filter === "overdue" && !isOverdue(o, now)) return false;
+      if (needle) {
+        const hay = `${titleOf(o.cluster)} ${o.ticket?.id ?? ""} ${o.cluster.neighborhood ?? ""} ${o.cluster.vendor ?? ""}`.toLowerCase();
+        if (!hay.includes(needle)) return false;
+      }
+      return true;
+    });
+    return rows.sort((a, b) => {
+      const ra = stageOf(a) === "resolved" ? 1 : 0, rb = stageOf(b) === "resolved" ? 1 : 0;
+      if (ra !== rb) return ra - rb;
+      return sort === "due" ? +new Date(a.due) - +new Date(b.due) : b.cluster.priority - a.cluster.priority;
+    });
+  }, [forVendor, filter, q, sort, now]);
+
+  useEffect(() => { setLimit(PAGE); }, [vendor, filter, q, sort]);
+
+  const effId = selId ?? (wide ? visible[0]?.cluster.id ?? null : null);
+  const current = effId ? all.find((o) => o.cluster.id === effId) ?? null : null;
+
+  const select = useCallback((id: string, openSheet = false) => {
+    setSelId(id);
+    if (openSheet) setOpen(true);
+  }, []);
+
+  function onKey(e: React.KeyboardEvent) {
+    if (e.key !== "ArrowDown" && e.key !== "ArrowUp") return;
+    e.preventDefault();
+    const idx = visible.findIndex((o) => o.cluster.id === effId);
+    const next = visible[Math.min(visible.length - 1, Math.max(0, idx + (e.key === "ArrowDown" ? 1 : -1)))];
+    if (!next) return;
+    if (visible.indexOf(next) >= limit) setLimit((l) => l + PAGE);
+    setSelId(next.cluster.id);
+    requestAnimationFrame(() => (listRef.current?.querySelector(`[data-id="${next.cluster.id}"]`) as HTMLElement | null)?.focus());
+  }
+
+  async function start(o: VendorOrder) {
+    const id = o.cluster.id;
+    setOv((m) => ({ ...m, [id]: { status: "in_progress", stage: "work_in_progress" } }));
+    try {
+      if (o.ticket) await api.advance(o.ticket.id, "work_in_progress");
+      toast(`Work started on ${o.ticket?.id ?? "order"}`);
+    } catch (e) {
+      setOv((m) => { const n = { ...m }; delete n[id]; return n; });
+      throw e;
+    }
+  }
+  async function fix(o: VendorOrder, blob: Blob | null, url: string | null) {
+    const id = o.cluster.id;
+    const prev = ov[id];
+    const fixedAt = new Date().toISOString();
+    const snap = applyOverride(o, { status: "fixed", stage: "resolved", fixedAt });
+    setOv((m) => ({ ...m, [id]: { status: "fixed", stage: "resolved", afterUrl: url ?? undefined, fixedAt, snapshot: snap } }));
+    try { await api.fix(id, blob); }
+    catch (e) {
+      setOv((m) => { const n = { ...m }; if (prev) n[id] = prev; else delete n[id]; return n; });
+      throw e;
+    }
+  }
+
+  const live = health.data?.flags.devrev_mode === "live";
+  const loadingFirst = orders.loading && !orders.data;
+
+  const detail = current ? (
+    <Detail key={current.cluster.id} order={current} afterUrl={ov[current.cluster.id]?.afterUrl} onStart={start} onFix={fix} />
+  ) : null;
+
+  return (
+    <div className="vd-root">
+      <aside className="vd-rail" aria-label="Filters">
+        <div className="vd-search">
+          <Search size={16} strokeWidth={1.75} aria-hidden />
+          <input type="search" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search address or ticket" aria-label="Search work orders" />
+        </div>
+
+        <div className="vd-rail__group">
+          <div className="vd-rail__label">Vendor</div>
+          <div className="vd-rail__scroll">
+            <VendorBtn name="" label="All vendors" count={Object.values(vendorCounts).reduce((a, b) => a + b, 0)} on={vendor === ""} onClick={() => setVendor("")} />
+            {VENDORS.map((v) => <VendorBtn key={v} name={v} label={v} count={vendorCounts[v] ?? 0} on={vendor === v} onClick={() => setVendor(v)} />)}
+          </div>
+        </div>
+
+        <div className="vd-rail__group">
+          <div className="vd-rail__label">Status</div>
+          <div className="vd-rail__scroll">
+            {([
+              ["all", "All", Layers, counts.all], ["open", "Open", CircleDot, counts.open], ["progress", "In progress", PlayCircle, counts.progress],
+              ["overdue", "Overdue", Clock, counts.overdue], ["fixed", "Fixed", CheckCheck, counts.fixed],
+            ] as const).map(([id, label, Icon, n]) => (
+              <button key={id} className={`vd-chip ${filter === id ? "is-on" : ""} ${id === "overdue" && n > 0 ? "is-warn" : ""}`} aria-pressed={filter === id} onClick={() => setFilter(id)}>
+                <Icon size={16} strokeWidth={1.75} aria-hidden /><span>{label}</span><b className="t-num">{n}</b>
+              </button>
+            ))}
+          </div>
+        </div>
+      </aside>
+
+      <main className="vd-main" aria-label="Work orders">
+        <header className="vd-main__head">
+          <div>
+            <h1 className="vd-h1">Work orders</h1>
+            <p className="vd-sub">{vendor || "All vendors"} {"·"} <span className="t-num">{counts.open + counts.progress}</span> active</p>
+          </div>
+          <span className="spacer" />
+          <Pill variant={live ? "success" : "neutral"} size="sm" icon={<Link2 size={12} strokeWidth={1.75} />} dot={live ? "pulse" : false}
+            title={live ? "Tickets are synced with DevRev" : "Tickets live on a DevRev-shaped board. Flip devrev_mode to live to sync."}>
+            {live ? "Synced with DevRev" : "Ticket board · DevRev-ready"}
+          </Pill>
+          <SegmentedControl<Sort> size="sm" label="Sort" value={sort} onChange={setSort} options={[{ value: "priority", label: "Priority" }, { value: "due", label: "Due date" }]} />
+        </header>
+
+        <div className="vd-list-wrap">
+          {loadingFirst && <div className="vd-skel" aria-busy="true">{Array.from({ length: 7 }, (_, i) => <div key={i} className="vd-skelrow"><Skeleton width={56} height={56} radius={12} /><div><Skeleton height={14} width="62%" /><Skeleton height={12} width="40%" style={{ marginTop: 10 }} /></div></div>)}</div>}
+          {orders.error && !orders.data && <ErrorState title="Can't load work orders" message={orders.error} onRetry={orders.reload} />}
+          {orders.error && orders.data && <div className="vd-banner" role="alert"><TriangleAlert size={16} /> Live refresh failed. Showing the last loaded list.</div>}
+          {!loadingFirst && !orders.error && visible.length === 0 && (
+            <EmptyState icon={<Inbox />} title={q || filter !== "all" ? "No matching work orders" : "No work orders"} description={q || filter !== "all" ? "Try a different filter or search." : "Nice work. Nothing is waiting on a crew."} />
+          )}
+          {visible.length > 0 && (
+            <motion.ul ref={listRef} className="vd-list" role="listbox" aria-label="Work orders" onKeyDown={onKey} variants={list} initial="hidden" animate="show" key={`${vendor}|${filter}|${sort}`}>
+              {visible.slice(0, limit).map((o, i) => {
+                const c = o.cluster, s = stageOf(o), due = dueInfo(o.due, s === "resolved");
+                const on = c.id === effId;
+                return (
+                  <motion.li key={c.id} variants={i < 12 ? item : undefined} layout={false}>
+                    <button data-id={c.id} role="option" aria-selected={on} tabIndex={on || (!effId && i === 0) ? 0 : -1} className={`vd-row ${on ? "is-on" : ""}`} onClick={() => select(c.id, true)}>
+                      <Photo src={c.photo_url} category={c.category} alt="" size="sm" />
+                      <span className="vd-row__main">
+                        <span className="vd-row__title">{titleOf(c)}</span>
+                        <span className="vd-row__meta">
+                          <TicketId id={o.ticket?.id ?? c.ticket_id} devrev={devrevOf(o.ticket)} />
+                          <PriorityBadge bucket={c.bucket} size="sm" />
+                          <span className="vd-row__rep" title={`${c.reporter_count} reporters`}><Users size={13} strokeWidth={1.75} aria-hidden /><span className="t-num">{c.reporter_count}</span></span>
+                          <span className={`vd-due is-${due.tone}`}>{due.short}</span>
+                        </span>
+                      </span>
+                      <StagePill stage={s} size="sm" />
+                    </button>
+                  </motion.li>
+                );
+              })}
+              {visible.length > limit && (
+                <li className="vd-more"><button onClick={() => setLimit((l) => l + PAGE)}>Show {Math.min(PAGE, visible.length - limit)} more <span className="vd-faint">of {visible.length - limit} remaining</span></button></li>
+              )}
+            </motion.ul>
+          )}
+        </div>
+      </main>
+
+      {wide ? (
+        <section className="vd-pane" aria-label="Order detail">
+          {detail ?? (loadingFirst ? <div style={{ padding: 24 }}><Skeleton height={28} width="50%" /><Skeleton height={200} style={{ marginTop: 16 }} /></div> : <div className="vd-pane__empty"><EmptyState icon={<Building2 />} title="Select a work order" description="Use the arrow keys or click a row to see the ticket." compact /></div>)}
+        </section>
+      ) : (
+        <Sheet open={open && !!current} onClose={() => setOpen(false)} side={phone ? "bottom" : "right"} width={600} title={current ? placeOf(current.cluster) : "Work order"}>
+          {detail}
+        </Sheet>
+      )}
+    </div>
+  );
+}
+
+function VendorBtn({ name, label, count, on, onClick }: { name: string; label: string; count: number; on: boolean; onClick: () => void }) {
+  return (
+    <button className={`vd-vendor ${on ? "is-on" : ""}`} aria-pressed={on} onClick={onClick}>
+      {name ? <Avatar name={name} size={28} /> : <span className="vd-vendor__all"><Building2 size={16} strokeWidth={1.75} aria-hidden /></span>}
+      <span className="vd-vendor__name">{label}</span>
+      <b className="t-num">{count}</b>
+    </button>
+  );
+}

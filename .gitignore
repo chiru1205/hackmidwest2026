@@ -1,0 +1,20 @@
+# secrets
+.env
+.env.*
+!.env.example
+*.pem
+
+# dependencies and builds
+node_modules/
+dist/
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# local runtime data
+data/civicflow.db*
+data/photos/*
+!data/photos/seed/
+*.log
+.DS_Store

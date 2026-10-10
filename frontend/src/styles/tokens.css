@@ -1,0 +1,131 @@
+/* Civic Flow design tokens: "a transit map for the city".
+   Theme is chosen by a data-theme="light|dark" attribute on a wrapper element
+   (see <Page theme> / the app shell). With no attribute, prefers-color-scheme decides. */
+
+:root {
+  /* ---- fonts ---- */
+  --font-display: "Bricolage Grotesque Variable", "Bricolage Grotesque", "Inter Variable", system-ui, sans-serif;
+  --font-ui: "Inter Variable", "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "JetBrains Mono Variable", "JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+
+  /* ---- type scale ---- */
+  --fs-12: 0.75rem;  --lh-12: 1rem;
+  --fs-14: 0.875rem; --lh-14: 1.25rem;
+  --fs-16: 1rem;     --lh-16: 1.5rem;
+  --fs-20: 1.25rem;  --lh-20: 1.75rem;
+  --fs-28: 1.75rem;  --lh-28: 2.125rem;
+  --fs-40: 2.5rem;   --lh-40: 2.75rem;
+  --fs-64: 4rem;     --lh-64: 4rem;
+
+  /* ---- spacing (4/8 scale) ---- */
+  --s-1: 4px;  --s-2: 8px;  --s-3: 12px; --s-4: 16px; --s-5: 20px; --s-6: 24px;
+  --s-8: 32px; --s-10: 40px; --s-12: 48px; --s-16: 64px; --s-20: 80px;
+  --gutter: 16px;
+
+  /* ---- radius ---- */
+  --r-xs: 6px; --r-sm: 8px; --r-md: 12px; --r-lg: 16px; --r-xl: 24px; --r-pill: 999px;
+  --radius: var(--r-lg);
+
+  /* ---- motion ---- */
+  --ease-out: cubic-bezier(.22, 1, .36, 1);
+  --ease-spring: cubic-bezier(.34, 1.56, .64, 1);
+  --spring: var(--ease-spring);
+  --dur-1: 120ms; --dur-2: 200ms; --dur-3: 360ms;
+
+  /* ---- layout ---- */
+  --header-h: 60px;
+  --z-header: 40; --z-pop: 60; --z-sheet: 80; --z-toast: 100;
+}
+
+/* ---------- LIGHT (default) ---------- */
+:root,
+[data-theme="light"] {
+  color-scheme: light;
+  --navy: #0B1B33;             /* brand navy */
+  --ink: var(--text);          /* legacy alias: old screens use ink as text colour */
+  --bg: #F4F6FA;
+  --surface: #FFFFFF;
+  --surface-2: #F8FAFD;        /* subtle fills, inputs, hover */
+  --surface-3: #EEF2F8;        /* pressed, tracks */
+  --line: #E3E8F0;
+  --line-strong: #CDD6E3;
+  --text: #0B1B33;
+  --muted: #5B6B85;
+  --faint: #8A97AD;
+
+  --primary: #2457FF;
+  --primary-hover: #1B49E6;
+  --primary-text: #1A47E0;     /* blue text on light surfaces */
+  --on-primary: #FFFFFF;
+
+  --p1: #E5484D; --p2: #F97316; --p3: #F5B301; --p4: #8A97AD;
+  --p1-ink: #B4232A; --p2-ink: #B54708; --p3-ink: #8A5A00; --p4-ink: #4A5870;
+  --success: #12B981; --success-ink: #067A55;
+  --hazard: #FF5B2E;
+  --danger: var(--p1);
+
+  --glass: rgba(255, 255, 255, .72);
+  --glass-line: rgba(11, 27, 51, .08);
+  --scrim: rgba(11, 27, 51, .42);
+
+  --shadow-1: 0 1px 2px rgba(11, 27, 51, .06), 0 1px 1px rgba(11, 27, 51, .04);
+  --shadow-2: 0 2px 4px rgba(11, 27, 51, .04), 0 10px 28px -8px rgba(11, 27, 51, .12);
+  --shadow-3: 0 4px 8px rgba(11, 27, 51, .05), 0 28px 56px -14px rgba(11, 27, 51, .26);
+  --ring: 0 0 0 3px rgba(36, 87, 255, .28);
+
+  /* legacy aliases (old screens only; do not use in new code) */
+  --paper: var(--bg); --signal: var(--primary); --on-signal: #fff; --teal: var(--success);
+  --amber: var(--p3); --alert: var(--p1); --fixed: var(--success); --xp: #F5B301; --map-grey: var(--surface-3);
+  --akamai: var(--hazard);
+}
+
+/* ---------- DARK ---------- */
+[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #0A1322;
+  --surface: #111D33;
+  --surface-2: #14233B;
+  --surface-3: #1A2B47;
+  --line: #1F2C45;
+  --line-strong: #2C3D5E;
+  --text: #E8EEF8;
+  --muted: #8FA0BC;
+  --faint: #62738F;
+
+  --primary: #3F6CFF;
+  --primary-hover: #5C84FF;
+  --primary-text: #8FAAFF;
+  --on-primary: #FFFFFF;
+
+  --p1-ink: #FF8A8E; --p2-ink: #FDA05A; --p3-ink: #F8CB52; --p4-ink: #A9B6CC;
+  --success-ink: #4ADBA8;
+
+  --glass: rgba(14, 25, 45, .66);
+  --glass-line: rgba(232, 238, 248, .10);
+  --scrim: rgba(3, 8, 18, .62);
+
+  --shadow-1: 0 1px 2px rgba(0, 0, 0, .4);
+  --shadow-2: 0 2px 4px rgba(0, 0, 0, .25), 0 12px 32px -8px rgba(0, 0, 0, .5);
+  --shadow-3: 0 4px 8px rgba(0, 0, 0, .3), 0 32px 64px -16px rgba(0, 0, 0, .7);
+  --ring: 0 0 0 3px rgba(92, 132, 255, .38);
+
+  --ink: var(--text); --paper: var(--bg); --signal: var(--primary); --map-grey: var(--surface-3);
+}
+
+/* OS dark preference only when no explicit theme was set anywhere */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme]) {
+    color-scheme: dark;
+    --bg: #0A1322; --surface: #111D33; --surface-2: #14233B; --surface-3: #1A2B47;
+    --line: #1F2C45; --line-strong: #2C3D5E; --text: #E8EEF8; --muted: #8FA0BC; --faint: #62738F;
+    --primary: #3F6CFF; --primary-hover: #5C84FF; --primary-text: #8FAAFF;
+    --p1-ink: #FF8A8E; --p2-ink: #FDA05A; --p3-ink: #F8CB52; --p4-ink: #A9B6CC; --success-ink: #4ADBA8;
+    --glass: rgba(14, 25, 45, .66); --glass-line: rgba(232, 238, 248, .10); --scrim: rgba(3, 8, 18, .62);
+    --shadow-1: 0 1px 2px rgba(0, 0, 0, .4);
+    --shadow-2: 0 2px 4px rgba(0, 0, 0, .25), 0 12px 32px -8px rgba(0, 0, 0, .5);
+    --shadow-3: 0 4px 8px rgba(0, 0, 0, .3), 0 32px 64px -16px rgba(0, 0, 0, .7);
+    --ring: 0 0 0 3px rgba(92, 132, 255, .38);
+  }
+}
+
+@media (max-width: 640px) { :root { --header-h: 56px; } }

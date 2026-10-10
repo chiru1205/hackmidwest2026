@@ -1,0 +1,251 @@
+<mxfile host="app.diagrams.net" agent="Claude Code" version="24.0.0">
+  <diagram id="arch" name="1. System architecture">
+    <mxGraphModel dx="1700" dy="1100" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1800" pageHeight="1100" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+
+        <mxCell id="title" value="&lt;b style=&quot;font-size:20px&quot;&gt;Civic Flow — System Architecture&lt;/b&gt;&lt;br&gt;HackMidwest 2026 · 3 people · one Linode on Akamai Cloud · solid = build for demo, dashed = optional / only if time" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="40" y="10" width="1300" height="50" as="geometry"/>
+        </mxCell>
+
+        <!-- CLIENTS -->
+        <mxCell id="cl" value="CLIENTS (P3 builds)" style="swimlane;startSize=30;fontStyle=1;html=1;whiteSpace=wrap;rounded=1;fillColor=#dae8fc;strokeColor=#6c8ebf;swimlaneFillColor=#ffffff;" vertex="1" parent="1">
+          <mxGeometry x="40" y="70" width="270" height="620" as="geometry"/>
+        </mxCell>
+        <mxCell id="c1" value="&lt;b&gt;Citizen phone app&lt;/b&gt;&lt;br&gt;Vite + React PWA&lt;br&gt;camera + GPS, compress to JPEG&lt;br&gt;report, track status, XP and badges" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=8;verticalAlign=top;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="cl">
+          <mxGeometry x="15" y="45" width="240" height="115" as="geometry"/>
+        </mxCell>
+        <mxCell id="c2" value="&lt;b&gt;Ops Theatre (big screen)&lt;/b&gt;&lt;br&gt;MapLibre + OpenFreeMap&lt;br&gt;live pipeline, counters, DevRev feed&lt;br&gt;Simulate: 1,243 reports → 37 pins" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=8;verticalAlign=top;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="cl">
+          <mxGeometry x="15" y="180" width="240" height="115" as="geometry"/>
+        </mxCell>
+        <mxCell id="c3" value="&lt;b&gt;Vendor page&lt;/b&gt;&lt;br&gt;assigned work orders&lt;br&gt;Mark fixed · before / after photo" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=8;verticalAlign=top;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="cl">
+          <mxGeometry x="15" y="315" width="240" height="95" as="geometry"/>
+        </mxCell>
+        <mxCell id="c4" value="&lt;b&gt;?demo=1 panel&lt;/b&gt;&lt;br&gt;mock-fixtures mode, location override,&lt;br&gt;backup video" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=8;verticalAlign=top;dashed=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=11;" vertex="1" parent="cl">
+          <mxGeometry x="15" y="430" width="240" height="90" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="k" value="&lt;b&gt;KCMO 311 open data&lt;/b&gt;&lt;br&gt;dataset d4px-6rwg snapshot&lt;br&gt;seed pins + City Impact numbers" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=8;verticalAlign=top;fillColor=#f5f5f5;strokeColor=#666666;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="40" y="720" width="270" height="85" as="geometry"/>
+        </mxCell>
+        <mxCell id="n" value="&lt;b&gt;Report lifecycle&lt;/b&gt;&lt;br&gt;1 snap photo + GPS&lt;br&gt;2 Caddy → FastAPI&lt;br&gt;3 engine dedup (no LLM)&lt;br&gt;4 merge +1, or new cluster&lt;br&gt;5 Intake vision triage&lt;br&gt;6 judge? → priority → dispatch → ticket&lt;br&gt;7 poll DevRev stage&lt;br&gt;8 SSE → phone shows Fixed" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=8;verticalAlign=top;fillColor=#ffffff;strokeColor=#999999;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="40" y="830" width="270" height="175" as="geometry"/>
+        </mxCell>
+
+        <!-- AKAMAI CLOUD -->
+        <mxCell id="a0" value="AKAMAI CLOUD — one Linode g6-standard-2, Docker Compose, HTTPS on port 443" style="swimlane;startSize=30;fontStyle=1;html=1;whiteSpace=wrap;rounded=1;fillColor=#e1f0ff;strokeColor=#0a6cc4;swimlaneFillColor=#ffffff;" vertex="1" parent="1">
+          <mxGeometry x="370" y="70" width="980" height="960" as="geometry"/>
+        </mxCell>
+        <mxCell id="a1" value="&lt;b&gt;Caddy&lt;/b&gt; — automatic HTTPS · serves the built web app (same origin, no CORS) · proxies /api · SSE flush enabled" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1f0ff;strokeColor=#0a6cc4;fontSize=11;" vertex="1" parent="a0">
+          <mxGeometry x="20" y="45" width="940" height="45" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="f0" value="FASTAPI — one uvicorn worker (P1 builds)" style="swimlane;startSize=28;fontStyle=1;html=1;whiteSpace=wrap;rounded=1;fillColor=#d5e8d4;strokeColor=#82b366;swimlaneFillColor=#ffffff;" vertex="1" parent="a0">
+          <mxGeometry x="20" y="110" width="940" height="300" as="geometry"/>
+        </mxCell>
+        <mxCell id="f1" value="&lt;b&gt;REST /api&lt;/b&gt;&lt;br&gt;POST /reports&lt;br&gt;GET /clusters, /me&lt;br&gt;/vendor, /admin (reset, simulate)&lt;br&gt;/healthz" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=8;verticalAlign=top;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="f0">
+          <mxGeometry x="15" y="40" width="210" height="125" as="geometry"/>
+        </mxCell>
+        <mxCell id="f2" value="&lt;b&gt;SSE live events&lt;/b&gt;&lt;br&gt;agent.node, cluster.*, ticket.*" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=8;verticalAlign=top;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="f0">
+          <mxGeometry x="15" y="185" width="210" height="85" as="geometry"/>
+        </mxCell>
+        <mxCell id="f3" value="&lt;b&gt;Dedup + priority engine&lt;/b&gt; (plain Python, zero LLM calls)&lt;br&gt;geo candidates via Valkey GEOSEARCH · per-category radius (pothole 15–40 m)&lt;br&gt;score = 0.50 geo + 0.20 category + 0.15 image + 0.15 time&lt;br&gt;≥ 0.75 merge · 0.50–0.75 ask judge · &amp;lt; 0.50 new cluster&lt;br&gt;priority 0–100, reporters log-scaled (1,000 minor reports still &amp;lt; one severity-5 near a school)&lt;br&gt;fraud: pHash, rate limits · XP ledger · per-cell asyncio lock" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=8;verticalAlign=top;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="f0">
+          <mxGeometry x="245" y="40" width="360" height="230" as="geometry"/>
+        </mxCell>
+        <mxCell id="f4" value="&lt;b&gt;Orchestrator&lt;/b&gt;&lt;br&gt;await agent.invoke_async (never a sync call)&lt;br&gt;builds the Graph per request&lt;br&gt;logs once after stream_async finishes&lt;br&gt;DevRev poller (~20 s) · watchdog&lt;br&gt;DEMO_MODE · fallback flags:&lt;br&gt;MODEL_PROVIDER, VISION, DEVREV_MODE, STORAGE" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=8;verticalAlign=top;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="f0">
+          <mxGeometry x="625" y="40" width="300" height="230" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="s0" value="AWS STRANDS AGENTS 1.59 (Python) — P1 builds, P2 pairs on smoke tests" style="swimlane;startSize=28;fontStyle=1;html=1;whiteSpace=wrap;rounded=1;fillColor=#e1d5e7;strokeColor=#9673a6;swimlaneFillColor=#ffffff;" vertex="1" parent="a0">
+          <mxGeometry x="20" y="430" width="940" height="250" as="geometry"/>
+        </mxCell>
+        <mxCell id="s1" value="&lt;b&gt;Intake Agent&lt;/b&gt;&lt;br&gt;standalone, runs first&lt;br&gt;photo → category, severity, hazard, valid?&lt;br&gt;structured_output_model (Bedrock only)" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=8;verticalAlign=top;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;" vertex="1" parent="s0">
+          <mxGeometry x="15" y="40" width="185" height="130" as="geometry"/>
+        </mxCell>
+        <mxCell id="s2" value="&lt;b&gt;dedup_judge?&lt;/b&gt;&lt;br&gt;only the 0.5–0.75 band&lt;br&gt;strict JSON prompt, max_tokens set, Pydantic-validated" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=8;verticalAlign=top;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;" vertex="1" parent="s0">
+          <mxGeometry x="215" y="40" width="170" height="130" as="geometry"/>
+        </mxCell>
+        <mxCell id="s3" value="&lt;b&gt;priority&lt;/b&gt;&lt;br&gt;writes the rationale; numbers come from engine code&lt;br&gt;calls a tool through MCPClient" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=8;verticalAlign=top;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;" vertex="1" parent="s0">
+          <mxGeometry x="400" y="40" width="170" height="130" as="geometry"/>
+        </mxCell>
+        <mxCell id="s4" value="&lt;b&gt;dispatch&lt;/b&gt;&lt;br&gt;plain Python creates ticket + assigns vendor&lt;br&gt;LLM writes title and body only&lt;br&gt;goal: under 10 s photo → ticket" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=8;verticalAlign=top;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;" vertex="1" parent="s0">
+          <mxGeometry x="585" y="40" width="170" height="130" as="geometry"/>
+        </mxCell>
+        <mxCell id="s5" value="&lt;b&gt;Hooks + MCP&lt;/b&gt;&lt;br&gt;BeforeToolCall guard&lt;br&gt;AfterToolCall audit&lt;br&gt;tiny in-repo MCP server" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=8;verticalAlign=top;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;" vertex="1" parent="s0">
+          <mxGeometry x="770" y="40" width="155" height="130" as="geometry"/>
+        </mxCell>
+        <mxCell id="s6" value="Graph (built per request, pure read-only edge conditions): dedup_judge? → priority → dispatch" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;fontStyle=2;fontSize=11;" vertex="1" parent="s0">
+          <mxGeometry x="215" y="185" width="540" height="30" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="a2" value="&lt;b&gt;Valkey&lt;/b&gt; (hot store)&lt;br&gt;geo:open:{group} — GEOADD / GEOSEARCH, ZREM&lt;br&gt;rate limits, pHash, leaderboard sorted set&lt;br&gt;EdgeKV-shaped cell cache" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=8;verticalAlign=top;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="a0">
+          <mxGeometry x="20" y="710" width="300" height="130" as="geometry"/>
+        </mxCell>
+        <mxCell id="a3" value="&lt;b&gt;Postgres (container)&lt;/b&gt; (durable)&lt;br&gt;users, clusters, reports, ledger, kv_meta&lt;br&gt;events (jsonb): judge_log, agent_traces&lt;br&gt;no PostGIS, no pgvector" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=8;verticalAlign=top;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="a0">
+          <mxGeometry x="340" y="710" width="300" height="130" as="geometry"/>
+        </mxCell>
+        <mxCell id="a4" value="&lt;b&gt;Akamai Object Storage&lt;/b&gt;&lt;br&gt;S3-compatible, bucket civicflow-photos&lt;br&gt;server-side upload with boto3&lt;br&gt;fallback: local disk (STORAGE=local)" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=8;verticalAlign=top;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="a0">
+          <mxGeometry x="660" y="710" width="300" height="130" as="geometry"/>
+        </mxCell>
+        <mxCell id="a5" value="&quot;Powered by Akamai&quot; strip in the UI is generated from /healthz live flags, so it only lists services that actually served the last report" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#0a6cc4;dashed=1;fontSize=11;" vertex="1" parent="a0">
+          <mxGeometry x="20" y="870" width="940" height="45" as="geometry"/>
+        </mxCell>
+
+        <!-- EXTERNAL SERVICES -->
+        <mxCell id="e1" value="&lt;b&gt;AWS Bedrock&lt;/b&gt;&lt;br&gt;Claude Haiku 5.5 — vision intake&lt;br&gt;us.anthropic.claude-haiku-5-5&lt;br&gt;fallback: Anthropic API key" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=8;verticalAlign=top;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="1410" y="120" width="260" height="125" as="geometry"/>
+        </mxCell>
+        <mxCell id="e2" value="&lt;b&gt;Akamai hosted inference&lt;/b&gt;&lt;br&gt;ws.akamai-workshops.com/v1&lt;br&gt;hackathon-chat — judge + priority text&lt;br&gt;hackathon-image — badge art&lt;br&gt;60 requests/min per team, no vision" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=8;verticalAlign=top;fillColor=#e1f0ff;strokeColor=#0a6cc4;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="1410" y="285" width="260" height="140" as="geometry"/>
+        </mxCell>
+        <mxCell id="e3" value="&lt;b&gt;DevRev (separate Civic Flow org)&lt;/b&gt;&lt;br&gt;REST api.devrev.ai (PAT)&lt;br&gt;works.create / update / get&lt;br&gt;one ticket per unique pothole&lt;br&gt;vendors = groups + tags&lt;br&gt;stage names → citizen-facing status" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=8;verticalAlign=top;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="1410" y="470" width="260" height="165" as="geometry"/>
+        </mxCell>
+        <mxCell id="e4" value="&lt;b&gt;DevRev Computer (optional)&lt;/b&gt;&lt;br&gt;dedup-mcp + SKILL.md&lt;br&gt;Enterprise-Bench data only&lt;br&gt;go / no-go at 2:00 PM" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=8;verticalAlign=top;dashed=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="1410" y="680" width="260" height="110" as="geometry"/>
+        </mxCell>
+        <mxCell id="e5" value="&lt;b&gt;Akamai EdgeWorker + EdgeKV&lt;/b&gt;&lt;br&gt;dormant bundle in /edge&lt;br&gt;only if sandbox access is granted" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=8;verticalAlign=top;dashed=1;fillColor=#e1f0ff;strokeColor=#0a6cc4;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="1410" y="830" width="260" height="100" as="geometry"/>
+        </mxCell>
+
+        <!-- FLOWS -->
+        <mxCell id="g1" value="1  photo + GPS (HTTPS)" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeWidth=2;fontSize=11;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="c1" target="a1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="g2" value="2" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeWidth=2;fontSize=11;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="a1" target="f1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="g3" value="3  dedup" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeWidth=2;fontSize=11;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="f1" target="f3">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="g4" value="4  geo candidates" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;startArrow=block;startFill=1;strokeWidth=2;fontSize=11;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="f3" target="a2">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="g5" value="persist" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeWidth=2;fontSize=11;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="f3" target="a3">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="g6" value="photo upload" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeWidth=2;fontSize=11;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="f1" target="a4">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="g7" value="5  new or ambiguous report" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeWidth=2;fontSize=11;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="f4" target="s1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="g8" value="vision" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeWidth=2;fontSize=11;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="s1" target="e1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="g9" value="judge / priority text" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeWidth=2;fontSize=11;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="s3" target="e2">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="g10" value="6  create / update ticket" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeWidth=2;fontSize=11;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="s4" target="e3">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="g11" value="7  poll stage ~20 s" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeWidth=2;fontSize=11;labelBackgroundColor=#ffffff;dashed=1;" edge="1" parent="1" source="e3" target="f4">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="g12" value="8  SSE live events" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeWidth=2;fontSize=11;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="f2" target="c2">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="g13" value="Mark fixed" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeWidth=2;fontSize=11;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="c3" target="f1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="g14" value="seed.py" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeWidth=2;fontSize=11;labelBackgroundColor=#ffffff;dashed=1;" edge="1" parent="1" source="k" target="a3">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="g15" value="ambiguous band only" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeWidth=2;fontSize=11;labelBackgroundColor=#ffffff;dashed=1;" edge="1" parent="1" source="s2" target="e2">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+
+  <diagram id="flow" name="2. Per-report dedup flow">
+    <mxGraphModel dx="1400" dy="1200" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1300" pageHeight="1450" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+
+        <mxCell id="t" value="&lt;b style=&quot;font-size:18px&quot;&gt;What happens to every report&lt;/b&gt;&lt;br&gt;Cheap deterministic checks first; agents only for new or ambiguous issues; DevRev written only at milestones" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="40" y="10" width="900" height="50" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="p0" value="Citizen submits report&lt;br&gt;photo + GPS + optional note" style="rounded=1;arcSize=50;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="420" y="80" width="300" height="55" as="geometry"/>
+        </mxCell>
+        <mxCell id="p1" value="Validate payload&lt;br&gt;GPS accuracy ≤ 100 m · 10 reports/hour · 1 per user per cluster" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="420" y="165" width="300" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="p2" value="Same photo seen before?&lt;br&gt;(pHash distance ≤ 6)" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="420" y="255" width="300" height="100" as="geometry"/>
+        </mxCell>
+        <mxCell id="p2n" value="Flag as fraud · no XP" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="860" y="275" width="230" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="p3" value="Intake Agent (Bedrock Haiku 5.5, vision)&lt;br&gt;category · severity 1–5 · hazard · valid?" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="420" y="390" width="300" height="65" as="geometry"/>
+        </mxCell>
+        <mxCell id="p4" value="Valid infrastructure issue?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="420" y="485" width="300" height="90" as="geometry"/>
+        </mxCell>
+        <mxCell id="p4n" value="Friendly reject · small reputation penalty" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="860" y="500" width="230" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="p5" value="Engine: Valkey GEOSEARCH&lt;br&gt;open clusters within 2 × R, same category group" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="420" y="605" width="300" height="65" as="geometry"/>
+        </mxCell>
+        <mxCell id="p6" value="score ≥ 0.75&lt;br&gt;or distance ≤ R_auto?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="420" y="700" width="300" height="100" as="geometry"/>
+        </mxCell>
+        <mxCell id="p7" value="MERGE into existing cluster&lt;br&gt;+1 reporter · XP +15 · recompute priority&lt;br&gt;&lt;b&gt;zero LLM calls&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="40" y="715" width="290" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="p8" value="0.50 ≤ score &amp;lt; 0.75?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="420" y="830" width="300" height="90" as="geometry"/>
+        </mxCell>
+        <mxCell id="p9" value="dedup_judge (Akamai hackathon-chat)&lt;br&gt;compares new photo to top 3 candidates&lt;br&gt;low confidence: merge (potholes)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="40" y="840" width="290" height="75" as="geometry"/>
+        </mxCell>
+        <mxCell id="p10" value="CREATE new cluster&lt;br&gt;first reporter XP +50" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="420" y="955" width="300" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="p11" value="Priority 0–100 from the code formula&lt;br&gt;priority agent writes the rationale" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="420" y="1045" width="300" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="p12" value="Priority bucket changed&lt;br&gt;or reporter milestone?&lt;br&gt;(1, 5, 10, 25, 50, 100 …)" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="420" y="1135" width="300" height="110" as="geometry"/>
+        </mxCell>
+        <mxCell id="p13" value="dispatch (plain Python)&lt;br&gt;create or update DevRev ticket · assign vendor" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="860" y="1165" width="250" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="p14" value="No DevRev write (throttled)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="420" y="1275" width="300" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="p15" value="SSE event → citizen phone + Ops Theatre update" style="rounded=1;arcSize=50;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="420" y="1355" width="300" height="55" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="h1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeWidth=2;" edge="1" parent="1" source="p0" target="p1"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="h2" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeWidth=2;" edge="1" parent="1" source="p1" target="p2"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="h3" value="yes" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeWidth=2;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="p2" target="p2n"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="h4" value="no" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeWidth=2;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="p2" target="p3"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="h5" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeWidth=2;" edge="1" parent="1" source="p3" target="p4"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="h6" value="no" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeWidth=2;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="p4" target="p4n"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="h7" value="yes" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeWidth=2;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="p4" target="p5"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="h8" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeWidth=2;" edge="1" parent="1" source="p5" target="p6"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="h9" value="yes" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeWidth=2;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="p6" target="p7"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="h10" value="no" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeWidth=2;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="p6" target="p8"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="h11" value="yes" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeWidth=2;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="p8" target="p9"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="h12" value="no (below 0.50)" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeWidth=2;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="p8" target="p10"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="h13" value="judge says new" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeWidth=2;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="p9" target="p10"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="h14" value="judge says merge" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeWidth=2;labelBackgroundColor=#ffffff;dashed=1;" edge="1" parent="1" source="p9" target="p7"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="h15" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeWidth=2;" edge="1" parent="1" source="p10" target="p11"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="h16" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeWidth=2;" edge="1" parent="1" source="p7" target="p11"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="h17" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeWidth=2;" edge="1" parent="1" source="p11" target="p12"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="h18" value="yes" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeWidth=2;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="p12" target="p13"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="h19" value="no" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeWidth=2;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="p12" target="p14"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="h20" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeWidth=2;" edge="1" parent="1" source="p14" target="p15"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="h21" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeWidth=2;" edge="1" parent="1" source="p13" target="p15"><mxGeometry relative="1" as="geometry"/></mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
