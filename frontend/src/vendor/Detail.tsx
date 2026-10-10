@@ -10,6 +10,7 @@ import { useAsync } from "../lib/hooks";
 import {
   Button, IconButton, Pill, PriorityBadge, Skeleton, TicketId, devrevOf, Tooltip, useReducedMotion, useToast, spring,
 } from "../components/ui";
+import { GeoChips, districtOf, zonesOf } from "../ops/geo";
 import { CategoryIcon, MapThumb, Photo, Prop, Timeline, type TLStep } from "./parts";
 import { SEVERITY_LABEL, STAGE_LABEL, ago, dueInfo, fmtDate, placeOf, stageOf, titleOf } from "./util";
 
@@ -120,6 +121,8 @@ export default function Detail({ order, afterUrl, onStart, onFix }: DetailProps)
         <Prop label="Due"><span className={`vd-due is-${due.tone}`}>{fmtDate(order.due, false)}</span></Prop>
         <Prop label="Category"><span className="vd-cat"><CategoryIcon category={c.category} size={15} /> {catLabel(c.category)}</span></Prop>
         <Prop label="Neighborhood">{c.neighborhood ?? "-"}</Prop>
+        {districtOf(c) && <Prop label="District">{districtOf(c)}</Prop>}
+        {zonesOf(c).length > 0 && <Prop label="Priority zones" wide><GeoChips c={c} zonesOnly max={4} /></Prop>}
       </dl>
 
       {(c.rationale || c.hazard_description) && (

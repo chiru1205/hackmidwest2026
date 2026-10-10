@@ -34,7 +34,7 @@ export default function Kit() {
         <div className="kit-row"><SegmentedControl value={seg} onChange={setSeg} options={[{ value: "map", label: "Map" }, { value: "list", label: "List", count: 24 }, { value: "feed", label: "Feed" }]} /></div>
         <div className="kit-row" style={{ alignItems: "flex-end" }}>
           <Stat label="Reports" value={1442} size="lg" /><Stat label="P1 open" value={7} tone="P1" /><Stat label="Fixed" value={118} tone="success" />
-          <Stat label="Avg edge" value={0.2} decimals={1} suffix=" ms" /><AnimatedNumber value={211} className="t-display xl" />
+          <Stat label="Avg cache" value={0.2} decimals={1} suffix=" ms" /><AnimatedNumber value={211} className="t-display xl" />
         </div>
         <div className="kit-row">
           <Avatar name="Ana Ruiz" /><Avatar name="Dev Patel" /><AvatarStack names={["Ana Ruiz", "Dev Patel", "Sam Lee", "Jo K", "Mia T"]} total={211} />

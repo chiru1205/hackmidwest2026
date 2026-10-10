@@ -7,6 +7,8 @@ import { mockApi } from "../mock";
 export interface ReportInput {
   lat: number; lng: number; accuracy_m: number; category: Category; note: string; severity?: number;
   photo?: Blob | null;
+  /** set when a demo preset / ?demo=1 is active so the server may accept out-of-area spots */
+  demoOverride?: boolean;
 }
 
 export interface Api {
@@ -70,6 +72,7 @@ const realApi: Api = {
     f.set("lat", String(r.lat)); f.set("lng", String(r.lng)); f.set("accuracy_m", String(r.accuracy_m));
     f.set("category", r.category); f.set("note", r.note);
     if (r.severity) f.set("severity", String(r.severity));
+    if (r.demoOverride) f.set("demo_override", "1");
     if (r.photo) f.set("photo", r.photo, "photo.jpg");
     return req("/api/reports", { method: "POST", body: f });
   },
@@ -125,3 +128,69 @@ const realApi: Api = {
 
 export const MOCK = import.meta.env.VITE_MOCK === "1" || import.meta.env.VITE_MOCK === "true";
 export const api: Api = MOCK ? mockApi : realApi;
+
+/* ---- Ops analytics (DevRev work orders, Civic Flow app metrics) ---- */
+export interface WorkOrderStats {
+  source: "devrev" | "local board"; as_of: string; total: number;
+  by_stage: { queued: number; work_in_progress: number; resolved: number; other: number };
+  open_backlog: { blocker: number; high: number; medium: number; low: number }; open_total: number;
+  resolved: number; resolved_timed: number;
+  median_ttr_s: number | null; median_ttr: string | null; p90_ttr_s: number | null; p90_ttr: string | null;
+  oldest_open_s: number | null; oldest_open: string | null; created_last_hour: number;
+  vendors: { vendor: string; total: number; open: number; resolved: number }[];
+}
+export interface AppMetrics {
+  source: string; total_reports: number; unique_issues: number; duplicates_absorbed: number; dedup_ratio: number;
+  llm_calls_avoided: number; geo_cache_hit_rate: number | null; geo_cache_lookups: number; geo_cache_avg_ms: number;
+  vision_reports: number | null; ai_usage: { label: string; calls: number; avg_ms: number; errors: number }[];
+}
+export const fetchWorkOrderStats = () => req<WorkOrderStats>("/api/analytics/work-orders");
+export const fetchAppMetrics = () => req<AppMetrics>("/api/analytics/app");
+
+export interface GeoZone { type: "school" | "hospital" | "arterial"; name: string; distance_m: number; radius_m: number; boost: number }
+export interface GeofenceInfo {
+  in_service_area: boolean; neighborhood: string | null; district: string | null; zones: GeoZone[]; message: string | null;
+}
+/** Geofence lookup; resolves null when the endpoint is missing or fails (the UI then shows nothing). */
+export const fetchGeofence = (lat: number, lng: number): Promise<GeofenceInfo | null> =>
+  req<GeofenceInfo>(`/api/geofence${qs({ lat: lat.toFixed(6), lng: lng.toFixed(6) })}`).catch(() => null);
+
+/* ---- Geofence layers (real neighborhood polygons + priority zones) ---- */
+export interface GeoZone { type: "school" | "hospital" | "arterial"; name: string; lat: number; lng: number; radius_m: number }
+export interface GeofenceLayers {
+  neighborhoods: { type: "FeatureCollection"; features: { type: "Feature"; properties: { name: string; district?: string | null }; geometry: unknown }[] };
+  zones: GeoZone[];
+}
+export const fetchGeofenceLayers = () => req<GeofenceLayers>("/api/geofence/layers");
+
+/* ---- DevRev case-flow board (Workflow page) ---- */
+export type CfStageKey = "queued" | "assigned" | "in_progress" | "awaiting_verification" | "resolved";
+export interface BoardTicket {
+  id: string; devrev_id: string | null; title: string; cluster_id: string; stage_key: CfStageKey;
+  severity: "blocker" | "high" | "medium" | "low"; priority_bucket: "P1" | "P2" | "P3" | "P4";
+  vendor: string | null; owner: string | null; neighborhood: string | null; district: string | null;
+  zones: string[]; reporters: number; age_s: number; due: string | null; overdue: boolean;
+  escalated: boolean; evidence_count: number; web_url: string | null;
+}
+export interface BoardStage { key: CfStageKey; label: string; count: number; avg_age_s: number | null; tickets: BoardTicket[] }
+export interface DevrevBoard {
+  source: "devrev" | "local board"; as_of: string; stages: BoardStage[];
+  totals: { open: number; overdue: number; escalated: number; resolved: number; median_ttr: string | null };
+}
+export interface JourneyStep {
+  ts: string; source: "civicflow" | "devrev";
+  kind: "report" | "vision" | "geofence" | "dedup" | "priority" | "routing" | "created" | "stage" | "comment" | "escalated" | "verification" | "resolved" | "reopened";
+  title: string; detail: string;
+}
+export interface DevrevJourney { ticket: BoardTicket; steps: JourneyStep[] }
+export type DevrevActionName = "start" | "request_verification" | "approve" | "escalate" | "reopen";
+export interface DevrevActionResult { ok: boolean; ticket: BoardTicket | null; error: string | null }
+export interface DevrevEvent {
+  ts: string; kind: "created" | "stage" | "comment" | "escalated" | "verification" | "resolved" | "reopened";
+  ticket_id: string; devrev_id: string | null; text: string; source: "DevRev" | "Civic Flow";
+}
+export const devrevBoard = () => req<DevrevBoard>("/api/devrev/board");
+export const devrevJourney = (id: string) => req<DevrevJourney>(`/api/devrev/ticket/${encodeURIComponent(id)}/journey`);
+export const devrevAction = (id: string, action: DevrevActionName, note?: string | null) =>
+  post<DevrevActionResult>(`/api/devrev/ticket/${encodeURIComponent(id)}/action`, { action, note: note ?? null });
+export const devrevEvents = (limit = 30) => req<DevrevEvent[]>(`/api/devrev/events${qs({ limit })}`);

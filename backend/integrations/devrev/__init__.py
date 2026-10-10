@@ -90,6 +90,13 @@ def _devrev_body(cluster: Cluster, title: str, body: str, vendor: str | None) ->
     footer = (f"Civic Flow cluster {cluster.id} | {cluster.reporter_count} unique reporters | "
               f"priority {cluster.bucket} ({cluster.priority:.0f}/100)"
               + (f" | vendor: {vendor}" if vendor else ""))
+    geo = [f"Neighborhood: {cluster.neighborhood}"] if cluster.neighborhood else []
+    if getattr(cluster, "district", None):
+        geo.append(f"District: {cluster.district}")
+    zs = getattr(cluster, "zones", None) or []
+    geo.append("Zones: " + ("; ".join(zs) if zs else "none"))
+    if geo:
+        footer += "\n" + " | ".join(geo)
     return "\n".join([body, "", "---", footer, f"Map: {link}"])
 
 
@@ -106,6 +113,11 @@ def _sync_create(tid: str, cluster: Cluster, title: str, body: str, vendor: str 
         finally:
             c.close()
     log.info("Civic Flow %s mirrored to DevRev %s", tid, dr.get("display_id"))
+    try:
+        from . import events
+        events.record("created", tid, dr.get("display_id"), f"{dr.get('display_id')} created in DevRev: {title}"[:200], "DevRev")
+    except Exception:
+        pass
 
 
 def _sync_update(devrev_id: str, **fields) -> None:
@@ -128,7 +140,7 @@ def _poll_loop() -> None:
 
     base = os.getenv("API_INTERNAL_URL", "http://127.0.0.1:8000")
     while True:
-        time.sleep(int(os.getenv("DEVREV_POLL_S", "20")))
+        time.sleep(int(os.getenv("DEVREV_POLL_S", "5")))
         try:
             c = _conn()
             try:
@@ -139,6 +151,10 @@ def _poll_loop() -> None:
             for r in rows:
                 new = stages.get(r["cluster_id"])
                 if new in live.KNOWN_STAGES and new != r["devrev_stage"]:
+                    r = raw_row(r["id"]) or r  # re-read: an app action may have just written this stage itself
+                    if new == r["devrev_stage"]:
+                        continue
+                    _record_external_change(r, new)
                     with _lock:
                         cc = _conn()
                         try:
@@ -151,6 +167,56 @@ def _poll_loop() -> None:
                         log.info("DevRev moved %s to %s; applied locally", r["id"], new)
         except Exception as e:  # never let the poller die
             log.warning("DevRev poll error: %s", type(e).__name__)
+
+
+def _record_external_change(r, new: str) -> None:
+    """The poller saw a DevRev stage change that did not come from our own actions: log it as a DevRev event."""
+    try:
+        from . import events
+        events.record_external_stage(r["id"], r["devrev_display"], r["devrev_stage"], new)
+    except Exception as e:
+        log.warning("event record failed: %s", type(e).__name__)
+
+
+def set_devrev_stage_seen(ticket_id: str, stage: str) -> None:
+    """Remember the DevRev stage we just wrote ourselves, so the poller does not treat it as an outside change."""
+    with _lock:
+        c = _conn()
+        try:
+            c.execute("UPDATE tickets SET devrev_stage=? WHERE id=?", (stage, ticket_id))
+            c.commit()
+        finally:
+            c.close()
+
+
+def raw_row(ticket_id: str):
+    c = _conn()
+    try:
+        return c.execute("SELECT * FROM tickets WHERE id=?", (ticket_id,)).fetchone()
+    finally:
+        c.close()
+
+
+def raw_rows() -> list:
+    c = _conn()
+    try:
+        return c.execute("SELECT * FROM tickets ORDER BY num DESC").fetchall()
+    finally:
+        c.close()
+
+
+def set_severity(ticket_id: str, severity: str) -> None:
+    with _lock:
+        c = _conn()
+        try:
+            c.execute("UPDATE tickets SET severity=?, updated_at=? WHERE id=?", (severity, _now(), ticket_id))
+            c.commit()
+        finally:
+            c.close()
+
+
+def add_comment(devrev_id: str, text: str) -> bool:
+    return live.comment(devrev_id, text)
 
 
 # ---------------------------------------------------------------- board API
@@ -250,9 +316,15 @@ def _vendors() -> list[dict]:
         return DEFAULT_VENDORS
 
 
-def pick_vendor(category: str) -> str:
+def pick_vendor(category: str, district: str | None = None) -> str:
+    """The crew for a category. Prefers a crew that serves the district; round-robin among the candidates."""
     vs = _vendors()
     matches = [v for v in vs if category in v.get("categories", [])] or vs[:1]
-    i = _rr.get(category, 0)
-    _rr[category] = i + 1
+    if district:
+        local = [v for v in matches if district in (v.get("districts") or v.get("areas") or [])]
+        if local:
+            matches = local
+    key = f"{category}|{district or ''}"
+    i = _rr.get(key, 0)
+    _rr[key] = i + 1
     return matches[i % len(matches)]["name"]

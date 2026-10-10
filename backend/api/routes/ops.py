@@ -81,7 +81,17 @@ async def vendor_fix(cluster_id: str, photo: Optional[UploadFile] = File(None)):
         data = await photo.read()
         if data:
             adapters.save_photo(f"fix_{cluster_id}.jpg", data)
-    return pipeline.mark_fixed(c)
+    was_open = c.status != "fixed"
+    out = pipeline.mark_fixed(c)
+    if was_open and c.ticket_id:  # log the vendor fix (and its after-photo) in the ticket event history
+        try:
+            from backend.integrations.devrev import events as dr_events
+            dr_events.record("resolved", c.ticket_id, None,
+                             "Vendor marked fixed" + (" with an after-photo" if photo is not None and photo.filename else ""),
+                             "Civic Flow")
+        except Exception:
+            pass
+    return out
 
 
 @router.get("/impact")

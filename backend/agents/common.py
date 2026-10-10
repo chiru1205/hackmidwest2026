@@ -85,6 +85,9 @@ def template_rationale(cluster: Cluster) -> str:
         parts.append("safety hazard")
     if cluster.location_crit >= 0.8:
         parts.append("high-criticality location")
+    for z in getattr(cluster, "zones", None) or []:
+        kind, _, name = z.partition(": ")
+        parts.append(("on an arterial corridor" if kind.startswith("Arterial") else f"inside a {kind.lower()}") + (f": {name}" if name else ""))
     return f"{cluster.bucket} (score {cluster.priority:.0f}): " + ", ".join(parts) + "."
 
 
@@ -92,7 +95,8 @@ def cluster_facts(cluster: Cluster, report: Report | None = None) -> str:
     return (f"category={cluster.category}; severity={cluster.severity}/5; hazard={cluster.is_hazard} "
             f"({cluster.hazard_description}); unique_reporters={cluster.reporter_count}; "
             f"location_criticality={cluster.location_crit}; priority_score={cluster.priority:.0f}; bucket={cluster.bucket}; "
-            f"address={where(cluster)}; neighborhood={cluster.neighborhood}; "
+            f"address={where(cluster)}; neighborhood={cluster.neighborhood}; district={getattr(cluster, 'district', None)}; "
+            f"priority_zones={'; '.join(getattr(cluster, 'zones', None) or []) or 'none'} (if any, mention the zone in the rationale); "
             f"citizen_note={(report.note if report else '')!r}")
 
 

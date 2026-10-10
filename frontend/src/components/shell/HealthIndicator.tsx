@@ -9,7 +9,7 @@ type State = { kind: "loading" } | { kind: "ok" | "degraded"; data: Health } | {
 
 const FLAG_LABEL: Record<string, string> = {
   model_provider: "Model", agents_mode: "Agents", vision: "Vision", devrev_mode: "DevRev",
-  storage: "Storage", edgekv_backend: "Edge KV", demo_mode: "Demo mode",
+  storage: "Storage", edgekv_backend: "Geo cache", demo_mode: "Demo mode",
 };
 
 /** Live API health dot in the header. Click for services and feature flags. */

@@ -27,7 +27,7 @@ export interface Cluster {
   id: string; category: Category; lat: number; lng: number; status: ClusterStatus;
   severity: number; is_hazard: boolean; hazard_description: string;
   reporter_count: number; report_count: number; priority: number; bucket: Bucket;
-  rationale: string; location_crit: number; neighborhood?: string | null; address?: string | null;
+  rationale: string; location_crit: number; neighborhood?: string | null; district?: string | null; zones?: string[]; address?: string | null;
   photo_url?: string | null; ticket_id?: string | null; vendor?: string | null; simulated: boolean;
   first_reported_at: string; last_reported_at: string; fixed_at?: string | null;
 }
@@ -74,4 +74,43 @@ export interface Health { status: string; flags: Flags; services: Record<string,
 export interface Impact {
   headline: string;
   facts: { label: string; value: string; note: string; estimate: boolean; source: string }[];
+}
+
+export interface CategorySuggestion { category: Category; confidence: number; source: "akamai-embedding" | "keywords" }
+export interface AIModelUsage {
+  name: string; provider: string; calls: number; errors: number; avg_ms: number; last_ms: number; tokens: number | null;
+}
+export interface AIUsage { models: AIModelUsage[]; since: string }
+
+export interface ZoneHit { type: "school" | "hospital" | "arterial"; name: string; distance_m: number; radius_m: number; boost: number }
+export interface GeoInfo {
+  in_service_area: boolean; neighborhood?: string | null; district?: string | null; zones: ZoneHit[]; message?: string | null;
+}
+
+// ---- DevRev case-flow board
+export type StageKey = "queued" | "assigned" | "in_progress" | "awaiting_verification" | "resolved";
+export interface BoardTicket {
+  id: string; devrev_id: string | null; title: string; cluster_id: string; stage_key: StageKey;
+  severity: "blocker" | "high" | "medium" | "low"; priority_bucket: "P1" | "P2" | "P3" | "P4";
+  vendor: string | null; owner: string | null; neighborhood: string | null; district: string | null; zones: string[];
+  reporters: number; age_s: number; due: string | null; overdue: boolean; escalated: boolean;
+  evidence_count: number; web_url: string | null;
+}
+export interface BoardStage { key: StageKey; label: string; count: number; avg_age_s: number | null; tickets: BoardTicket[] }
+export interface Board {
+  source: "devrev" | "local board"; as_of: string; stages: BoardStage[];
+  totals: { open: number; overdue: number; escalated: number; resolved: number; median_ttr: string | null };
+}
+export interface JourneyStep {
+  ts: string; source: "civicflow" | "devrev";
+  kind: "report" | "vision" | "geofence" | "dedup" | "priority" | "routing" | "created" | "stage" | "comment"
+    | "escalated" | "verification" | "resolved" | "reopened";
+  title: string; detail: string;
+}
+export interface Journey { ticket: BoardTicket; steps: JourneyStep[] }
+export interface TicketAction { action: "start" | "request_verification" | "approve" | "escalate" | "reopen"; note?: string | null }
+export interface TicketActionResult { ok: boolean; ticket: BoardTicket | null; error: string | null }
+export interface TicketEventRow {
+  ts: string; kind: "created" | "stage" | "comment" | "escalated" | "verification" | "resolved" | "reopened";
+  ticket_id: string; devrev_id: string | null; text: string; source: "DevRev" | "Civic Flow";
 }

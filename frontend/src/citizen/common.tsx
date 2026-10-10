@@ -49,8 +49,8 @@ export function Photo({ src, cat, alt = "", className = "", children }: { src?: 
 export function EdgePill({ edge }: { edge?: EdgeInfo | null }) {
   if (!edge) return null;
   return (
-    <Pill variant={edge.hit ? "success" : "hazard"} size="sm" icon={<Zap size={12} strokeWidth={2} aria-hidden />} title={`Edge cell ${edge.cell}`}>
-      Edge {edge.hit ? "HIT" : "MISS"} <span className="t-mono">{edge.ms.toFixed(1)} ms</span>
+    <Pill variant={edge.hit ? "success" : "hazard"} size="sm" icon={<Zap size={12} strokeWidth={2} aria-hidden />} title={`Geo cache cell ${edge.cell} (the app's own in-memory cache)`}>
+      Geo cache {edge.hit ? "hit" : "miss"} <span className="t-mono">{edge.ms.toFixed(1)} ms</span>
     </Pill>
   );
 }
@@ -98,3 +98,21 @@ export function levelSpan(xp: number) {
 
 export const shortAddr = (a?: string | null) => (a ?? "").replace(/\s+(SIGN|SIGNAL|N\/A)$/i, "").trim();
 export const MapPinIcon = MapPin;
+
+/** District and zones arrive from the geofence step; tolerate older servers that omit them. */
+export function geoOf(c: { neighborhood?: string | null } | null | undefined): { district: string | null; zones: string[] } {
+  const g = (c ?? {}) as { district?: string | null; zones?: string[] };
+  return { district: g.district ?? null, zones: g.zones ?? [] };
+}
+/** "Plaza - District 4 - near a school zone" */
+export function areaLine(c: { neighborhood?: string | null } | null | undefined): string {
+  const { district, zones } = geoOf(c);
+  const parts: string[] = [];
+  if (c?.neighborhood) parts.push(c.neighborhood);
+  if (district) parts.push(/^district/i.test(district) ? district : `District ${district}`);
+  if (zones.length) {
+    const z = zones[0].toLowerCase();
+    parts.push(z.startsWith("school") ? "near a school zone" : z.startsWith("hospital") ? "near a hospital zone" : "on a priority corridor");
+  }
+  return parts.join(" · ");
+}

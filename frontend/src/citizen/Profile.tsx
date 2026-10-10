@@ -1,5 +1,6 @@
+import { useState } from "react";
 import { motion } from "framer-motion";
-import { Award, Binoculars, Camera, Crown, Eye, Flame, HardHat, Lock, MapPin, Users } from "lucide-react";
+import { Award, Binoculars, Camera, Crown, Flame, ShieldCheck, HardHat, Lock, MapPin, Users } from "lucide-react";
 import type { Badge, LeaderboardEntry } from "@contracts";
 import { api } from "../lib/api";
 import { useAsync, useEvents } from "../lib/hooks";
@@ -9,19 +10,22 @@ import { levelSpan } from "./common";
 const BADGE: Record<string, { icon: typeof Camera; tone: string }> = {
   first_report: { icon: Camera, tone: "blue" },
   good_neighbor: { icon: Users, tone: "green" },
-  eagle_eye: { icon: Eye, tone: "amber" },
   fixer: { icon: HardHat, tone: "orange" },
   streak: { icon: Flame, tone: "hazard" },
+  guardian: { icon: ShieldCheck, tone: "amber" },
   watcher: { icon: Binoculars, tone: "navy" },
 };
 
 function Medallion({ b }: { b: Badge }) {
   const def = BADGE[b.id] ?? { icon: Award, tone: "blue" };
   const I = def.icon;
+  const [imgOk, setImgOk] = useState(true);
   return (
-    <motion.li variants={item} className={`cz-medal ${b.earned ? `is-on tone-${def.tone}` : "is-locked"}`}>
+    <motion.li variants={item} className={`cz-medal ${b.earned ? `is-on tone-${def.tone}` : "is-locked"} ${imgOk ? "has-art" : ""}`}>
       <span className="cz-medal__disc" aria-hidden>
-        {b.earned ? <I size={28} strokeWidth={1.75} /> : <Lock size={22} strokeWidth={1.75} />}
+        {imgOk && <span className="cz-medal__artw"><img className="cz-medal__art" src={`/badges/${b.id}.png`} alt="" loading="lazy" onError={() => setImgOk(false)} /></span>}
+        {!imgOk && (b.earned ? <I size={28} strokeWidth={1.75} /> : <Lock size={22} strokeWidth={1.75} />)}
+        {imgOk && !b.earned && <span className="cz-medal__lock"><Lock size={14} strokeWidth={2} /></span>}
       </span>
       <b>{b.name}</b>
       <span className="cz-medal__d">{b.description}</span>

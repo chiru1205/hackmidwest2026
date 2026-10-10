@@ -4,6 +4,7 @@ from __future__ import annotations
 import json
 import re
 
+from backend.engine import geofence
 from backend.engine.geo import haversine_m
 
 from . import config
@@ -17,6 +18,13 @@ _pois: list[dict] | None = None
 
 
 def neighborhood_for(lat: float, lng: float) -> str:
+    """Real KCMO neighborhood polygon when the point is inside one; nearest of a short list otherwise."""
+    try:
+        name = geofence.locate(lat, lng)["neighborhood"]
+        if name:
+            return name
+    except Exception:
+        pass
     return min(NEIGHBORHOODS, key=lambda n: haversine_m(lat, lng, *NEIGHBORHOODS[n]))
 
 
@@ -43,7 +51,52 @@ def location_crit(lat: float, lng: float) -> float:
             return 1.0
         if kind in ("arterial", "road") and d <= 100:
             best = max(best, 0.8)
+    try:
+        best = max(best, geofence.criticality(geofence.zones_at(lat, lng)))
+    except Exception:
+        pass
     return best
+
+
+def apply_geo(c) -> None:
+    """Fill a cluster's neighborhood, district and zones from the geofence and raise location_crit to the zone boost.
+    Never lowers location_crit. Safe to call repeatedly."""
+    try:
+        loc = geofence.locate(c.lat, c.lng)
+        hits = geofence.zones_at(c.lat, c.lng) if loc["in_service_area"] else []
+    except Exception:
+        return
+    if not loc["in_service_area"]:          # only reachable through the demo override: never invent a KC neighborhood
+        if geofence.available():
+            c.neighborhood, c.district, c.zones = None, None, []
+        return
+    if loc["neighborhood"]:
+        c.neighborhood = loc["neighborhood"]
+    if loc["district"]:
+        c.district = loc["district"]
+    c.zones = geofence.zone_labels(hits)
+    c.location_crit = max(c.location_crit, geofence.criticality(hits))
+
+
+_ZONE_PHRASE = {"School zone": "inside a school zone", "Hospital zone": "inside a hospital zone",
+                "Arterial corridor": "on an arterial corridor"}
+
+
+def zone_phrases(zones: list[str]) -> list[str]:
+    out = []
+    for z in zones:
+        kind, _, name = z.partition(": ")
+        out.append(f"{_ZONE_PHRASE.get(kind, 'inside a priority zone')}: {name}" if name else z)
+    return out
+
+
+def rationale_with_zones(base: str, c) -> str:
+    """Append the zone mention(s) to a template rationale ('... open 1 day.' -> '..., inside a school zone: X, open 1 day.')."""
+    ph = zone_phrases(getattr(c, "zones", None) or [])
+    if not ph:
+        return base
+    first = base.rstrip(".")
+    return first + ", " + "; ".join(ph) + "."
 
 
 _SUFFIX = {"ave", "st", "blvd", "rd", "dr", "ct", "ter", "ln", "pkwy", "way", "pl", "cir", "trfy", "hwy", "road",
@@ -103,4 +156,10 @@ def address_for(lat: float, lng: float) -> str:
             best, bd = a, d
     if best:
         return f"{best}"
+    try:
+        loc = geofence.locate(lat, lng)
+        if geofence.available() and not loc["in_service_area"]:
+            return f"{lat:.5f}, {lng:.5f} (outside Kansas City)"
+    except Exception:
+        pass
     return f"{neighborhood_for(lat, lng)}, Kansas City"

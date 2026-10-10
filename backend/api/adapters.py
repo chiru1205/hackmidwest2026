@@ -74,7 +74,9 @@ def template_rationale(c: Cluster) -> str:
             f"{c.reporter_count} unique reporter{'s' if c.reporter_count != 1 else ''}"]
     if c.is_hazard:
         bits.append("safety hazard")
-    if c.location_crit >= 1.0:
+    if getattr(c, "zones", None):
+        pass  # the zone sentence is appended by places.rationale_with_zones
+    elif c.location_crit >= 1.0:
         bits.append("near a school or hospital")
     elif c.location_crit >= 0.8:
         bits.append("on an arterial road")
@@ -190,6 +192,17 @@ async def run_new_cluster_pipeline(cluster: Cluster, report: Report, emit) -> di
         except Exception as e:
             log.warning("run_new_cluster_pipeline failed: %s", e)
     return local_new_cluster(cluster)
+
+
+async def write_texts(cluster: Cluster, report: Report, emit) -> dict | None:
+    """Akamai-written rationale + ticket title/body (background). None when unavailable."""
+    if _agents is None or not hasattr(_agents, "write_texts"):
+        return None
+    try:
+        return await asyncio.wait_for(_agents.write_texts(cluster, report, emit), AGENT_TIMEOUT * 2)
+    except Exception as e:
+        log.warning("write_texts failed: %s", type(e).__name__)
+        return None
 
 
 def local_new_cluster(cluster: Cluster) -> dict:

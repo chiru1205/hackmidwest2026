@@ -178,3 +178,16 @@
 .vd-pane__empty { height: 100%; display: grid; place-items: center; padding: var(--s-6); }
 .vd-pane__empty > * { border: 0 !important; box-shadow: none !important; background: transparent !important; }
 .vd-hero .vd-photo--lg:has(.vd-photo__ph:not(.ui-skeleton)) { aspect-ratio: 21/8; }
+
+/* geofence: district/zone chips and wide props */
+.vd-prop.is-wide { grid-column: 1 / -1; }
+.vd-prop:last-child:nth-child(odd) { grid-column: 1 / -1; }
+.vd-row__geo { min-width: 0; flex-wrap: nowrap; overflow: hidden; }
+.vd-row__geo .geo-chip { background: transparent; padding: 0; color: var(--faint); }
+.vd-row__geo .geo-chip.is-dist { background: transparent; color: var(--faint); }
+.vd-row__geo .geo-chip.is-hood svg { display: none; }
+.vd-row__geo .geo-chip.is-school, .vd-row__geo .geo-chip.is-hospital { padding: 1px 7px; }
+.vd-row__geo .geo-chip.is-school { background: color-mix(in srgb, #0E9F9A 14%, transparent); color: #0B6F6B; }
+.vd-row__geo .geo-chip.is-hospital { background: color-mix(in srgb, #6D5BD0 13%, transparent); color: #4E3FB0; }
+.vd-row__geo .geo-chip.is-dist::before { content: "\00b7"; margin-right: 4px; }
+.vd-row__main { gap: 6px; }

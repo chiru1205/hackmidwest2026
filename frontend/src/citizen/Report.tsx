@@ -1,10 +1,11 @@
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { AnimatePresence, motion } from "framer-motion";
-import { Camera, Check, ImagePlus, LocateFixed, RotateCcw, Send, TriangleAlert, Users } from "lucide-react";
+import { Camera, Check, ImagePlus, LocateFixed, MapPinOff, RotateCcw, School, Send, ShieldAlert, Siren, TriangleAlert, Users } from "lucide-react";
 import type { Category, Cluster, EdgeInfo, ReportResult } from "@contracts";
-import { api } from "../lib/api";
-import { CATEGORIES } from "../lib/const";
+import { useSearchParams } from "react-router-dom";
+import { api, fetchGeofence, type GeofenceInfo, type GeoZone } from "../lib/api";
+import { CATEGORIES, PRESETS, catLabel } from "../lib/const";
 import { compressImage } from "../lib/image";
 import { AvatarStack, Button, Pill, PriorityBadge, TicketId, spring } from "../components/ui";
 import { CatIcon, EdgePill, NEIGHBOR_NAMES, Photo, photoFor, shortAddr } from "./common";
@@ -18,7 +19,11 @@ const SCAN_STEPS = ["Reading the photo", "Checking for neighbor reports", "Scori
 const SEVERITY = ["Minor", "Noticeable", "Real problem", "Serious", "Dangerous"];
 
 export default function Report() {
-  const { loc, setPin } = useLoc();
+  const { loc, setPin, override } = useLoc();
+  const [sp] = useSearchParams();
+  const [geo, setGeo] = useState<GeofenceInfo | null>(null);
+  const [presetsOpen, setPresetsOpen] = useState(false);
+  const demoOn = sp.get("demo") === "1" || loc.source === "override";
   const overlay = useOverlayRoot();
   const [category, setCategory] = useState<Category>("pothole");
   const [note, setNote] = useState("");
@@ -28,6 +33,8 @@ export default function Report() {
   const [nearby, setNearby] = useState<Cluster[]>([]);
   const [nearLoaded, setNearLoaded] = useState(false);
   const [edge, setEdge] = useState<EdgeInfo | null>(null);
+  const [explicit, setExplicit] = useState(false);
+  const [sugg, setSugg] = useState<{ category: Category; confidence: number; source: string } | null>(null);
   const [scanning, setScanning] = useState(false);
   const [scanStep, setScanStep] = useState(0);
   const [result, setResult] = useState<ReportResult | null>(null);
@@ -39,7 +46,7 @@ export default function Report() {
     api.nearby(loc.lat, loc.lng, category).then((r) => { setNearby(r.clusters); setEdge(r.edge); setNearLoaded(true); })
       .catch(() => { setNearby([]); setEdge(null); setNearLoaded(true); });
 
-  // live nearby check, debounced; served from the edge cache
+  // live nearby check, debounced; served from the in-memory geo cache
   useEffect(() => {
     let live = true;
     const t = setTimeout(() => {
@@ -48,6 +55,29 @@ export default function Report() {
     }, 300);
     return () => { live = false; clearTimeout(t); };
   }, [loc.lat, loc.lng, category]);
+
+  // geofence lookup for the chosen spot: debounced, last result kept while the next one loads
+  useEffect(() => {
+    let live = true;
+    const t = setTimeout(() => { fetchGeofence(loc.lat, loc.lng).then((g) => { if (live) setGeo(g); }); }, 400);
+    return () => { live = false; clearTimeout(t); };
+  }, [loc.lat, loc.lng]);
+  const outside = geo?.in_service_area === false;
+  const blocked = outside && !demoOn;
+
+  // category suggestion from the note (endpoint may not exist yet: stay silent)
+  useEffect(() => {
+    const text = note.trim();
+    if (explicit || text.length < 8) { setSugg(null); return; }
+    let live = true;
+    const t = setTimeout(() => {
+      fetch(`/api/suggest?text=${encodeURIComponent(text)}`)
+        .then((r) => (r.ok ? r.json() : null))
+        .then((j) => { if (live) setSugg(j && j.category && CATEGORIES.some((c) => c.id === j.category) ? j : null); })
+        .catch(() => { if (live) setSugg(null); });
+    }, 500);
+    return () => { live = false; clearTimeout(t); };
+  }, [note, explicit]);
 
   useEffect(() => () => { if (preview) URL.revokeObjectURL(preview); }, [preview]);
 
@@ -73,7 +103,7 @@ export default function Report() {
   }
 
   const submit = () => run(
-    () => api.submitReport({ lat: loc.lat, lng: loc.lng, accuracy_m: loc.accuracy_m, category, note, severity, photo }),
+    () => api.submitReport({ lat: loc.lat, lng: loc.lng, accuracy_m: loc.accuracy_m, category, note, severity, photo, demoOverride: demoOn }),
     () => { setNote(""); setPhoto(null); setPreview(null); },
   );
   const meToo = (c: Cluster) => run(() => api.confirm(c.id, loc.lat, loc.lng, loc.accuracy_m));
@@ -131,13 +161,29 @@ export default function Report() {
         <div className="cz-loc__row">
           <span className="cz-loc__icon"><LocateFixed size={18} strokeWidth={1.75} aria-hidden /></span>
           <div className="cz-loc__txt">
-            <b>{best?.neighborhood ?? "Your location"}{best?.address ? ` · ${shortAddr(best.address)}` : ""}</b>
+            <b>{geo?.in_service_area ? (geo.neighborhood ?? best?.neighborhood ?? "Your location") : outside ? "Outside Kansas City" : (best?.neighborhood ?? "Your location")}{best?.address ? ` · ${shortAddr(best.address)}` : ""}</b>
             <span className="t-mono">{loc.lat.toFixed(4)}, {loc.lng.toFixed(4)}</span>
           </div>
           <Pill variant={accuracyBad ? "hazard" : "success"} size="sm" dot={loc.source === "gps" ? "pulse" : true}>
             {accuracyBad ? "Too imprecise" : `${srcLabel} ±${Math.max(1, Math.round(loc.accuracy_m))} m`}
           </Pill>
         </div>
+        <GeoChips geo={geo} />
+        {outside && (
+          <div className="cz-out" role="status">
+            <span className="cz-out__ic"><MapPinOff size={18} strokeWidth={1.75} aria-hidden /></span>
+            <div className="cz-out__txt">
+              <b>You're outside the Kansas City service area</b>
+              <span>{geo?.message ?? "Civic Flow covers Kansas City, Missouri for now."}</span>
+              <button type="button" className="cz-out__btn" aria-expanded={presetsOpen} onClick={() => setPresetsOpen((o) => !o)}>Use a demo location</button>
+              {presetsOpen && (
+                <div className="cz-out__presets">
+                  {PRESETS.map((p) => <button key={p.name} type="button" onClick={() => { override(p.lat, p.lng); setPresetsOpen(false); }}>{p.name}</button>)}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
         <PinMap lat={loc.lat} lng={loc.lng} onPin={setPin} clusters={nearby} />
         <div className="cz-loc__hint t-caption">Drag the pin or tap the map to fix the spot.</div>
       </section>
@@ -147,7 +193,7 @@ export default function Report() {
         <h2 className="cz-sec" id="cz-cat">What is it?</h2>
         <div className="cz-cats" role="radiogroup" aria-labelledby="cz-cat">
           {CATEGORIES.map((c) => (
-            <button key={c.id} type="button" role="radio" aria-checked={category === c.id} className={`cz-cat ${category === c.id ? "is-on" : ""}`} onClick={() => setCategory(c.id)}>
+            <button key={c.id} type="button" role="radio" aria-checked={category === c.id} className={`cz-cat ${category === c.id ? "is-on" : ""}`} onClick={() => { setExplicit(true); setSugg(null); setCategory(c.id); }}>
               <span className="cz-cat__ic"><CatIcon cat={c.id} size={22} /></span>
               <span className="cz-cat__lbl">{c.label}</span>
             </button>
@@ -188,6 +234,16 @@ export default function Report() {
       <section>
         <label className="cz-sec" htmlFor="cz-note">Anything we should know?</label>
         <textarea id="cz-note" className="cz-input" rows={2} value={note} onChange={(e) => setNote(e.target.value)} placeholder="Deep hole in the right lane" />
+        <AnimatePresence>
+          {!explicit && sugg && sugg.confidence >= 0.5 && sugg.category !== category && (
+            <motion.button key={sugg.category} type="button" className="cz-suggest" initial={{ opacity: 0, y: 6, scale: 0.96 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, scale: 0.96 }} transition={spring.snappy}
+              onClick={() => { setCategory(sugg.category); setSugg(null); }}>
+              <span className="cz-suggest__ic"><CatIcon cat={sugg.category} size={14} /></span>
+              <span>Looks like {catLabel(sugg.category)}. Use this?</span>
+              {sugg.source === "akamai-embedding" && <span className="cz-suggest__src">suggested by Akamai AI</span>}
+            </motion.button>
+          )}
+        </AnimatePresence>
       </section>
 
       <section aria-labelledby="cz-sev">
@@ -207,9 +263,10 @@ export default function Report() {
       )}
 
       <div className="cz-sendbar">
-        <Button size="lg" block variant={best ? "secondary" : "primary"} loading={scanning} icon={<Send />} onClick={submit}>
+        <Button size="lg" block variant={best ? "secondary" : "primary"} loading={scanning} disabled={blocked} icon={<Send />} onClick={submit}>
           {best ? "Report it separately" : "Send report"}
         </Button>
+        {blocked && <p className="cz-sendbar__why t-caption">Move the pin inside Kansas City to send a report.</p>}
       </div>
 
       {overlay && createPortal(
@@ -218,6 +275,24 @@ export default function Report() {
         </AnimatePresence>, overlay)}
       {overlay && result && createPortal(
         <Reveal result={result} onClose={() => { setResult(null); loadNearby(); }} />, overlay)}
+    </div>
+  );
+}
+
+const ZONE_ICON = { school: School, hospital: Siren, arterial: ShieldAlert } as const;
+const ZONE_LABEL = { school: "School zone", hospital: "Hospital zone", arterial: "Priority corridor" } as const;
+
+function GeoChips({ geo }: { geo: GeofenceInfo | null }) {
+  if (!geo || !geo.in_service_area) return null;
+  const area = [geo.neighborhood, geo.district ? (/^district/i.test(geo.district) ? geo.district : `District ${geo.district}`) : null].filter(Boolean).join(" · ");
+  if (!area && !geo.zones.length) return null;
+  return (
+    <div className="cz-geo" aria-label="Area and priority zones">
+      {area && <Pill variant="neutral" size="sm">{area}</Pill>}
+      {geo.zones.map((z: GeoZone) => {
+        const Ic = ZONE_ICON[z.type] ?? ShieldAlert;
+        return <span key={z.type + z.name} className="cz-zone" title={`${z.distance_m} m away, zone radius ${z.radius_m} m`}><Ic size={13} strokeWidth={2} aria-hidden /> {ZONE_LABEL[z.type] ?? "Zone"}: {z.name} &middot; priority boost</span>;
+      })}
     </div>
   );
 }

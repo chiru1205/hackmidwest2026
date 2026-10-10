@@ -81,7 +81,7 @@ function Story() {
   const s = stats.data;
   const steps = [
     { icon: Camera, title: "Neighbors report", text: "A photo, a pin and a tap. Thousands of phones, one city." },
-    { icon: GitMerge, title: "Reports converge", text: "Duplicates fold into one issue at the edge, in under a millisecond." },
+    { icon: GitMerge, title: "Reports converge", text: "Duplicates fold into one issue, matched by place and by meaning." },
     { icon: Wrench, title: "One ticket, one crew", text: "Scored, ticketed, assigned. You watch it get fixed." },
   ];
   return (

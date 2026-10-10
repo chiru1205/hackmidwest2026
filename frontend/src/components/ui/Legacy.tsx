@@ -20,7 +20,7 @@ export function EdgeChip({ edge }: { edge?: EdgeInfo | null }) {
   if (!edge) return null;
   return (
     <Pill variant={edge.hit ? "success" : "hazard"} dot="pulse" mono title={`Cell ${edge.cell}`}>
-      {edge.hit ? "Edge hit" : "Edge miss"} · {Math.round(edge.ms)} ms
+      {edge.hit ? "Geo cache hit" : "Geo cache miss"} · {Math.round(edge.ms)} ms
     </Pill>
   );
 }

@@ -8,8 +8,9 @@ from typing import Optional
 from fastapi import APIRouter, File, Form, Header, HTTPException, UploadFile
 from pydantic import BaseModel
 
-from contracts.models import (AgentStep, Cluster, ClusterDetail, NearbyResult, ReportResult, TimelineEntry)
+from contracts.models import (AgentStep, AIUsage, CategorySuggestion, Cluster, ClusterDetail, NearbyResult, ReportResult, TimelineEntry)
 from backend.engine.geo import haversine_m
+from backend.integrations.ai import suggest as ai_suggest, usage as ai_usage
 
 from .. import adapters, edge, pipeline, store
 
@@ -19,7 +20,7 @@ router = APIRouter()
 @router.post("/reports", response_model=ReportResult)
 async def post_report(lat: float = Form(...), lng: float = Form(...), accuracy_m: float = Form(20.0),
                       category: str = Form(""), note: str = Form(""), severity: str = Form(""),
-                      photo: Optional[UploadFile] = File(None), x_user_id: str = Header("u_you")):
+                      demo_override: str = Form(""), photo: Optional[UploadFile] = File(None), x_user_id: str = Header("u_you")):
     data, ext = None, ".jpg"
     if photo is not None and photo.filename:
         data = await photo.read()
@@ -32,7 +33,8 @@ async def post_report(lat: float = Form(...), lng: float = Form(...), accuracy_m
         sev = int(severity) if severity.strip() else None
     except ValueError:
         sev = None
-    return await pipeline.submit_report(x_user_id, lat, lng, accuracy_m, category or None, note, sev, data, ext)
+    return await pipeline.submit_report(x_user_id, lat, lng, accuracy_m, category or None, note, sev, data, ext,
+                                       demo_override=demo_override.strip() == "1")
 
 
 class ConfirmBody(BaseModel):
@@ -85,3 +87,13 @@ async def cluster_detail(cluster_id: str):
             pass
     return ClusterDetail(cluster=c, ticket=adapters.get_ticket(c.ticket_id), reports=store.reports_for(cluster_id),
                          timeline=tl, agent_trace=trace)
+
+
+@router.get("/suggest", response_model=CategorySuggestion)
+async def suggest_category(text: str = ""):
+    return CategorySuggestion(**(await ai_suggest.suggest(text)))
+
+
+@router.get("/ai-usage", response_model=AIUsage)
+async def get_ai_usage():
+    return AIUsage(**ai_usage.snapshot())

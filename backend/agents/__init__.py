@@ -100,3 +100,34 @@ async def run_new_cluster_pipeline(cluster: Cluster, report: Report, emit: Emit)
         step(emit, "dispatch", "error", rid, cid, elapsed_ms(t1), f"ticket creation failed: {type(e).__name__}")
         pass
     return {"rationale": texts["rationale"], "ticket": ticket, "vendor": vendor}
+
+
+async def write_texts(cluster: Cluster, report: Report, emit: Emit) -> dict | None:
+    """Slow part of the new-cluster pipeline, run in the background AFTER the ticket exists.
+
+    Akamai-written priority rationale + ticket title/body. Emits the priority 'done' step.
+    Returns {"rationale","title","body","model"} or None (nothing better than the template)."""
+    if not graph_enabled():
+        return None
+    from . import graph
+    rid, cid = report.id, cluster.id
+    t0 = time.perf_counter()
+    try:
+        texts = await graph.run_pipeline_graph(cluster, report)
+    except Exception as e:
+        log.warning("background texts failed (%s), keeping template", type(e).__name__)
+        step(emit, "priority", "error", rid, cid, elapsed_ms(t0), f"Akamai rationale failed ({type(e).__name__}), template kept")
+        return None
+    step(emit, "priority", "done", rid, cid, elapsed_ms(t0), texts["rationale"], texts["model"])
+    return texts
+
+
+def _warm() -> None:
+    try:
+        from . import vision
+        vision.warm()
+    except Exception:
+        pass
+
+
+_warm()

@@ -7,7 +7,7 @@ import { api } from "../lib/api";
 import { catLabel, timeAgo } from "../lib/const";
 import { useAsync, useEvents } from "../lib/hooks";
 import { Button, buttonClass, EmptyState, ErrorState, PriorityBadge, Sheet, Skeleton, SkeletonText, TicketId, StatusBadge, item, list, spring } from "../components/ui";
-import { CatIcon, Photo, RouteStepper, photoFor, shortAddr } from "./common";
+import { CatIcon, Photo, areaLine, RouteStepper, photoFor, shortAddr } from "./common";
 
 export default function MyReports() {
   const { search } = useLocation();
@@ -86,6 +86,7 @@ export default function MyReports() {
                       <div>
                         <b>{catLabel(c.category)}</b>
                         <span>{shortAddr(c.address) || c.neighborhood || "Nearby"}</span>
+                        {areaLine(c) && <span className="cz-rcard__area">{areaLine(c)}</span>}
                       </div>
                       <time className="cz-rcard__time">{timeAgo(c.first_reported_at)}</time>
                     </div>

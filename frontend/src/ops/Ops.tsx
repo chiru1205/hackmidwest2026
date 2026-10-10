@@ -1,8 +1,8 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   Activity, ArrowRight, CheckCircle2, Cpu, Gauge, Inbox, Layers, MapPin, Play, Plus, RotateCcw, Radio,
-  Route as RouteIcon, ScanLine, GitMerge, Scale, Send, Sparkles, Ticket as TicketIcon, Users, Wrench, X, Zap, Clock, FileText,
+  Route as RouteIcon, BarChart3, Workflow, ScanLine, GitMerge, Scale, Send, Sparkles, Ticket as TicketIcon, Users, Wrench, X, Zap, Clock, FileText,
 } from "lucide-react";
 import type { AgentStep, CivicEvent, Cluster, Health, Stats } from "@contracts";
 import { api, MOCK } from "../lib/api";
@@ -13,8 +13,12 @@ import {
   Skeleton, StatusBadge, TicketId, spring,
 } from "../components/ui";
 import { Page } from "../components/shell/Page";
-import OpsMap, { type OpsMapHandle } from "./OpsMap";
+import OpsMap, { ZONE_COL, type GeoFlags, type OpsMapHandle } from "./OpsMap";
+import { GeoChips, districtOf, useGeofenceLayers, zonesOf } from "./geo";
+import AnalyticsPanel from "./Analytics";
 import { CAT_ICON, Photo, cleanAddress, fmtClock } from "./util";
+import { DevRevChip, DevRevCtx, WorkOrdersPanel, useDevRev, type DevRevEvent } from "./devrev";
+import { useDevRevTicket } from "./devrev";
 import "./ops.css";
 
 const NODES: AgentStep["node"][] = ["intake", "dedup", "judge", "priority", "dispatch"];
@@ -27,9 +31,9 @@ const PLAZA = { lat: 39.042, lng: -94.595 };
 const STORY_TOTAL = 1243;
 
 /* ---------------- feed ---------------- */
-type FeedKind = "new" | "merge" | "fixed" | "assigned" | "ticket" | "info";
-interface FeedItem { id: string; ts: string; kind: FeedKind; text: string; sub?: string; bucket?: string }
-const FEED_ICON: Record<FeedKind, typeof Plus> = { new: Plus, merge: Users, fixed: CheckCircle2, assigned: Wrench, ticket: TicketIcon, info: Activity };
+type FeedKind = "new" | "merge" | "fixed" | "assigned" | "ticket" | "info" | "devrev";
+interface FeedItem { id: string; ts: string; kind: FeedKind; text: string; sub?: string; bucket?: string; refs?: string[]; tag?: string }
+const FEED_ICON: Record<FeedKind, typeof Plus> = { new: Plus, merge: Users, fixed: CheckCircle2, assigned: Wrench, ticket: TicketIcon, info: Activity, devrev: Workflow };
 
 function describe(e: CivicEvent): FeedItem | null {
   const d = e.data as any;
@@ -40,10 +44,10 @@ function describe(e: CivicEvent): FeedItem | null {
     case "cluster.updated": {
       const s = d.cluster.status as string;
       if (s === "fixed") return { id, ts: e.ts, kind: "fixed", text: `Fixed: ${catLabel(d.cluster.category).toLowerCase()} at ${cleanAddress(d.cluster)}`, sub: "Reporters notified" };
-      return { id, ts: e.ts, kind: "assigned", text: s === "assigned" ? `Crew assigned at ${cleanAddress(d.cluster)}` : `Work started at ${cleanAddress(d.cluster)}`, sub: d.cluster.vendor ?? undefined };
+      return { id, ts: e.ts, kind: "assigned", text: s === "assigned" ? `Crew assigned at ${cleanAddress(d.cluster)}` : `Work started at ${cleanAddress(d.cluster)}`, sub: d.cluster.vendor ?? undefined, refs: [d.cluster.ticket_id].filter(Boolean) };
     }
-    case "ticket.created": return { id, ts: e.ts, kind: "ticket", text: `Ticket ${d.ticket.id} opened`, sub: d.ticket.vendor ? `Routed to ${d.ticket.vendor}` : "In the queue" };
-    case "ticket.updated": return { id, ts: e.ts, kind: "ticket", text: `${d.ticket.id} is ${String(d.ticket.stage).replace(/_/g, " ")}`, sub: d.ticket.vendor ?? undefined };
+    case "ticket.created": return { id, ts: e.ts, kind: "ticket", text: `Ticket ${d.ticket.id} opened`, sub: d.ticket.vendor ? `Routed to ${d.ticket.vendor}` : "In the queue", refs: [d.ticket.id] };
+    case "ticket.updated": return { id, ts: e.ts, kind: "ticket", text: `${d.ticket.id} is ${String(d.ticket.stage).replace(/_/g, " ")}`, sub: d.ticket.vendor ?? undefined, refs: [d.ticket.id] };
     case "reset": return { id, ts: e.ts, kind: "info", text: "Demo reset, fresh city loaded" };
     default: return null;
   }
@@ -57,6 +61,19 @@ function synthFeed(cl: Cluster[]): FeedItem[] {
   }));
 }
 
+/** Merge DevRev events into the SSE-derived feed; drop SSE ticket/crew items that the same DevRev event already reports. */
+function mergeFeed(feed: FeedItem[], ev: DevRevEvent[]): FeedItem[] {
+  const dr: FeedItem[] = ev.map((e, i) => ({
+    id: `dr-${e.ts}-${e.ticket_id}-${e.kind}-${i}`, ts: e.ts, kind: e.source === "DevRev" ? "devrev" : "ticket" as FeedKind,
+    text: e.source === "DevRev" && e.devrev_id && !e.text.includes(e.devrev_id) ? `${e.devrev_id} ${e.text}` : e.text,
+    sub: e.source === "DevRev" ? undefined : e.devrev_id ?? undefined, tag: e.source === "DevRev" ? "DevRev" : undefined,
+    refs: [e.ticket_id],
+  }));
+  const near = (a: string, b: string) => Math.abs(+new Date(a) - +new Date(b)) < 20000;
+  const kept = feed.filter((f) => !(f.refs?.length && (f.kind === "ticket" || f.kind === "assigned" || f.kind === "fixed") && dr.some((d) => d.refs?.some((r) => f.refs!.includes(r)) && near(d.ts, f.ts))));
+  return [...dr, ...kept].sort((a, b) => (+new Date(b.ts) || 0) - (+new Date(a.ts) || 0)).slice(0, 14);
+}
+
 type Story = { phase: "resetting" | "running" | "done"; baseUnique: number; baseReports: number; done: number } | null;
 
 export default function Ops() {
@@ -67,11 +84,21 @@ export default function Ops() {
   const [sim, setSim] = useState<{ done: number; total: number } | null>(null);
   const [story, setStory] = useState<Story>(null);
   const [selected, setSelected] = useState<string | null>(null);
+  const [analyticsOpen, setAnalyticsOpen] = useState(false);
+  const [ordersOpen, setOrdersOpen] = useState(false);
+  const dr = useDevRev();
+  const drRefresh = useRef(dr.refresh); drRefresh.current = dr.refresh;
   const [loadErr, setLoadErr] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [simBusy, setSimBusy] = useState(false);
   const [actErr, setActErr] = useState<string | null>(null);
-  const pending = useRef(new Map<string, Cluster>());
+  const [district, setDistrict] = useState("");
+  const [flags, setFlags] = useState<GeoFlags>(() => {
+    try { const j = JSON.parse(localStorage.getItem("cf_ops_layers") || ""); return { hoods: !!j.hoods, zones: !!j.zones, shade: !!j.shade }; } catch { return { hoods: true, zones: true, shade: true }; }
+  });
+  useEffect(() => { try { localStorage.setItem("cf_ops_layers", JSON.stringify(flags)); } catch { /* ignore */ } }, [flags]);
+  const geo = useGeofenceLayers(flags.hoods || flags.zones);
+  const pending =useRef(new Map<string, Cluster>());
   const pendingFeed = useRef<CivicEvent[]>([]);
   const litRef = useRef<Partial<Record<AgentStep["node"], AgentStep & { at: number }>>>({});
   const mapRef = useRef<OpsMapHandle>(null);
@@ -95,6 +122,7 @@ export default function Ops() {
 
   const connected = useEvents((e) => {
     const d = e.data as any;
+    if (e.type.startsWith("ticket.") || e.type === "cluster.updated") setTimeout(() => drRefresh.current(), 600);
     if (e.type === "reset") { pending.current.clear(); void load(); return; }
     if ((e.type === "cluster.created" || e.type === "cluster.merged" || e.type === "cluster.updated") && d.cluster) pending.current.set(d.cluster.id, d.cluster);
     if (e.type === "report.received" && typeof d.lat === "number") mapRef.current?.spawn(d.lat, d.lng);
@@ -141,7 +169,9 @@ export default function Ops() {
     return () => clearInterval(t);
   }, []);
 
-  const list = useMemo(() => [...clusters.values()], [clusters]);
+  const allList = useMemo(() => [...clusters.values()], [clusters]);
+  const districts = useMemo(() => [...new Set(allList.map(districtOf).filter((d): d is string => !!d))].sort((a, b) => a.localeCompare(b, undefined, { numeric: true })), [allList]);
+  const list = useMemo(() => (district ? allList.filter((c) => districtOf(c) === district) : allList), [allList, district]);
   const queue = useMemo(() => list.filter((c) => c.status !== "fixed").sort((a, b) => b.priority - a.priority).slice(0, 30), [list]);
   const health = useAsync<Health>(() => api.health(), []);
   useEffect(() => { const t = setInterval(health.reload, 15000); return () => clearInterval(t); }, [health.reload]);
@@ -173,21 +203,26 @@ export default function Ops() {
   }
   useEffect(() => { if (story?.phase === "done") { const t = setTimeout(() => mapRef.current?.fit(), 1200); return () => clearTimeout(t); } }, [story?.phase]);
 
+  const shownFeed = useMemo(() => mergeFeed(feed, dr.events), [feed, dr.events]);
   const h = health.data;
   const sel = selected ? clusters.get(selected) ?? null : null;
   const busy = !!sim || story?.phase === "resetting";
 
   return (
+    <DevRevCtx.Provider value={dr.byCluster}>
     <Page theme="light" width="full" fill bleed>
       <div className="ops-stage">
         <div className="ops-canvas">
-          <OpsMap ref={mapRef} clusters={list} selected={selected} onSelect={setSelected} />
+          <OpsMap ref={mapRef} clusters={list} selected={selected} onSelect={setSelected} geo={geo} flags={flags} />
+          <LayerControl flags={flags} onChange={setFlags} ready={!!geo} />
 
-          <KpiBar stats={stats} loading={loading} busy={busy} sim={sim} onStory={runStory} onSim={simulate} onReset={reset} simBusy={simBusy} />
+          <KpiBar stats={stats} loading={loading} busy={busy} sim={sim} onStory={runStory} onSim={simulate} onReset={reset} simBusy={simBusy} onAnalytics={() => setAnalyticsOpen(true)} onOrders={() => setOrdersOpen(true)} />
+          <AnalyticsPanel open={analyticsOpen} onClose={() => setAnalyticsOpen(false)} />
+          <WorkOrdersPanel open={ordersOpen} onClose={() => setOrdersOpen(false)} board={dr.board} onPick={(id) => setSelected(id)} />
 
           <div className="ops-left">
             <AnimatePresence>{story && <StoryCard story={story} stats={stats} onClose={() => setStory(null)} />}</AnimatePresence>
-            <Feed feed={feed} connected={connected} loading={loading} />
+            <Feed feed={shownFeed} connected={connected} loading={loading} />
           </div>
 
           <Pipeline lit={lit} />
@@ -198,7 +233,7 @@ export default function Ops() {
                 <Drawer key="drawer" cluster={sel} onClose={() => setSelected(null)} />
               ) : (
                 <motion.div key="queue" className="ops-right__stack" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.15 }}>
-                  <Queue queue={queue} loading={loading} error={loadErr} retry={() => void load()} selected={selected} onSelect={setSelected} />
+                  <Queue queue={queue} loading={loading} error={loadErr} retry={() => void load()} selected={selected} onSelect={setSelected} districts={districts} district={district} onDistrict={setDistrict} />
                   <Impact stats={stats} />
                 </motion.div>
               )}
@@ -211,14 +246,14 @@ export default function Ops() {
         </div>
 
         <footer className="ops-foot">
-          <span className="ops-foot__brand"><span className="ops-foot__mark" aria-hidden /><span>Powered by <b>Akamai Cloud AI</b></span><span className="ops-foot__sep" />AWS Strands Agents</span>
+          <span className="ops-foot__brand"><span className="ops-foot__mark" aria-hidden /><span>Powered by <b>Akamai Cloud AI</b> (hosted chat, embeddings, image)</span><span className="ops-foot__sep" />AWS Bedrock vision{h?.flags.agents_mode === "graph" ? " / Strands agents" : ""}</span>
           <span className="ops-foot__spacer" />
           {MOCK && <Pill variant="hazard" size="sm">Mock data</Pill>}
           {h ? (
             <span className="ops-foot__health" title={Object.entries(h.services).map(([k, v]) => `${k}: ${v}`).join("\n")}>
               <i className={`ops-dot ${h.status === "ok" ? "ok" : "bad"}`} />
               <span>API {h.status === "ok" ? "healthy" : h.status}</span>
-              <span className="t-mono ops-foot__flags">{h.flags.agents_mode} / vision {h.flags.vision ? "on" : "off"} / edge {h.flags.edgekv_backend} / {h.flags.model_provider}</span>
+              <span className="t-mono ops-foot__flags">{h.flags.agents_mode} / vision {h.flags.vision ? "on" : "off"} / geo cache {h.flags.edgekv_backend} / {h.flags.model_provider}</span>
             </span>
           ) : (
             <span className="ops-foot__health"><i className={`ops-dot ${health.error ? "bad" : ""}`} /><span>{health.error ? "API unreachable" : "Checking API"}</span></span>
@@ -226,13 +261,14 @@ export default function Ops() {
         </footer>
       </div>
     </Page>
+    </DevRevCtx.Provider>
   );
 }
 
 /* ---------------- KPI bar ---------------- */
-function KpiBar({ stats, loading, busy, sim, simBusy, onStory, onSim, onReset }: {
+function KpiBar({ stats, loading, busy, sim, simBusy, onStory, onSim, onReset, onAnalytics, onOrders }: {
   stats: Stats; loading: boolean; busy: boolean; sim: { done: number; total: number } | null; simBusy: boolean;
-  onStory: () => void; onSim: () => void; onReset: () => void;
+  onStory: () => void; onSim: () => void; onReset: () => void; onAnalytics: () => void; onOrders: () => void;
 }) {
   const items: { label: string; value: number; icon: typeof Inbox; dec?: number; suffix?: string; tone?: string }[] = [
     { label: "Reports", value: stats.total_reports, icon: Inbox },
@@ -240,7 +276,7 @@ function KpiBar({ stats, loading, busy, sim, simBusy, onStory, onSim, onReset }:
     { label: "Dupes absorbed", value: stats.duplicates_absorbed, icon: Layers },
     { label: "LLM calls avoided", value: stats.llm_calls_avoided, icon: Zap },
     { label: "Tickets", value: stats.tickets, icon: TicketIcon },
-    { label: "Edge response", value: stats.avg_edge_ms, icon: Gauge, dec: 1, suffix: " ms" },
+    { label: "Geo cache", value: stats.avg_edge_ms, icon: Gauge, dec: 1, suffix: " ms" },
   ];
   return (
     <Card tone="glass" padding="none" className="ops-kpis" role="region" aria-label="Key numbers">
@@ -261,6 +297,8 @@ function KpiBar({ stats, loading, busy, sim, simBusy, onStory, onSim, onReset }:
         <Button variant="secondary" size="sm" onClick={onSim} loading={simBusy} disabled={busy} icon={<Radio />}>
           {sim ? `${sim.done}/${sim.total}` : "Simulate"}
         </Button>
+        <Button variant="secondary" size="sm" icon={<Workflow />} onClick={onOrders}>Work orders</Button>
+        <Button variant="secondary" size="sm" icon={<BarChart3 />} onClick={onAnalytics}>Analytics</Button>
         <Tip label="Reset the demo"><IconButton variant="ghost" icon={<RotateCcw />} label="Reset demo" onClick={onReset} disabled={busy} /></Tip>
       </div>
     </Card>
@@ -316,7 +354,7 @@ function Feed({ feed, connected, loading }: { feed: FeedItem[]; connected: boole
             return (
               <motion.div key={f.id} layout="position" className="ops-feed__row" initial={{ opacity: 0, x: -14 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0 }} transition={spring.soft}>
                 <span className={`ops-feed__icon k-${f.kind}`}><Icon size={14} strokeWidth={2} aria-hidden /></span>
-                <span className="ops-feed__text"><span>{f.text}</span>{f.sub && <small>{f.sub}</small>}</span>
+                <span className="ops-feed__text"><span>{f.tag && <em className="ops-feed__tag">{f.tag}</em>}{f.text}</span>{f.sub && <small>{f.sub}</small>}</span>
                 <time className="t-mono">{fmtClock(f.ts)}</time>
               </motion.div>
             );
@@ -355,15 +393,52 @@ function Pipeline({ lit }: { lit: Partial<Record<AgentStep["node"], AgentStep & 
 }
 
 /* ---------------- queue ---------------- */
-function Queue({ queue, loading, error, retry, selected, onSelect }: {
+function LayerControl({ flags, onChange, ready }: { flags: GeoFlags; onChange: (f: GeoFlags) => void; ready: boolean }) {
+  const Toggle = ({ k, label }: { k: keyof GeoFlags; label: string }) => (
+    <label className={`ops-layer__row ${flags[k] ? "is-on" : ""} ${k === "shade" ? "is-sub" : ""}`}>
+      <input type="checkbox" checked={flags[k]} onChange={(e) => onChange({ ...flags, [k]: e.target.checked })} />
+      <span className="ops-layer__box" aria-hidden />
+      <span>{label}</span>
+    </label>
+  );
+  return (
+    <Card tone="glass" padding="none" className="ops-layer" role="group" aria-label="Map layers">
+      <div className="ops-layer__title"><Layers size={14} strokeWidth={1.75} aria-hidden />Map layers</div>
+      <Toggle k="hoods" label="Neighborhoods" />
+      {flags.hoods && <Toggle k="shade" label="Shade by open issues" />}
+      <Toggle k="zones" label="Priority zones" />
+      {flags.zones && (
+        <div className="ops-layer__legend">
+          <span><i style={{ background: ZONE_COL.school }} />School</span>
+          <span><i style={{ background: ZONE_COL.hospital }} />Hospital</span>
+        </div>
+      )}
+      {(flags.hoods || flags.zones) && !ready && <div className="ops-layer__note">Boundaries not loaded yet</div>}
+      {(flags.hoods || flags.zones) && ready && <div className="ops-layer__note">Boundaries: Kansas City open data</div>}
+    </Card>
+  );
+}
+
+function Queue({ queue, loading, error, retry, selected, onSelect, districts, district, onDistrict }: {
   queue: Cluster[]; loading: boolean; error: string | null; retry: () => void; selected: string | null; onSelect: (id: string) => void;
+  districts: string[]; district: string; onDistrict: (d: string) => void;
 }) {
+  const drMap = useContext(DevRevCtx);
   return (
     <Card tone="glass" padding="none" className="ops-queue">
       <div className="ops-panel__head">
         <span className="t-title">Priority queue</span>
         <Pill variant="outline" size="sm">{queue.length} open</Pill>
       </div>
+      {(districts.length > 0 || district) && (
+        <div className="ops-queue__filter">
+          <label htmlFor="ops-district">District</label>
+          <select id="ops-district" value={district} onChange={(e) => onDistrict(e.target.value)} aria-label="Filter by council district">
+            <option value="">All districts</option>
+            {districts.map((d) => <option key={d} value={d}>{d}</option>)}
+          </select>
+        </div>
+      )}
       <div className="ops-queue__list">
         {loading && queue.length === 0 && <div className="ops-pad"><Skeleton n={5} h={64} /></div>}
         {error && <div className="ops-pad"><ErrorState compact message={error} onRetry={retry} /></div>}
@@ -379,11 +454,13 @@ function Queue({ queue, loading, error, retry, selected, onSelect }: {
               <span className="ops-qrow__body">
                 <span className="ops-qrow__top"><b>{catLabel(c.category)}</b><PriorityBadge bucket={c.bucket} size="sm" /></span>
                 <span className="ops-qrow__addr">{cleanAddress(c)}</span>
+                {(c.neighborhood || districtOf(c) || zonesOf(c).length > 0) && <GeoChips c={c} max={1} className="ops-qrow__geo" />}
                 <span className="ops-qrow__meta">
                   <span><Users size={13} strokeWidth={1.75} />{c.reporter_count.toLocaleString()}</span>
                   {c.ticket_id && <TicketId id={c.ticket_id} />}
                   <span className={`ops-qrow__status s-${c.status}`}><i />{c.status === "in_progress" ? "In progress" : c.status === "assigned" ? "Crew assigned" : "Reported"}</span>
                 </span>
+                {drMap.get(c.id)?.devrev_id && <span className="ops-qrow__dr"><DevRevChip t={drMap.get(c.id) ?? null} /></span>}
               </span>
             </motion.button>
           ))}
@@ -425,6 +502,7 @@ function Drawer({ cluster: c, onClose }: { cluster: Cluster; onClose: () => void
   const d = useAsync(() => api.cluster(c.id), [c.id, c.status, c.reporter_count]);
   const photo = c.photo_url ?? d.data?.reports.find((r) => r.photo_url)?.photo_url ?? null;
   const Icon = CAT_ICON[c.category];
+  const dt = useDevRevTicket(c.id);
   return (
     <motion.aside className="ops-drawer" initial={{ opacity: 0, x: 28 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 28 }} transition={spring.soft} role="dialog" aria-label="Issue detail">
       <Card tone="glass" padding="none" className="ops-drawer__card">
@@ -437,18 +515,21 @@ function Drawer({ cluster: c, onClose }: { cluster: Cluster; onClose: () => void
           <div className="ops-drawer__main">
             <div className="ops-drawer__title"><Icon size={20} strokeWidth={1.75} aria-hidden /><h2 className="t-title">{catLabel(c.category)}</h2></div>
             <p className="ops-drawer__addr">{cleanAddress(c)}{c.neighborhood ? `, ${c.neighborhood}` : ""}</p>
+            {(c.neighborhood || districtOf(c) || zonesOf(c).length > 0) && <GeoChips c={c} max={4} />}
             <div className="ops-drawer__meta">
               <div><AnimatedNumber value={c.reporter_count} className="ops-drawer__n" /><span>neighbors</span></div>
               <div><AnimatedNumber value={c.report_count} className="ops-drawer__n" /><span>reports</span></div>
               <div><b className="ops-drawer__n t-num">{c.severity}/5</b><span>severity</span></div>
             </div>
             <div className="ops-drawer__row">{c.ticket_id && <TicketId id={c.ticket_id} />}{c.vendor && <Pill variant="neutral" size="sm">{c.vendor}</Pill>}{c.is_hazard && <Pill variant="hazard" size="sm">Safety hazard</Pill>}</div>
+            {dt?.devrev_id && <div className="ops-drawer__dr"><DevRevChip t={dt} link /></div>}
             <ProgressBar value={c.priority} tone={c.bucket} label="Priority score" />
 
             {c.rationale && (
               <section className="ops-drawer__sec">
-                <h3><Sparkles size={14} strokeWidth={1.75} aria-hidden />AI rationale</h3>
+                <h3><Sparkles size={14} strokeWidth={1.75} aria-hidden />Why this priority</h3>
                 <p>{c.rationale}</p>
+                {zonesOf(c).length > 0 && <p className="ops-drawer__zonenote">Location criticality raised by: {zonesOf(c).join("; ")}</p>}
               </section>
             )}
             {d.loading && !d.data && <Skeleton n={2} h={44} />}

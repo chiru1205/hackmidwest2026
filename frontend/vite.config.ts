@@ -9,8 +9,8 @@ export default defineConfig({
     port: 5173,
     fs: { allow: [path.resolve(__dirname, "..")] },
     proxy: {
-      "/api": { target: "http://localhost:8000", changeOrigin: true },
-      "/photos": { target: "http://localhost:8000", changeOrigin: true },
+      "/api": { target: process.env.API_TARGET || "http://localhost:8000", changeOrigin: true },
+      "/photos": { target: process.env.API_TARGET || "http://localhost:8000", changeOrigin: true },
     },
   },
 });

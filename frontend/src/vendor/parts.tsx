@@ -92,9 +92,9 @@ export function Timeline({ steps, fmt }: { steps: TLStep[]; fmt: (iso: string) =
   );
 }
 
-export function Prop({ label, children }: { label: string; children: ReactNode }) {
+export function Prop({ label, children, wide = false }: { label: string; children: ReactNode; wide?: boolean }) {
   return (
-    <div className="vd-prop">
+    <div className={`vd-prop${wide ? " is-wide" : ""}`}>
       <dt>{label}</dt>
       <dd>{children}</dd>
     </div>

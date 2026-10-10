@@ -1,13 +1,25 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import confetti from "canvas-confetti";
-import { ArrowRight, Check, ChevronDown, HardHat, HeartHandshake, Sparkles } from "lucide-react";
-import type { Bucket, ReportResult } from "@contracts";
+import { ArrowRight, Check, ChevronDown, HardHat, HeartHandshake, ShieldAlert, Sparkles } from "lucide-react";
+import type { AgentStep, Bucket, ReportResult } from "@contracts";
 import { catLabel } from "../lib/const";
+import { useEvents } from "../lib/hooks";
 import { AnimatedNumber, Button, PriorityBadge, ProgressRing, TicketId, item, list, spring, useCountUp, useReducedMotion } from "../components/ui";
-import { CatIcon, levelSpan } from "./common";
+import { CatIcon, areaLine, geoOf, levelSpan } from "./common";
 
-const NODE_LABEL: Record<string, string> = { intake: "Intake", dedup: "Dedup", judge: "Judge", priority: "Priority", dispatch: "Dispatch" };
+const NODE_LABEL: Record<string, string> = { intake: "Read the photo", dedup: "Checked the map", judge: "Compared with nearby reports", priority: "Scored the priority", dispatch: "Sent to a crew" };
+
+/** Honest step titles: name a provider only when the step's model says so. */
+function stepTitle(s: AgentStep): string {
+  const m = (s.model ?? "").toLowerCase();
+  const base = NODE_LABEL[s.node] ?? s.node;
+  if (s.status === "skipped") return base;
+  if (s.node === "intake") return /bedrock|claude|anthropic/.test(m) ? "Read the photo - Claude on AWS Bedrock" : base;
+  if (s.node === "judge") return /embed/.test(m) || m.startsWith("akamai") ? "Compared with nearby reports - Akamai embeddings" : base;
+  if (s.node === "priority") return m.startsWith("akamai") ? "Explained the priority - Akamai AI" : base;
+  return base;
+}
 
 /** Sample a quadratic bezier into keyframes. */
 function bez(p0: [number, number], c: [number, number], p1: [number, number], n = 14) {
@@ -116,9 +128,18 @@ export default function Reveal({ result, onClose }: { result: ReportResult; onCl
   const reduced = useReducedMotion();
   const merged = result.outcome === "merged";
   const rejected = result.outcome === "rejected";
+  const outside = rejected && result.reject_reason === "outside_service_area";
   const alreadyCounted = merged && result.points_awarded === 0;
   const others = Math.max(0, result.neighbors - 1);
   const c = result.cluster;
+  const [why, setWhy] = useState<string | null>(c?.rationale ?? null);
+  const [whyKey, setWhyKey] = useState(0);
+  // the AI-written explanation can arrive a few seconds after the ticket
+  useEvents((e) => {
+    if (e.type !== "cluster.updated" || !c) return;
+    const cl = e.data?.cluster;
+    if (cl?.id === c.id && typeof cl.rationale === "string" && cl.rationale && cl.rationale !== why) { setWhy(cl.rationale); setWhyKey((k) => k + 1); }
+  });
   const [stage, setStage] = useState(reduced ? 1 : 0);
   const [open, setOpen] = useState(false);
   const root = useRef<HTMLDivElement>(null);
@@ -168,20 +189,28 @@ export default function Reveal({ result, onClose }: { result: ReportResult; onCl
               {rejected ? (
                 <>
                   <motion.div variants={item} className="cz-rv__head">
-                    <span className="cz-rv__eyebrow">Not counted this time</span>
-                    <h2 className="cz-rv__title">Let's try that again</h2>
-                    <p className="cz-rv__sub">{result.reject_reason ?? result.message}</p>
+                    <span className="cz-rv__eyebrow">{outside ? "Outside our service area" : "Not counted this time"}</span>
+                    <h2 className="cz-rv__title">{outside ? "That spot is outside Kansas City" : "Let's try that again"}</h2>
+                    <p className="cz-rv__sub">{outside ? (result.message || "Civic Flow covers Kansas City, Missouri for now. Move the pin to a spot inside the city and try again.") : (result.reject_reason ?? result.message)}</p>
                   </motion.div>
+                  {outside ? (
+                  <motion.ul variants={item} className="cz-rv__tips">
+                    <li><Check size={16} strokeWidth={2} aria-hidden /> Drag the pin to the problem inside Kansas City, MO</li>
+                    <li><Check size={16} strokeWidth={2} aria-hidden /> Check that your phone's location is accurate</li>
+                  </motion.ul>
+                  ) : (
                   <motion.ul variants={item} className="cz-rv__tips">
                     <li><Check size={16} strokeWidth={2} aria-hidden /> Stand close to the issue and keep it in the frame</li>
                     <li><Check size={16} strokeWidth={2} aria-hidden /> Make sure your location is on and accurate</li>
                     <li><Check size={16} strokeWidth={2} aria-hidden /> Add a short note if the photo is dark</li>
                   </motion.ul>
+                  )}
                 </>
               ) : (
                 <>
                   <motion.div variants={item} className="cz-rv__head">
                     <span className="cz-rv__eyebrow"><CatIcon cat={c?.category ?? "other"} size={14} /> {catLabel(c?.category ?? "")}{c?.neighborhood ? ` · ${c.neighborhood}` : ""}</span>
+                    {c && areaLine(c) && <span className="cz-rv__area t-caption">{areaLine(c)}</span>}
                     {merged ? (
                       alreadyCounted ? (
                         <h2 className="cz-rv__title">Already counted</h2>
@@ -198,6 +227,16 @@ export default function Reveal({ result, onClose }: { result: ReportResult; onCl
 
                   <motion.div variants={item} className="cz-rv__card">
                     <PriorityMeter before={result.priority_before ?? null} after={score} bucket={bucket} />
+                    {why && (
+                      <motion.p key={whyKey} className="cz-rv__sub cz-rv__why" initial={{ opacity: whyKey ? 0 : 1 }} animate={{ opacity: 1 }} transition={{ duration: 0.8 }} style={{ margin: "10px 0 0" }}>
+                        {why}
+                      </motion.p>
+                    )}
+                    {geoOf(c).zones.length > 0 && (
+                      <div className="cz-zones cz-zones--rv">
+                        {geoOf(c).zones.map((z) => <span key={z} className="cz-zone"><ShieldAlert size={13} strokeWidth={2} aria-hidden /> {z}</span>)}
+                      </div>
+                    )}
                     <div className="cz-rv__ticket">
                       <TicketId id={ticketId} />
                       <span className="cz-rv__crew">
@@ -242,7 +281,7 @@ export default function Reveal({ result, onClose }: { result: ReportResult; onCl
                             {result.steps.map((s, i) => (
                               <li key={i}>
                                 <span className="cz-rv__stdot" />
-                                <div><b>{NODE_LABEL[s.node] ?? s.node}</b><span>{s.summary}</span></div>
+                                <div><b>{stepTitle(s)}</b><span>{s.summary}</span></div>
                                 <em className="t-mono">{s.status === "skipped" ? "skipped" : `${Math.round(s.ms)} ms`}</em>
                               </li>
                             ))}

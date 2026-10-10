@@ -9,7 +9,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
 from . import config, edge, events, seed, store
-from .routes import admin, ops, reports, users
+from .routes import admin, analytics, devrev, geofence, ops, reports, users
 
 logging.basicConfig(level=logging.INFO)
 log = logging.getLogger("civicflow.api")
@@ -34,6 +34,6 @@ async def lifespan(app: FastAPI):
 app = FastAPI(title="Civic Flow API", lifespan=lifespan)
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"],
                    expose_headers=["*"])
-for r in (reports.router, users.router, ops.router, admin.router):
+for r in (reports.router, users.router, ops.router, admin.router, analytics.router, geofence.router, devrev.router):
     app.include_router(r, prefix="/api")
 app.mount("/photos", StaticFiles(directory=str(config.PHOTO_DIR)), name="photos")

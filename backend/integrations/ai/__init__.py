@@ -10,6 +10,8 @@ import time
 import httpx
 from dotenv import load_dotenv
 
+from . import usage
+
 load_dotenv()
 log = logging.getLogger("civicflow.ai")
 
@@ -74,6 +76,8 @@ async def _chat(system: str, user: str, max_tokens: int, timeout: float = 15.0) 
     if not _bucket.try_take():
         log.warning("akamai rate limit bucket empty")
         return None
+    t0 = time.perf_counter()
+    ok, tokens = False, None
     try:
         async with httpx.AsyncClient(timeout=timeout) as client:
             r = await client.post(
@@ -85,10 +89,16 @@ async def _chat(system: str, user: str, max_tokens: int, timeout: float = 15.0) 
         if r.status_code != 200:
             log.warning("akamai chat HTTP %s", r.status_code)
             return None
-        return r.json()["choices"][0]["message"]["content"]
+        body = r.json()
+        tokens = (body.get("usage") or {}).get("total_tokens")
+        out = body["choices"][0]["message"]["content"]
+        ok = True
+        return out
     except Exception as e:  # timeout, network, bad payload
         log.warning("akamai chat failed: %s", type(e).__name__)
         return None
+    finally:
+        usage.record("chat", ok, (time.perf_counter() - t0) * 1000, tokens)
 
 
 async def chat_json(system: str, user: str, max_tokens: int = 400) -> dict | None:

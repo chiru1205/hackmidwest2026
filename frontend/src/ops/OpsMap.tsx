@@ -1,18 +1,30 @@
-import { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState } from "react";
+import { forwardRef, useCallback, useContext, useEffect, useImperativeHandle, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import maplibre from "maplibre-gl";
 import { Users, Ticket as TicketIcon } from "lucide-react";
 import type { Cluster } from "@contracts";
 import { KC_CENTER, catLabel } from "../lib/const";
 import { PriorityBadge, StatusBadge } from "../components/ui";
+import type { GeofenceLayers } from "../lib/api";
 import { Photo, cleanAddress } from "./util";
+import { DevRevChip, DevRevCtx, useDevRevTicket } from "./devrev";
 
 export interface OpsMapHandle {
   spawn(lat: number, lng: number): void;
   fit(): void;
   flyTo(lat: number, lng: number, zoom: number): void;
 }
-interface Props { clusters: Cluster[]; selected: string | null; onSelect: (id: string) => void }
+export interface GeoFlags { hoods: boolean; zones: boolean; shade: boolean }
+interface Props { clusters: Cluster[]; selected: string | null; onSelect: (id: string) => void; geo?: GeofenceLayers | null; flags?: GeoFlags }
+
+export const ZONE_COL = { school: "#0E9F9A", hospital: "#6D5BD0", arterial: "#64748B" } as const;
+const ZONE_RING = (lat: number, lng: number, r: number) => {
+  const n = 40, dLat = r / 111320, dLng = r / (111320 * Math.cos((lat * Math.PI) / 180));
+  const ring: [number, number][] = [];
+  for (let i = 0; i <= n; i++) { const a = (i / n) * Math.PI * 2; ring.push([+(lng + Math.cos(a) * dLng).toFixed(6), +(lat + Math.sin(a) * dLat).toFixed(6)]); }
+  return ring;
+};
+const NO_FLAGS: GeoFlags = { hoods: false, zones: false, shade: false };
 
 /** Map content area: keeps pins clear of the KPI bar (top), the right column and the bottom strip. */
 export const PAD = { top: 170, bottom: 190, left: 48, right: 424 };
@@ -21,7 +33,7 @@ const pinClass = (c: Cluster) => (c.status === "fixed" ? "pin--fixed" : `pin--${
 
 interface Particle { lng: number; lat: number; tlng: number; tlat: number; ox: number; oy: number; t0: number; dur: number; col: string; bend: number }
 
-const OpsMap = forwardRef<OpsMapHandle, Props>(function OpsMap({ clusters, selected, onSelect }, ref) {
+const OpsMap = forwardRef<OpsMapHandle, Props>(function OpsMap({ clusters, selected, onSelect, geo = null, flags = NO_FLAGS }, ref) {
   const el = useRef<HTMLDivElement>(null);
   const canvas = useRef<HTMLCanvasElement>(null);
   const map = useRef<maplibre.Map | null>(null);
@@ -35,6 +47,12 @@ const OpsMap = forwardRef<OpsMapHandle, Props>(function OpsMap({ clusters, selec
   const firstPaint = useRef(true);
   const particles = useRef<Particle[]>([]);
   const raf = useRef(0);
+  const geoRef = useRef(geo); geoRef.current = geo;
+  const flagsRef = useRef(flags); flagsRef.current = flags;
+  const hoodN = useRef<Record<string, number>>({});
+  const hoodHover = useRef<string | null>(null);
+  const tip = useRef<maplibre.Popup | null>(null);
+  const drMap = useContext(DevRevCtx);
 
   // hover popover
   const [hoverId, setHoverId] = useState<string | null>(null);
@@ -69,6 +87,7 @@ const OpsMap = forwardRef<OpsMapHandle, Props>(function OpsMap({ clusters, selec
       m.touchZoomRotate.disableRotation();
       m.on("load", () => setReady(true));
       map.current = m;
+      if (import.meta.env.DEV) (window as unknown as { __opsMap?: unknown }).__opsMap = m;
       popup.current = new maplibre.Popup({ closeButton: false, closeOnClick: false, className: "ops-popup", maxWidth: "none", anchor: "bottom" });
     } catch { /* no WebGL: the rest of the screen still works */ }
     const mk = markers.current;
@@ -76,6 +95,109 @@ const OpsMap = forwardRef<OpsMapHandle, Props>(function OpsMap({ clusters, selec
   }, []);
 
   useEffect(() => { if (ready && !fitted.current && clusters.length) { fitted.current = true; fit(); const t = window.setTimeout(fit, 900); return () => window.clearTimeout(t); } }, [ready, clusters.length, fit]);
+
+  /* ---------- geofence layers (lazy, re-added after any style change) ---------- */
+  const applyVis = useCallback(() => {
+    const m = map.current; const f = flagsRef.current;
+    if (!m) return;
+    try {
+      const vis = (id: string, on: boolean) => { if (m.getLayer(id)) m.setLayoutProperty(id, "visibility", on ? "visible" : "none"); };
+      vis("gf-hood-fill", f.hoods); vis("gf-hood-line", f.hoods); vis("gf-zone-fill", f.zones); vis("gf-zone-line", f.zones);
+      if (m.getLayer("gf-hood-fill")) {
+        const hov: any = ["case", ["boolean", ["feature-state", "hover"], false], 0.16, 0];
+        const n: any = ["coalesce", ["feature-state", "n"], 0];
+        const shade: any = f.shade ? ["interpolate", ["linear"], n, 0, 0, 1, 0.07, 6, 0.2, 14, 0.32] : 0;
+        m.setPaintProperty("gf-hood-fill", "fill-opacity", ["+", hov, shade]);
+      }
+    } catch { /* style mid-change */ }
+  }, []);
+
+  const applyCounts = useCallback(() => {
+    const m = map.current; const g = geoRef.current;
+    if (!m || !g || !m.getSource("gf-hoods")) return;
+    const counts: Record<string, number> = {};
+    clustersRef.current.forEach((c) => { if (c.status !== "fixed" && c.neighborhood) counts[c.neighborhood] = (counts[c.neighborhood] ?? 0) + 1; });
+    hoodN.current = counts;
+    try {
+      g.neighborhoods.features.forEach((f) => m.setFeatureState({ source: "gf-hoods", id: f.properties.name }, { n: counts[f.properties.name] ?? 0 }));
+    } catch { /* source not ready */ }
+  }, []);
+
+  const ensureGeo = useCallback(() => {
+    const m = map.current; const g = geoRef.current;
+    if (!m || !g) return;
+    try {
+      if (m.getSource("gf-hoods")) return;
+      const before = m.getStyle().layers?.find((l) => l.type === "symbol")?.id;
+      m.addSource("gf-hoods", { type: "geojson", data: g.neighborhoods as any, promoteId: "name", tolerance: 0.6 });
+      const zf = g.zones.map((z) => ({ type: "Feature" as const, properties: { type: z.type, name: z.name, radius_m: z.radius_m }, geometry: { type: "Polygon" as const, coordinates: [ZONE_RING(z.lat, z.lng, z.radius_m)] } }));
+      m.addSource("gf-zones", { type: "geojson", data: { type: "FeatureCollection", features: zf } as any });
+      const zc: any = ["match", ["get", "type"], "school", ZONE_COL.school, "hospital", ZONE_COL.hospital, ZONE_COL.arterial];
+      m.addLayer({ id: "gf-hood-fill", type: "fill", source: "gf-hoods", paint: { "fill-color": "#2457FF", "fill-opacity": 0 } }, before);
+      m.addLayer({ id: "gf-hood-line", type: "line", source: "gf-hoods", paint: { "line-color": "#3F4F6B", "line-width": ["interpolate", ["linear"], ["zoom"], 9, 0.7, 14, 1.6], "line-opacity": 0.7 } }, before);
+      m.addLayer({ id: "gf-zone-fill", type: "fill", source: "gf-zones", paint: { "fill-color": zc, "fill-opacity": 0.16 } }, before);
+      m.addLayer({ id: "gf-zone-line", type: "line", source: "gf-zones", paint: { "line-color": zc, "line-width": 1.4, "line-opacity": 0.8 } }, before);
+    } catch { /* retried on next styledata */ }
+    applyVis(); applyCounts();
+  }, [applyVis, applyCounts]);
+
+  useEffect(() => {
+    const m = map.current;
+    if (!ready || !m) return;
+    const again = () => { if (geoRef.current && !m.getSource("gf-hoods")) ensureGeo(); };
+    m.on("styledata", again);
+    return () => { m.off("styledata", again); };
+  }, [ready, ensureGeo]);
+  useEffect(() => { if (ready && geo) ensureGeo(); }, [ready, geo, ensureGeo]);
+  useEffect(() => { if (ready) applyVis(); }, [ready, flags.hoods, flags.zones, flags.shade, applyVis]);
+  useEffect(() => { if (ready) applyCounts(); }, [ready, geo, clusters, applyCounts]);
+
+  // hover: highlight a neighborhood and name it, or name a zone
+  useEffect(() => {
+    const m = map.current;
+    if (!ready || !m) return;
+    if (!tip.current) tip.current = new maplibre.Popup({ closeButton: false, closeOnClick: false, className: "ops-hood-tip", maxWidth: "none", offset: 14 });
+    const t = tip.current;
+    const unhover = () => {
+      if (hoodHover.current) { try { m.setFeatureState({ source: "gf-hoods", id: hoodHover.current }, { hover: false }); } catch { /* */ } hoodHover.current = null; }
+    };
+    const clear = () => { unhover(); t.remove(); };
+    const move = (e: maplibre.MapMouseEvent) => {
+      const f = flagsRef.current;
+      const layers = [f.zones && "gf-zone-fill", f.hoods && "gf-hood-fill"].filter((x): x is string => !!x && !!m.getLayer(x));
+      if (!layers.length) { clear(); return; }
+      const hits = m.queryRenderedFeatures(e.point, { layers });
+      const z = hits.find((h) => h.layer.id === "gf-zone-fill");
+      const h = hits.find((x) => x.layer.id === "gf-hood-fill");
+      const name = h ? String(h.properties?.name) : null;
+      if (hoodHover.current !== name) {
+        unhover();
+        hoodHover.current = name;
+        if (name) { try { m.setFeatureState({ source: "gf-hoods", id: name }, { hover: true }); } catch { /* */ } }
+      }
+      if (!z && !h) { t.remove(); return; }
+      const box = document.createElement("div");
+      box.setAttribute("data-theme", "light");
+      box.className = "ops-hood-tip__box";
+      const b = document.createElement("b");
+      const sub = document.createElement("span");
+      if (z) {
+        const ty = String(z.properties?.type);
+        b.textContent = String(z.properties?.name);
+        sub.textContent = `${ty === "school" ? "School zone" : ty === "hospital" ? "Hospital zone" : "Arterial corridor"}, ${Math.round(Number(z.properties?.radius_m))} m radius`;
+      } else if (h && name) {
+        b.textContent = name;
+        const d = h.properties?.district ? String(h.properties.district) : "";
+        const n = hoodN.current[name] ?? 0;
+        sub.textContent = `${d ? d + " · " : ""}${n} open ${n === 1 ? "issue" : "issues"}`;
+      }
+      box.append(b, sub);
+      t.setLngLat(e.lngLat).setDOMContent(box);
+      if (!t.isOpen()) t.addTo(m);
+    };
+    m.on("mousemove", move); m.on("mouseout", clear);
+    return () => { m.off("mousemove", move); m.off("mouseout", clear); clear(); };
+  }, [ready]);
 
   /* ---------- pins ---------- */
   useEffect(() => {
@@ -119,12 +241,17 @@ const OpsMap = forwardRef<OpsMapHandle, Props>(function OpsMap({ clusters, selec
       pin.className = cls.join(" ");
       if (bump) { void pin.offsetWidth; pin.classList.add("is-bump"); window.setTimeout(() => pin.classList.remove("is-bump"), 700); }
       pin.textContent = s >= 28 ? String(c.reporter_count) : "";
-      node.setAttribute("aria-label", `${catLabel(c.category)} ${c.bucket}, ${c.reporter_count} reporters`);
+      const dt = drMap.get(c.id);
+      const flag = !!dt && (dt.overdue || dt.escalated) && c.status !== "fixed";
+      let fl = node.querySelector<HTMLElement>(".ops-pin__flag");
+      if (flag && !fl) { fl = document.createElement("i"); fl.className = "ops-pin__flag"; node.appendChild(fl); }
+      if (fl) { if (flag) { fl.classList.toggle("is-esc", !!dt?.escalated); fl.title = dt?.escalated ? "Escalated" : "Overdue"; } else fl.remove(); }
+      node.setAttribute("aria-label", `${catLabel(c.category)} ${c.bucket}, ${c.reporter_count} reporters${flag ? (dt?.escalated ? ", escalated" : ", overdue") : ""}`);
       node.style.zIndex = String(c.bucket === "P1" ? 4 : c.bucket === "P2" ? 3 : 2);
     });
     markers.current.forEach((v, id) => { if (!seen.has(id)) { v.m.remove(); markers.current.delete(id); } });
     if (clusters.length) firstPaint.current = false;
-  }, [clusters]);
+  }, [clusters, drMap]);
 
   useEffect(() => {
     markers.current.forEach((v, id) => {
@@ -222,6 +349,7 @@ const OpsMap = forwardRef<OpsMapHandle, Props>(function OpsMap({ clusters, selec
 export default OpsMap;
 
 function PinCard({ c }: { c: Cluster }) {
+  const dt = useDevRevTicket(c.id);
   return (
     <div className="ops-pcard">
       <Photo url={c.photo_url} category={c.category} className="ops-pcard__photo" />
@@ -233,6 +361,7 @@ function PinCard({ c }: { c: Cluster }) {
           <span><Users size={14} strokeWidth={1.75} />{c.reporter_count.toLocaleString()} {c.reporter_count === 1 ? "neighbor" : "neighbors"}</span>
           {c.ticket_id && <span className="t-mono"><TicketIcon size={14} strokeWidth={1.75} />{c.ticket_id}</span>}
         </div>
+        {dt?.devrev_id && <div className="ops-pcard__dr"><DevRevChip t={dt} /></div>}
       </div>
     </div>
   );

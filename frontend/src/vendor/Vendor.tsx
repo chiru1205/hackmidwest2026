@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { motion } from "framer-motion";
-import { Building2, CheckCheck, CircleDot, Clock, Inbox, Layers, Link2, PlayCircle, Search, TriangleAlert, Users } from "lucide-react";
+import { Building2, MapPin, CheckCheck, CircleDot, Clock, Inbox, Layers, Link2, PlayCircle, Search, TriangleAlert, Users } from "lucide-react";
 import type { VendorOrder } from "@contracts";
 import { api } from "../lib/api";
 import { useAsync, useEvents } from "../lib/hooks";
@@ -8,6 +8,7 @@ import {
   Avatar, EmptyState, ErrorState, Pill, PriorityBadge, SegmentedControl, Sheet, Skeleton, TicketId, devrevOf, useMediaQuery, useToast, list, item,
 } from "../components/ui";
 import Detail, { StagePill } from "./Detail";
+import { GeoChips, districtOf, zonesOf } from "../ops/geo";
 import { CategoryIcon, Photo } from "./parts";
 import { applyOverride, dueInfo, isOverdue, placeOf, stageOf, titleOf, type Override } from "./util";
 import "./vendor.css";
@@ -25,6 +26,7 @@ export default function Vendor() {
   const phone = useMediaQuery("(max-width: 640px)");
 
   const [vendor, setVendor] = useState("");
+  const [district, setDistrict] = useState("");
   const [filter, setFilter] = useState<Filter>("all");
   const [sort, setSort] = useState<Sort>("priority");
   const [q, setQ] = useState("");
@@ -51,7 +53,17 @@ export default function Vendor() {
     return [...base, ...extra].map((o) => applyOverride(o, ov[o.cluster.id]));
   }, [orders.data, ov]);
 
-  const forVendor = useMemo(() => (vendor ? all.filter((o) => o.cluster.vendor === vendor) : all), [all, vendor]);
+  const vendors = useMemo(() => {
+    const extra = [...new Set(all.map((o) => o.cluster.vendor).filter((v): v is string => !!v && !VENDORS.includes(v)))].sort();
+    return [...VENDORS, ...extra];
+  }, [all]);
+  const districts = useMemo(() => [...new Set(all.map((o) => districtOf(o.cluster)).filter((d): d is string => !!d))].sort((a, b) => a.localeCompare(b, undefined, { numeric: true })), [all]);
+  const districtCounts = useMemo(() => {
+    const m: Record<string, number> = {};
+    all.forEach((o) => { const d = districtOf(o.cluster); if (d && stageOf(o) !== "resolved" && (!vendor || o.cluster.vendor === vendor)) m[d] = (m[d] ?? 0) + 1; });
+    return m;
+  }, [all, vendor]);
+  const forVendor = useMemo(() => all.filter((o) => (!vendor || o.cluster.vendor === vendor) && (!district || districtOf(o.cluster) === district)), [all, vendor, district]);
   const now = Date.now();
   const counts = useMemo(() => {
     const n = { all: forVendor.length, open: 0, progress: 0, fixed: 0, overdue: 0 };
@@ -77,7 +89,7 @@ export default function Vendor() {
       if (filter === "fixed" && s !== "resolved") return false;
       if (filter === "overdue" && !isOverdue(o, now)) return false;
       if (needle) {
-        const hay = `${titleOf(o.cluster)} ${o.ticket?.id ?? ""} ${o.cluster.neighborhood ?? ""} ${o.cluster.vendor ?? ""}`.toLowerCase();
+        const hay = `${titleOf(o.cluster)} ${o.ticket?.id ?? ""} ${o.cluster.neighborhood ?? ""} ${districtOf(o.cluster) ?? ""} ${zonesOf(o.cluster).join(" ")} ${o.cluster.vendor ?? ""}`.toLowerCase();
         if (!hay.includes(needle)) return false;
       }
       return true;
@@ -89,7 +101,7 @@ export default function Vendor() {
     });
   }, [forVendor, filter, q, sort, now]);
 
-  useEffect(() => { setLimit(PAGE); }, [vendor, filter, q, sort]);
+  useEffect(() => { setLimit(PAGE); }, [vendor, district, filter, q, sort]);
 
   const effId = selId ?? (wide ? visible[0]?.cluster.id ?? null : null);
   const current = effId ? all.find((o) => o.cluster.id === effId) ?? null : null;
@@ -153,9 +165,25 @@ export default function Vendor() {
           <div className="vd-rail__label">Vendor</div>
           <div className="vd-rail__scroll">
             <VendorBtn name="" label="All vendors" count={Object.values(vendorCounts).reduce((a, b) => a + b, 0)} on={vendor === ""} onClick={() => setVendor("")} />
-            {VENDORS.map((v) => <VendorBtn key={v} name={v} label={v} count={vendorCounts[v] ?? 0} on={vendor === v} onClick={() => setVendor(v)} />)}
+            {vendors.map((v) => <VendorBtn key={v} name={v} label={v} count={vendorCounts[v] ?? 0} on={vendor === v} onClick={() => setVendor(v)} />)}
           </div>
         </div>
+
+        {districts.length > 0 && (
+          <div className="vd-rail__group">
+            <div className="vd-rail__label">District</div>
+            <div className="vd-rail__scroll">
+              <button className={`vd-chip ${district === "" ? "is-on" : ""}`} aria-pressed={district === ""} onClick={() => setDistrict("")}>
+                <MapPin size={16} strokeWidth={1.75} aria-hidden /><span>All districts</span>
+              </button>
+              {districts.map((d) => (
+                <button key={d} className={`vd-chip ${district === d ? "is-on" : ""}`} aria-pressed={district === d} onClick={() => setDistrict(d)}>
+                  <MapPin size={16} strokeWidth={1.75} aria-hidden /><span>{d}</span><b className="t-num">{districtCounts[d] ?? 0}</b>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
 
         <div className="vd-rail__group">
           <div className="vd-rail__label">Status</div>
@@ -176,7 +204,7 @@ export default function Vendor() {
         <header className="vd-main__head">
           <div>
             <h1 className="vd-h1">Work orders</h1>
-            <p className="vd-sub">{vendor || "All vendors"} {"·"} <span className="t-num">{counts.open + counts.progress}</span> active</p>
+            <p className="vd-sub">{vendor || "All vendors"}{district ? ` ${"·"} ${district}` : ""} {"·"} <span className="t-num">{counts.open + counts.progress}</span> active</p>
           </div>
           <span className="spacer" />
           <Pill variant={live ? "success" : "neutral"} size="sm" icon={<Link2 size={12} strokeWidth={1.75} />} dot={live ? "pulse" : false}
@@ -194,7 +222,7 @@ export default function Vendor() {
             <EmptyState icon={<Inbox />} title={q || filter !== "all" ? "No matching work orders" : "No work orders"} description={q || filter !== "all" ? "Try a different filter or search." : "Nice work. Nothing is waiting on a crew."} />
           )}
           {visible.length > 0 && (
-            <motion.ul ref={listRef} className="vd-list" role="listbox" aria-label="Work orders" onKeyDown={onKey} variants={list} initial="hidden" animate="show" key={`${vendor}|${filter}|${sort}`}>
+            <motion.ul ref={listRef} className="vd-list" role="listbox" aria-label="Work orders" onKeyDown={onKey} variants={list} initial="hidden" animate="show" key={`${vendor}|${district}|${filter}|${sort}`}>
               {visible.slice(0, limit).map((o, i) => {
                 const c = o.cluster, s = stageOf(o), due = dueInfo(o.due, s === "resolved");
                 const on = c.id === effId;
@@ -210,6 +238,7 @@ export default function Vendor() {
                           <span className="vd-row__rep" title={`${c.reporter_count} reporters`}><Users size={13} strokeWidth={1.75} aria-hidden /><span className="t-num">{c.reporter_count}</span></span>
                           <span className={`vd-due is-${due.tone}`}>{due.short}</span>
                         </span>
+                        {(c.neighborhood || districtOf(c) || zonesOf(c).length > 0) && <GeoChips c={c} max={1} className="vd-row__geo" />}
                       </span>
                       <StagePill stage={s} size="sm" />
                     </button>

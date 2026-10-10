@@ -151,3 +151,29 @@ def test_edgekv_cells_and_bad_valkey():
     assert hit and v == [{"id": "c1"}] and ms >= 0
     s = kv.stats()
     assert s["hits"] == 1 and s["misses"] == 1
+
+
+# ---- semantic dedup helpers (made-up vectors)
+from backend.engine import semantic as sem  # noqa: E402
+
+
+def test_cosine_basic():
+    assert sem.cosine([1, 0], [1, 0]) == pytest.approx(1.0)
+    assert sem.cosine([1, 0], [0, 1]) == pytest.approx(0.0)
+    assert sem.cosine([1, 1], [-1, -1]) == pytest.approx(-1.0)
+    assert sem.cosine([], [1]) == 0.0 and sem.cosine([0, 0], [1, 1]) == 0.0 and sem.cosine([1], [1, 2]) == 0.0
+
+
+@pytest.mark.parametrize("s,v", [(0.80, "merge"), (0.72, "merge"), (0.66, "unsure"), (0.60, "new"), (0.3, "new")])
+def test_semantic_decide(s, v):
+    assert sem.decide(s) == v
+
+
+def test_semantic_best_match_and_text():
+    cid, s = sem.best_match([1, 0], {"a": [0, 1], "b": [0.9, 0.1]})
+    assert cid == "b" and s > 0.9
+    assert sem.best_match([1, 0], {}) == (None, 0.0)
+    assert not sem.has_signal("hi", "") and sem.has_signal("big hole by the crosswalk")
+    t = sem.cluster_text("Pothole", "deep hole", "P2 (score 60)", ["a" * 300] * 9 + ["note b"])
+    assert len(t) <= sem.CLUSTER_TEXT_MAX and t.startswith("Pothole. deep hole")
+    assert "same issue" in sem.summary(0.78, "merge")

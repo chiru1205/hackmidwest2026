@@ -77,3 +77,23 @@ Setup asks for these. To add or change one later, open the file `.env` in Notepa
 | The AI steps show template text | There is no Akamai key, or it is mistyped. Keys are long: copy and paste, do not retype. Check with `.venv\Scripts\python scripts\smoke_akamai.py` |
 | The demo data looks messy after testing | Stop the app, delete `data\civicflow.db`, start again. It reseeds a clean demo |
 | `winget` not found | Install Git, Python 3.12 and Node.js (LTS) by hand from their websites, then run setup again |
+
+## Demo script (3 minutes)
+1. **Ops** (`/ops`): open the **Analytics** panel. Point out the work-order numbers (from DevRev) and the "Reports and AI" numbers (reports vs unique issues, geo cache hit rate, calls per AI model).
+2. **Citizen** (`/`): choose Report, take or pick a pothole photo, leave the category on "other", type a short note. Watch the suggestion chip, then submit.
+3. **Reveal**: the photo is read by the vision model (AWS Bedrock), checked against nearby reports (geo cache, then Akamai embeddings in the unclear band), scored for priority, and turned into one work order. The priority explanation upgrades a few seconds later.
+4. **Vendor** (`/vendor`): start the job, then mark it fixed. The DevRev chip shows the live ticket (`TKT-n`).
+5. **DevRev**: open the ticket to show the same work order and its stage.
+6. **Ops** again: the Analytics panel refreshes (about 15 s) with the new ticket and resolved time.
+7. **Geofence: outside the area**: on the Report screen, pick a spot outside Kansas City (for example St. Louis from the demo location list). The app shows "outside the Kansas City service area" and blocks Send. Real city neighborhood and council district boundaries come from KCMO open data.
+8. **Geofence: school-zone boost**: pick a spot inside a school zone (150 m) or hospital zone (250 m), for example Notre Dame de Sion School (39.05767, -94.57903). The reveal shows the zone chip, location criticality goes to 1.0 and the priority explanation says "inside a school zone". In Ops, turn on the "Priority zones" map layer to see the circles.
+9. **Geofence: district routing**: report a pothole in District 4, then one in District 5 or 6. Districts 1-4 go to KC Road Crew Co. and Districts 5-6 to Southside Pavement & Walk (a fictional second crew). The district and zones also appear in the work order and in the DevRev ticket footer; use the District filter in Ops and Vendor.
+10. **DevRev case flow** (`/workflow`): this is the live work-order board, backed by real DevRev tickets. Press **Send a sample report** (or report from `/`). Watch the new card appear in **Assigned** with its `TKT-n` number within a few seconds.
+11. **Act on the ticket**: select the card to open its journey (Civic Flow steps next to DevRev's own history). Press **Start work** (the card moves to In progress, and DevRev goes to work_in_progress), then **Request verification** (Awaiting verification; this stage is kept by Civic Flow, DevRev stays at work_in_progress and gets a comment), then **Approve and resolve** with a short note as evidence (DevRev resolved, XP paid). Approving without a note or photo is refused. **Escalate** raises the severity one level and **Reopen** puts it back in the queue.
+12. **Change it inside DevRev**: open the same ticket in the DevRev app and move its stage. Within about 5-10 seconds the board card moves and the Activity strip shows the change. If `DEVREV_WEB_BASE` is set in `.env` (for example `https://app.devrev.ai/<org>/works`), **Open in DevRev** appears in the journey panel.
+13. **Ops work orders**: on `/ops` press **Work orders** for DevRev totals, the stage funnel and the overdue and escalated lists. Queue rows, map popovers and the drawer carry a DevRev chip with the stage and ticket number, and DevRev events appear in the Live feed.
+
+Badge art in Profile is generated once with Akamai image generation. Re-create it with `.venv\Scripts\python scripts\gen_badges.py` (paced at one image every 12 s because of the team rate limit).
+
+## Deploy to Akamai Cloud (Linode)
+To put the app on a public HTTPS address (one Ubuntu VM, no Docker), follow [infra/linode/DEPLOY.md](infra/linode/DEPLOY.md). In short: create a Linode, then run `powershell -ExecutionPolicy Bypass -File infra/linode/deploy.ps1 -Ip <ip>`.

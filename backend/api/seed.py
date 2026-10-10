@@ -57,6 +57,14 @@ FIXED = {2, 9, 14, 26, 41, 50}
 IN_PROGRESS = {3, 7, 11, 19, 22, 30, 38, 46}
 
 
+def _vendor(category: str, district: str | None) -> str:
+    try:
+        from backend.integrations import devrev
+        return devrev.pick_vendor(category, district)
+    except Exception:
+        return adapters.pick_vendor(category)
+
+
 def _iso(dt: datetime) -> str:
     return dt.isoformat().replace("+00:00", "Z")
 
@@ -110,6 +118,8 @@ def seed(n_clusters: int = 60) -> None:
             neighborhood=p.get("neighborhood") or places.neighborhood_for(lat, lng),
             address=p.get("address") or places.address_for(lat, lng), simulated=True,
             first_reported_at=_iso(first), last_reported_at=_iso(now - timedelta(minutes=rnd.randint(1, 600))))
+        c.neighborhood = places.neighborhood_for(lat, lng)    # real polygon name; the old nearest-name list is the fallback
+        places.apply_geo(c)                                    # district, zones, zone-boosted location_crit
         c.priority, c.bucket = priority.compute_priority(c, now)
         sla = DUE_DAYS[c.bucket]
         if hot:
@@ -121,8 +131,8 @@ def seed(n_clusters: int = 60) -> None:
             age_d = max(age_d, 0.3, sla - 8.5)
         first = now - timedelta(days=age_d)
         c.first_reported_at = _iso(first)
-        c.rationale = adapters.template_rationale(c)
-        c.vendor = adapters.pick_vendor(cat)
+        c.rationale = places.rationale_with_zones(adapters.template_rationale(c), c)
+        c.vendor = _vendor(cat, c.district)
         c.status = "assigned"
         t = adapters.create_ticket(c, adapters.ticket_title(c), adapters.ticket_body(c), c.vendor)
         c.ticket_id = t.id

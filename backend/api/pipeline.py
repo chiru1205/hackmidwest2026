@@ -1,19 +1,24 @@
 """The report pipeline: validate -> triage -> candidates (edge first) -> decide -> merge/judge/create -> ticket."""
 from __future__ import annotations
 
+import asyncio
 import json
 import logging
+import os
 import time
 from datetime import datetime, timedelta, timezone
 
 from contracts.models import AgentStep, Cluster, EdgeInfo, Report, ReportResult
-from backend.engine import dedup, priority, xp
+from backend.engine import dedup, geofence, priority, semantic, xp
+from backend.integrations.ai import embed as ai_embed
 
 from . import adapters, config, edge, events, places, store
 
 log = logging.getLogger("civicflow.pipeline")
 CATEGORIES = set(adapters.LABELS)
 POINTS = {"first": 50, "confirm": 5, "photo_confirm": 15}
+EMBED_MODEL = "akamai:hackathon-embedding"
+_bg_tasks: set = set()      # strong refs so background enrichment tasks are not garbage collected
 
 
 def cj(c: Cluster) -> dict:
@@ -44,6 +49,19 @@ class Ctx:
                                      "summary": summary, "model": model})
 
 
+def _template_rationale(c: Cluster) -> str:
+    return places.rationale_with_zones(adapters.template_rationale(c), c)
+
+
+def _pick_vendor(category: str, district: str | None) -> str:
+    """The crew for category + district (falls back to the category-only pick if the DevRev layer is unavailable)."""
+    try:
+        from backend.integrations import devrev
+        return devrev.pick_vendor(category, district)
+    except Exception:
+        return adapters.pick_vendor(category)
+
+
 def _reject(reason: str, message: str) -> ReportResult:
     return ReportResult(outcome="rejected", message=message, reject_reason=reason)
 
@@ -69,7 +87,7 @@ def publish_stats() -> None:
 async def submit_report(user_id: str, lat: float, lng: float, accuracy_m: float = 20.0, category: str | None = None,
                         note: str = "", severity: int | None = None, photo: bytes | None = None,
                         photo_ext: str = ".jpg", *, confirm_cluster_id: str | None = None,
-                        simulated: bool = False, quiet_stats: bool = False) -> ReportResult:
+                        simulated: bool = False, quiet_stats: bool = False, demo_override: bool = False) -> ReportResult:
     flags = config.flags
     relaxed = flags.demo_mode or simulated
     report_id = store.new_id("r")
@@ -103,6 +121,11 @@ async def submit_report(user_id: str, lat: float, lng: float, accuracy_m: float 
                              (user_id, since30)):
                 if adapters.phash_close(ph, r["phash"]):
                     return _reject("duplicate photo", "This photo was already submitted by someone else.")
+    # ---- 1b. geofence: reports outside the Kansas City service area are not routed to a city crew
+    if target is None and not simulated and os.getenv("GEOFENCE_ENFORCE", "1") != "0" and geofence.available():
+        if not geofence.locate(lat, lng)["in_service_area"] and not (demo_override and flags.demo_mode):
+            return _reject("outside_service_area", geofence.OUTSIDE_MESSAGE)
+
     photo_url = None
     if photo:
         photo_url = adapters.save_photo(f"{report_id}{photo_ext}", photo)
@@ -146,19 +169,28 @@ async def submit_report(user_id: str, lat: float, lng: float, accuracy_m: float 
             cands, edge_info = edge.candidates(lat, lng, category)
             decision = dedup.decide(cands, category)
             ctx.step("dedup", "done", (time.perf_counter() - t0) * 1000,
-                     f"edge {'HIT' if edge_info.hit else 'MISS'} {edge_info.ms:.2f} ms, {len(cands)} candidates, "
+                     f"geo cache {'HIT' if edge_info.hit else 'MISS'} {edge_info.ms:.2f} ms, {len(cands)} candidates, "
                      f"decision={decision['action']} score={decision['score']:.2f}", "engine")
             if decision["action"] == "judge":
                 t0 = time.perf_counter()
                 pool = [c for c, s, _ in sorted(cands, key=lambda t: -t[1]) if s >= 0.5]
-                j = await adapters.judge_dedup(report, pool, decision["scores"], ctx.emit)
-                used_llm = True
-                if j.get("decision") == "merge" and j.get("cluster_id") in store.clusters:
-                    decision = {**decision, "action": "merge", "cluster": store.clusters[j["cluster_id"]]}
+                sem = None if simulated else await _semantic_judge(report, pool, hdesc)
+                if sem is not None and sem["verdict"] != "unsure":
+                    if sem["verdict"] == "merge" and sem["cluster"].id in store.clusters:
+                        decision = {**decision, "action": "merge", "cluster": store.clusters[sem["cluster"].id]}
+                    else:
+                        decision = {**decision, "action": "create", "cluster": None}
+                    ctx.step("judge", "done", (time.perf_counter() - t0) * 1000,
+                             semantic.summary(sem["sim"], sem["verdict"]), EMBED_MODEL)
                 else:
-                    decision = {**decision, "action": "create", "cluster": None}
-                ctx.step("judge", "done", (time.perf_counter() - t0) * 1000,
-                         f"{j.get('decision')}: {j.get('reason', '')}")
+                    j = await adapters.judge_dedup(report, pool, decision["scores"], ctx.emit)
+                    used_llm = True
+                    if j.get("decision") == "merge" and j.get("cluster_id") in store.clusters:
+                        decision = {**decision, "action": "merge", "cluster": store.clusters[j["cluster_id"]]}
+                    else:
+                        decision = {**decision, "action": "create", "cluster": None}
+                    ctx.step("judge", "done", (time.perf_counter() - t0) * 1000,
+                             f"{j.get('decision')}: {j.get('reason', '')}")
         if decision["action"] == "merge":
             live = store.clusters.get(decision["cluster"].id)
             result = _merge(live, report, photo is not None, severity, hazard, hdesc, ctx, relaxed, simulated,
@@ -199,11 +231,12 @@ def _merge(c: Cluster, report: Report, has_photo: bool, severity: int, hazard: b
     c.last_reported_at = report.created_at
     if not c.photo_url and report.photo_url:
         c.photo_url = report.photo_url
+    places.apply_geo(c)          # zone boost can only raise location_crit; fills district/zones on older clusters
     c.priority, c.bucket = priority.compute_priority(c, datetime.now(timezone.utc))
     milestone = new_user and priority.is_milestone(c.reporter_count)
     bucket_changed = c.bucket != old_bucket
     if bucket_changed:
-        c.rationale = adapters.template_rationale(c)
+        c.rationale = _template_rationale(c)
     store.save_cluster(c)
     store.insert_report(report)
     edge.refresh(c)
@@ -251,6 +284,7 @@ def _create(report: Report, lat: float, lng: float, category: str, severity: int
                 hazard_description=hdesc, location_crit=places.location_crit(lat, lng), neighborhood=nb,
                 address=places.address_for(lat, lng), photo_url=photo_url, simulated=simulated,
                 first_reported_at=now, last_reported_at=now)
+    places.apply_geo(c)          # real neighborhood + district + priority zones; raises location_crit
     # a recently fixed cluster at the same spot means this is a reopened issue
     for old in store.clusters.values():
         if old.status == "fixed" and old.category == category and old.fixed_at:
@@ -278,15 +312,53 @@ def _create(report: Report, lat: float, lng: float, category: str, severity: int
     return c
 
 
+async def _semantic_judge(report: Report, pool: list[Cluster], hdesc: str) -> dict | None:
+    """Embedding-based dedup for the judge band. None when unavailable (caller falls back to the LLM/rule judge)."""
+    if not pool or not ai_embed.enabled() or not semantic.has_signal(report.note, hdesc):
+        return None
+    try:
+        top = pool[:3]
+        new_text = semantic.report_text(adapters.LABELS.get(report.category, report.category), report.note, hdesc)
+        texts = [new_text]
+        for c in top:
+            notes = [r.note for r in store.reports_for(c.id, 8) if r.note]
+            texts.append(semantic.cluster_text(adapters.LABELS.get(c.category, c.category), c.hazard_description,
+                                               c.rationale, notes))
+        vecs = await ai_embed.embed(texts)
+        if vecs is None:
+            return None
+        cid, sim = semantic.best_match(vecs[0], {c.id: v for c, v in zip(top, vecs[1:])})
+        if cid is None:
+            return None
+        return {"verdict": semantic.decide(sim), "sim": sim, "cluster": next(c for c in top if c.id == cid)}
+    except Exception as e:
+        log.warning("semantic judge failed: %s", type(e).__name__)
+        return None
+
+
 async def _finish_create(c: Cluster, report: Report, ctx: Ctx, simulated: bool, edge_info: EdgeInfo | None) -> ReportResult:
+    """Ticket + vendor immediately with template text (the priority number comes from the engine); the
+    Akamai-written rationale and ticket text arrive later via _enrich_cluster."""
     prefix = c.rationale
-    if simulated:
-        out = adapters.local_new_cluster(c)
+    c.rationale = (prefix + _template_rationale(c)).strip()
+    ticket, vendor = None, None
+    t0 = time.perf_counter()
+    try:
+        vendor = _pick_vendor(c.category, c.district)
+        try:
+            from backend.agents import common as ac
+            title, body = ac.template_title(c), ac.template_body(c, report)
+        except Exception:
+            title, body = adapters.ticket_title(c), adapters.ticket_body(c)
+        ticket = adapters.create_ticket(c, title, body, vendor)
+    except Exception:
+        log.exception("ticket creation failed")
+        ctx.step("dispatch", "error", (time.perf_counter() - t0) * 1000, "ticket creation failed")
     else:
-        out = await adapters.run_new_cluster_pipeline(c, report, ctx.emit)
-    ticket = out.get("ticket")
-    c.rationale = (prefix + (out.get("rationale") or adapters.template_rationale(c))).strip()
-    c.vendor = out.get("vendor") or (ticket.vendor if ticket else None)
+        if not simulated:
+            ctx.step("priority", "done", 0, f"{c.bucket} score {c.priority:.0f} computed by the engine, rationale text writing", "engine")
+            ctx.step("dispatch", "done", (time.perf_counter() - t0) * 1000, f"{ticket.id} -> {vendor}")
+    c.vendor = vendor or (ticket.vendor if ticket else None)
     if ticket is not None:
         c.ticket_id = ticket.id
     if c.vendor:
@@ -294,19 +366,60 @@ async def _finish_create(c: Cluster, report: Report, ctx: Ctx, simulated: bool, 
     store.save_cluster(c)
     edge.refresh(c)
     if ticket is not None:
-        store.timeline_add(c.id, "Ticket created", f"{ticket.id} assigned to {c.vendor or 'unassigned'}") if not simulated \
-            else store.timeline_add(c.id, "Ticket created", ticket.id)
+        if simulated:
+            store.timeline_add(c.id, "Ticket created", ticket.id)
+        else:
+            store.timeline_add(c.id, "Ticket created", f"{ticket.id} assigned to {c.vendor or 'unassigned'}")
         events.publish("ticket.created", {"ticket": ticket.model_dump(mode="json")})
     events.publish("cluster.updated", {"cluster": cj(c), "outcome": "created", "points": POINTS["first"]})
     total, level = _user_view(report.user_id, simulated)
-    if not ctx.steps and not simulated:
-        pass
-    store.x("INSERT OR REPLACE INTO kv_meta(k,v) VALUES(?,?)",
-            (f"trace:{c.id}", json.dumps([s.model_dump() for s in ctx.steps])))
+    _save_trace(c.id, ctx)
+    if not simulated and ticket is not None:
+        task = asyncio.create_task(_enrich_cluster(c.id, report, ctx, prefix, c.rationale, time.monotonic()))
+        _bg_tasks.add(task)
+        task.add_done_callback(_bg_tasks.discard)
     return ReportResult(outcome="created", message=f"{prefix and 'Reopened issue. '}You're the first reporter! +{POINTS['first']} XP",
                         report_id=report.id, cluster=c, neighbors=1, points_awarded=POINTS["first"], xp_total=total,
                         level=level, priority_before=None, priority_after=round(c.priority, 1), ticket=ticket,
-                        edge=edge_info, steps=ctx.steps)
+                        edge=edge_info, steps=list(ctx.steps))
+
+
+def _save_trace(cluster_id: str, ctx: Ctx) -> None:
+    store.x("INSERT OR REPLACE INTO kv_meta(k,v) VALUES(?,?)",
+            (f"trace:{cluster_id}", json.dumps([s.model_dump() for s in ctx.steps])))
+
+
+async def _enrich_cluster(cluster_id: str, report: Report, ctx: Ctx, prefix: str, template_text: str,
+                          t_created: float) -> None:
+    """Background: Akamai-written rationale + ticket title/body. Never raises. The cluster keeps its template
+    rationale unless it is unchanged since creation (a bucket change in the meantime rewrote it)."""
+    try:
+        c0 = store.clusters.get(cluster_id)
+        if c0 is None:
+            return
+        texts = await adapters.write_texts(c0.model_copy(deep=True), report, ctx.emit)
+        if not texts:
+            return
+        # let the DevRev mirror (separate thread) finish creating the remote item before we update it
+        await asyncio.sleep(max(0.0, 2.5 - (time.monotonic() - t_created)))
+        async with store.alock:
+            c = store.clusters.get(cluster_id)
+            if c is None:
+                return
+            rationale = (texts.get("rationale") or "").strip()
+            if rationale and c.rationale == template_text:
+                c.rationale = (prefix + rationale).strip()
+                store.save_cluster(c)
+                edge.refresh(c)
+            ticket = None
+            if c.ticket_id:
+                ticket = adapters.update_ticket(c, texts.get("title") or None, texts.get("body") or None)
+            events.publish("cluster.updated", {"cluster": cj(c), "outcome": "created", "points": 0})
+            if ticket is not None:
+                events.publish("ticket.updated", {"ticket": ticket.model_dump(mode="json")})
+        _save_trace(cluster_id, ctx)
+    except Exception as e:
+        log.warning("background enrichment failed for %s: %s", cluster_id, type(e).__name__)
 
 
 # ------------------------------------------------------------------ fixing / stage changes
@@ -340,3 +453,4 @@ def mark_fixed(c: Cluster, set_ticket: bool = True) -> Cluster:
         events.publish("ticket.updated", {"ticket": ticket.model_dump(mode="json")})
     publish_stats()
     return c
+

@@ -1,0 +1,35 @@
+[Unit]
+Description=Civic Flow API (FastAPI / uvicorn)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=civic
+Group=civic
+WorkingDirectory=/opt/civicflow
+EnvironmentFile=/opt/civicflow/.env
+Environment=PYTHONUNBUFFERED=1
+Environment=PYTHONDONTWRITEBYTECODE=1
+ExecStart=/opt/civicflow/.venv/bin/python -m uvicorn backend.api.main:app --host 127.0.0.1 --port 8000 --timeout-graceful-shutdown 3 --proxy-headers --forwarded-allow-ips 127.0.0.1
+Restart=always
+RestartSec=2
+TimeoutStopSec=10
+LimitNOFILE=65536
+
+# Hardening: everything read-only except the data directory (SQLite db + photos).
+NoNewPrivileges=true
+PrivateTmp=true
+PrivateDevices=true
+ProtectSystem=strict
+ReadWritePaths=/opt/civicflow/data
+ProtectHome=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictSUIDSGID=true
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+LockPersonality=true
+
+[Install]
+WantedBy=multi-user.target

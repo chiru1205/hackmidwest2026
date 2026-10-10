@@ -1,0 +1,55 @@
+# Civic Flow Caddyfile template. provision.sh replaces {$DOMAIN} with the real host name
+# and installs the result as /etc/caddy/Caddyfile. Caddy gets a Let's Encrypt certificate
+# automatically (ports 80 and 443 must be reachable and the name must resolve to this server).
+#
+# Optional admin password: provision.sh writes /etc/caddy/civicflow-admin-auth.caddy.
+#   - CITY_PASS_HASH set in /opt/civicflow/.env  -> a basicauth block for CITY_USER
+#   - not set                                    -> a harmless no-op header line
+# Make a hash with:  caddy hash-password   (then put CITY_USER=... and CITY_PASS_HASH=... in .env)
+
+{$DOMAIN} {
+	root * /opt/civicflow/web
+
+	header {
+		Strict-Transport-Security "max-age=31536000"
+		X-Content-Type-Options "nosniff"
+		X-Frame-Options "SAMEORIGIN"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		Permissions-Policy "camera=(self), geolocation=(self), microphone=()"
+		-Server
+	}
+
+	# Ops page actions (simulate, reset): optional basic auth. No compression here.
+	handle /api/admin/* {
+		import /etc/caddy/civicflow-admin-auth.caddy
+		reverse_proxy 127.0.0.1:8000 {
+			flush_interval -1
+		}
+	}
+
+	# API and Server-Sent Events (/api/events). flush_interval -1 = no proxy buffering.
+	# No encode directive on purpose: compressing would buffer text/event-stream.
+	handle /api/* {
+		reverse_proxy 127.0.0.1:8000 {
+			flush_interval -1
+		}
+	}
+
+	# Uploaded and seed photos (already compressed images).
+	handle /photos/* {
+		reverse_proxy 127.0.0.1:8000
+	}
+
+	# Everything else: the single-page app. Unknown paths fall back to index.html.
+	handle {
+		encode zstd gzip
+		@hashed path /assets/*
+		header @hashed Cache-Control "public, max-age=31536000, immutable"
+		@notHashed not path /assets/*
+		header @notHashed Cache-Control "no-cache"
+		try_files {path} /index.html
+		file_server
+	}
+
+	log
+}

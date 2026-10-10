@@ -237,3 +237,41 @@
   .ops-kpi__value { font-size: 24px; }
   .ops-kpis__actions { padding-left: var(--s-3); }
 }
+
+/* ---------- geofence: layer control, chips, hover tip ---------- */
+.ops-layer { position: absolute; z-index: 9; top: 104px; right: 424px; width: 196px; padding: var(--s-2) var(--s-3) var(--s-3); display: flex; flex-direction: column; gap: 2px; border-radius: var(--r-lg); }
+.ops-layer__title { display: flex; align-items: center; gap: 6px; font: 600 11px/1 var(--font-ui); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); padding: var(--s-1) 0 var(--s-2); }
+.ops-layer__row { position: relative; display: flex; align-items: center; gap: var(--s-2); min-height: 28px; font-size: 13px; color: var(--muted); cursor: pointer; }
+.ops-layer__row.is-sub { padding-left: var(--s-5); font-size: 12px; }
+.ops-layer__row.is-on { color: var(--text); }
+.ops-layer__row input { position: absolute; opacity: 0; width: 100%; height: 100%; margin: 0; cursor: pointer; }
+.ops-layer__box { width: 16px; height: 16px; flex: none; border-radius: 5px; background: var(--surface); box-shadow: inset 0 0 0 1.5px var(--line-strong); transition: background .15s, box-shadow .15s; }
+.ops-layer__row.is-on .ops-layer__box { background: var(--primary); box-shadow: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M4 8.5l3 3 5-6' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"); }
+.ops-layer__row input:focus-visible + .ops-layer__box { box-shadow: var(--ring); }
+.ops-layer__legend { display: flex; gap: var(--s-3); padding-left: var(--s-5); font-size: 12px; color: var(--muted); }
+.ops-layer__legend span { display: inline-flex; align-items: center; gap: 5px; }
+.ops-layer__legend i { width: 9px; height: 9px; border-radius: 50%; display: inline-block; opacity: .85; }
+.ops-layer__note { margin-top: var(--s-1); font-size: 11px; color: var(--faint); }
+@media (max-width: 960px) { .ops-layer { position: static; width: auto; order: 1; } }
+
+.ops-hood-tip { z-index: 15; }
+.ops-hood-tip .maplibregl-popup-content { background: transparent; padding: 0; box-shadow: none; pointer-events: none; }
+.ops-hood-tip .maplibregl-popup-tip { display: none; }
+.ops-hood-tip__box { display: flex; flex-direction: column; gap: 1px; padding: 6px 10px; border-radius: var(--r-md); background: rgb(255 255 255 / .95); color: var(--text); box-shadow: var(--shadow-2), 0 0 0 1px var(--glass-line); font-size: 12px; }
+.ops-hood-tip__box b { font-weight: 600; font-size: 13px; }
+.ops-hood-tip__box span { color: var(--muted); }
+
+.geo-chips { display: flex; flex-wrap: wrap; gap: 4px; min-width: 0; }
+.geo-chip { display: inline-flex; align-items: center; gap: 4px; max-width: 100%; padding: 2px 7px; border-radius: 999px; font: 500 11px/1.4 var(--font-ui); color: var(--muted); background: var(--surface-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.geo-chip svg { flex: none; }
+.geo-chip.is-dist { color: var(--primary-text); background: color-mix(in srgb, var(--primary) 10%, transparent); }
+.geo-chip.is-school { color: #0B6F6B; background: color-mix(in srgb, #0E9F9A 14%, transparent); }
+.geo-chip.is-hospital { color: #4E3FB0; background: color-mix(in srgb, #6D5BD0 13%, transparent); }
+.geo-chip.is-arterial { color: var(--muted); background: var(--surface-3); }
+.ops-qrow__geo { margin-top: 2px; }
+.ops-qrow__geo .geo-chip.is-dist { flex: none; }
+
+.ops-queue__filter { display: flex; align-items: center; gap: var(--s-2); padding: 0 var(--s-4) var(--s-2); font-size: 12px; color: var(--muted); }
+.ops-queue__filter select { flex: 1; min-width: 0; height: 30px; padding: 0 var(--s-2); border-radius: var(--r-sm, 8px); border: 0; box-shadow: inset 0 0 0 1px var(--line-strong); background: var(--surface); color: var(--text); font: 500 13px var(--font-ui); }
+.ops-queue__filter select:focus-visible { outline: none; box-shadow: var(--ring); }
+.ops-drawer__sec p.ops-drawer__zonenote { margin-top: var(--s-2); font-size: 13px; color: var(--muted); }

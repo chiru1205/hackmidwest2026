@@ -72,6 +72,8 @@ class Cluster(BaseModel):
     rationale: str = ""          # agent-written explanation of the priority
     location_crit: float = 0.2   # 0..1 (school zone 1.0, arterial 0.8, residential 0.2)
     neighborhood: Optional[str] = None
+    district: Optional[str] = None      # KCMO council district, e.g. "District 4"
+    zones: list[str] = []               # priority zones the spot is inside, e.g. "School zone: Westport Elementary"
     address: Optional[str] = None
     photo_url: Optional[str] = None
     ticket_id: Optional[str] = None
@@ -222,3 +224,127 @@ class Health(BaseModel):
     status: str = "ok"
     flags: Flags
     services: dict[str, str] = {}        # name -> "ok" | "mock" | "off" | "error: ..."
+
+
+class CategorySuggestion(BaseModel):
+    """GET /api/suggest?text=..."""
+    category: Category = "other"
+    confidence: float = 0.0
+    source: Literal["akamai-embedding", "keywords"] = "keywords"
+
+
+class AIModelUsage(BaseModel):
+    name: str
+    provider: str
+    calls: int = 0
+    errors: int = 0
+    avg_ms: int = 0
+    last_ms: int = 0
+    tokens: Optional[int] = None
+
+
+class AIUsage(BaseModel):
+    """GET /api/ai-usage"""
+    models: list[AIModelUsage] = []
+    since: str = ""
+
+
+class ZoneHit(BaseModel):
+    """One priority zone containing a point (GET /api/geofence)."""
+    type: Literal["school", "hospital", "arterial"]
+    name: str
+    distance_m: int
+    radius_m: int
+    boost: float
+
+
+class GeoInfo(BaseModel):
+    """GET /api/geofence?lat=&lng="""
+    in_service_area: bool
+    neighborhood: Optional[str] = None
+    district: Optional[str] = None
+    zones: list[ZoneHit] = []
+    message: Optional[str] = None        # friendly sentence when outside the service area
+
+
+# ---- DevRev case-flow board (GET /api/devrev/board, /ticket/{id}/journey, POST /ticket/{id}/action, GET /events)
+StageKey = Literal["queued", "assigned", "in_progress", "awaiting_verification", "resolved"]
+
+
+class BoardTicket(BaseModel):
+    id: str                              # "CF-1063"
+    devrev_id: Optional[str] = None      # "TKT-21"
+    title: str
+    cluster_id: str
+    stage_key: StageKey
+    severity: TicketSeverity
+    priority_bucket: Bucket
+    vendor: Optional[str] = None
+    owner: Optional[str] = None
+    neighborhood: Optional[str] = None
+    district: Optional[str] = None
+    zones: list[str] = []
+    reporters: int = 1
+    age_s: float = 0.0
+    due: Optional[str] = None
+    overdue: bool = False
+    escalated: bool = False
+    evidence_count: int = 0
+    web_url: Optional[str] = None
+
+
+class BoardStage(BaseModel):
+    key: StageKey
+    label: str
+    count: int = 0
+    avg_age_s: Optional[float] = None
+    tickets: list[BoardTicket] = []
+
+
+class BoardTotals(BaseModel):
+    open: int = 0
+    overdue: int = 0
+    escalated: int = 0
+    resolved: int = 0
+    median_ttr: Optional[str] = None
+
+
+class Board(BaseModel):
+    source: Literal["devrev", "local board"]
+    as_of: str
+    stages: list[BoardStage] = []
+    totals: BoardTotals = BoardTotals()
+
+
+class JourneyStep(BaseModel):
+    ts: str
+    source: Literal["civicflow", "devrev"]
+    kind: Literal["report", "vision", "geofence", "dedup", "priority", "routing", "created", "stage", "comment",
+                  "escalated", "verification", "resolved", "reopened"]
+    title: str
+    detail: str = ""
+
+
+class Journey(BaseModel):
+    ticket: BoardTicket
+    steps: list[JourneyStep] = []
+
+
+class TicketAction(BaseModel):
+    action: Literal["start", "request_verification", "approve", "escalate", "reopen"]
+    note: Optional[str] = None
+
+
+class TicketActionResult(BaseModel):
+    ok: bool
+    ticket: Optional[BoardTicket] = None
+    error: Optional[str] = None
+
+
+class TicketEventRow(BaseModel):
+    ts: str
+    kind: Literal["created", "stage", "comment", "escalated", "verification", "resolved", "reopened"]
+    ticket_id: str
+    devrev_id: Optional[str] = None
+    text: str
+    source: Literal["DevRev", "Civic Flow"]
