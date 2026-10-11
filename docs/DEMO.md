@@ -77,7 +77,7 @@ The resident app is a web page, so it runs in a phone-shaped window next to the 
 
 ## Delivery notes (these matter as much as the words)
 - **Silence is a tool.** Let the collapse and the "Identified" reveal land before you talk. The product is doing the selling.
-- **One number:** 340 becomes 1. Everything else is secondary.
+- **One sentence to repeat:** "From a resident's photo to a fixed street." Say it at the start, in the middle (after the Fixed! moment) and at the end.
 - **Never apologize or say "prototype", "just", or "basically".** Say "simulated" once, plainly, for the storm.
 - **Name the technology as what it *did*,** not as a logo: embeddings *matched meaning*, vision *read the photo*, agents *ranked and routed*, DevRev *holds the case*.
 - **Practice the first 20 seconds and the last 15 until you can do them without looking.** The middle is driven by the screen.
