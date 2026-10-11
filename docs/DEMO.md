@@ -69,6 +69,13 @@ Two screens: **phone** = the resident, **laptop** = the city portal (PIN `city`)
 ### Timing check
 Hook 0:00 to 0:25, collapse to 0:55, photo to 1:35, loop to 2:30, close to 3:00. If you are behind at the loop, skip lines 22 to 25 (the DevRev and Vendors tab flashes) and keep the rest. If you are ahead, open **How it's built** after line 42 and say: "That's what is running underneath, live."
 
+## One device: how to run and record it (you only need the laptop)
+The resident app is a web page, so it runs in a phone-shaped window next to the city portal on the same screen. Everyone in the room sees both, and one recording captures the whole demo.
+1. Run `powershell -ExecutionPolicy Bypass -File scripts\demo_windows.ps1` (add `-Demo` if the laptop's location is not in Kansas City). Left window = resident, right window = city portal (sign in with PIN `city`).
+2. In the resident window, "Take a photo" opens a file picker: choose the real downed-tree photo from the laptop. Say "a resident sends a photo".
+3. **Backup video (silent is fine, you talk over it live):** turn on Do Not Disturb (Win+N), press **Win+Shift+R** (Snipping Tool screen recording), drag over the whole screen, Start, run the demo once, then stop. Save as `backup.mp4` on the desktop. Play it from the Photos or Media Player app. Keep it about 90 seconds; stop early rather than record the Impact page twice.
+4. **Your real phone is optional:** use it only if the judges are close enough to read it, and keep it for the "Fixed!" moment. A phone's own screen recorder (iPhone: Control Center, Screen Recording; Android: swipe down, Screen recorder) works if you want a clip of it, and Clipchamp (built into Windows 11) can place the two clips side by side, but the one-screen recording above is simpler and more reliable.
+
 ## Delivery notes (these matter as much as the words)
 - **Silence is a tool.** Let the collapse and the "Identified" reveal land before you talk. The product is doing the selling.
 - **One number:** 340 becomes 1. Everything else is secondary.
