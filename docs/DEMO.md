@@ -1,8 +1,8 @@
 # Civic Flow: the pitch (3 minutes, no slides)
 
 ## The idea to land
-**From a resident's photo to a fixed street.**
-Every local government (city, town, county) that looks after trees, traffic, potholes, signals, drains and streetlights runs the same broken loop: a call here, an email there, a spreadsheet, a guess at priority, a crew sent by phone, and the resident never hears back. Civic Flow is the **front door and the whole workflow behind it**: it understands the report, works out whose job and how urgent it is, merges the duplicates, opens one ticket, routes the crew, verifies the fix, tells the resident, and shows leadership what it all costs and saves.
+**Hear it once. Fix it fast.**
+Problems reach a local government (city, town, county) through five disconnected channels: 911, the police desk, the front desk phone, a council member's email, social media. Each one is retyped, passed on and lost, so the crew finds out days later and the resident never hears back. Civic Flow is the **front door and the whole workflow behind it**: it understands the report, works out whose job and how urgent it is, merges the duplicates, opens one ticket, routes the crew, verifies the fix, tells the resident, and shows leadership what it all costs and saves.
 
 Merging duplicates is **one** step of that loop, not the product. Say so: it is the part that shows at scale.
 
@@ -16,14 +16,14 @@ Two windows on one laptop (see "One device" below): **left** = the resident, **r
 ## The transcript (line by line, as you would actually say it; about 340 spoken words)
 **YOU** = what you say. **[DO]** = what happens on screen or in your hands (say nothing). Short lines on purpose: breathe between them.
 
-### 0:00 The opener [title card on the laptop; phone in your hand]
-1. [DO: the title card is on screen (Alt+I brings it up): the logo draws itself and "Snap. Route. Fixed." appears. Hold four seconds in silence and look at the room]
-2. **YOU:** "Snap. Route. Fixed. That's Civic Flow."
-3. **YOU:** "Every local government has the same front door: a phone call, an email, a post on Facebook. And behind it... a spreadsheet and a guess."
-4. **YOU:** "A tree comes down. One neighbor calls. Another emails. A third posts it. Three desks. The crew hears about it two days later. And nobody tells the neighbors a thing."
-5. [DO: pause for one full second]
-6. **YOU:** "We built what should be behind that door. A resident snaps a photo. We route it to the right crew, in the right order. And we don't stop until it's fixed... and she's been told."
-7. [DO: press **Space**; the Operations map appears]
+### 0:00 The opener [live Operations screen; press Alt+I so the opener plays over it; phone in your hand]
+1. [DO: Alt+I. The five ways in (911, police, phone, email, social media) fly into the logo and "Hear it once. Fix it fast." appears. Start speaking as it settles; do not wait in silence]
+2. **YOU:** "A tree comes down. How does the city find out?"
+3. **YOU:** "A 911 call. A police report. A call to the front desk. An email to a council member. A post on social media."
+4. **YOU:** "Five channels. Five people retyping it. None of them talking to each other."
+5. **YOU:** "So the crew finds out days later... if at all."
+6. [DO: press **Space**; the overlay clears and the Operations map is live behind it]
+7. **YOU:** "Civic Flow is one front door instead. A resident sends a photo... and the fix starts in seconds."
 
 ### 0:25 Scale: a storm [laptop: Operations]
 8. [DO: click **Flooding** under "Run the story"; say nothing for two seconds while the map fills]
@@ -64,20 +64,17 @@ Two windows on one laptop (see "One device" below): **left** = the resident, **r
 37. [DO: stop moving; look at the room]
 38. **YOU:** "Kansas City is where we built it. But every town, county and city has trees to remove, traffic to manage and roads to fix."
 39. **YOU:** "Running right now on Akamai Cloud, reading photos with AWS, living in DevRev."
-40. **YOU:** "Civic Flow. From a resident's photo... to a fixed street. Thank you."
+40. **YOU:** "Civic Flow. Hear it once. Fix it fast. Thank you."
 
 ### Timing check
 Opener 0:00 to 0:25, storm to 0:55, resident to 1:35, loop to 2:30, close to 3:00. If you are behind at the loop, skip lines 21 to 24 (the DevRev and Vendors tab flashes) and keep the rest. If you are ahead, open **How it's built** after line 40 and say: "That's what is running underneath, live."
 
 ## The logo and the opening line
-- **Logo:** a "C" that is a loop. Reports stream in from the top (the dots) and a blue check closes the loop: *from a photo to a fixed street*. Files are in `docs/brand/` (`logo-mark.svg`, `logo-mark-1024.png`, `logo-horizontal.png`, `banner.png` for the submission page).
-- **Opening line (use this):** **"Snap. Route. Fixed."** Three beats that map to the product: the resident snaps, the system routes (identify, prioritize, dispatch), the loop closes when it's fixed. Under it: "From a resident's photo to a fixed street. For every local government."
-- **Other options if you want to swap:**
-  - "Broken to fixed. Faster."
-  - "Because 'we'll look into it' isn't a fix."
-  - "Close the loop on every street."
-  - "Every report, one path, one fix."
-- **The title card:** `https://city.172-232-2-16.sslip.io/intro` needs no PIN. In the portal press **Alt+I** to bring it up from any page; **Space**, Enter or a click begins (it goes to Operations). It is the app's own launch screen, about five seconds, not a slide.
+- **Logo:** a "C" that is a loop. Reports stream in from the top (the dots) and a blue check closes the loop. Files are in `docs/brand/` (`logo-mark.svg`, `logo-mark-1024.png`, `logo-horizontal.png`, `banner.png` for the submission page).
+- **Opening line (use this):** **"Hear it once. Fix it fast."** The point is speed: the city hears about a problem once, in one place, and the fix starts the moment a resident takes a photo. Under it: "One front door instead of 911 calls, police reports, phone calls, emails and social media."
+- **Be exact about what it is:** Civic Flow is the one front door residents use, with the workflow behind it. It does not pull in 911 or phone feeds today. Say "one front door **instead of** five", never "we collect all five".
+- **The opener:** a short overlay on the **live Operations screen** (the map shows through, blurred), not a slide. About two seconds of animation: the five channels fly into the logo, then the line appears. Sign in with the PIN, then press **Alt+I** from any page; **Space**, Enter, Escape or a click dismisses it. Also reachable at `https://city.172-232-2-16.sslip.io/ops?intro=1`.
+- **Other lines if you want to swap:** "Five ways in. One way to fix it." / "Stop hearing about it five ways." / "One front door. Faster fixes."
 
 ## One device: how to run and record it (you only need the laptop)
 The resident app is a web page, so it runs in a phone-shaped window next to the city portal on the same screen. Everyone in the room sees both, and one recording captures the whole demo.
@@ -88,7 +85,7 @@ The resident app is a web page, so it runs in a phone-shaped window next to the 
 
 ## Delivery notes (these matter as much as the words)
 - **Silence is a tool.** Let the collapse and the "Identified" reveal land before you talk. The product is doing the selling.
-- **One sentence to repeat:** "From a resident's photo to a fixed street." Say it at the start, in the middle (after the Fixed! moment) and at the end.
+- **One sentence to repeat:** "Hear it once. Fix it fast." It is on the opener, so say it again right after "Fixed!" and as your last line.
 - **Never apologize or say "prototype", "just", or "basically".** Say "simulated" once, plainly, for the storm.
 - **Name the technology as what it *did*,** not as a logo: embeddings *matched meaning*, vision *read the photo*, agents *ranked and routed*, DevRev *holds the case*.
 - **Practice the first 20 seconds and the last 15 until you can do them without looking.** The middle is driven by the screen.
@@ -108,7 +105,7 @@ The resident app is a web page, so it runs in a phone-shaped window next to the 
 ## Before you go on stage (7:30 AM, and again right before)
 1. `powershell -ExecutionPolicy Bypass -File scripts\demo_prep.ps1` (resets the data, warms the AI, prints READY or NOT READY; creates no reports or tickets). Run it twice if the first run shows any WARN.
 2. Phone: open `https://172-232-2-16.sslip.io/?newuser=1`, allow location. "My requests" must be empty. Have the **downed tree** photo ready.
-3. Laptop tabs in this order: Operations, Workflow, Vendors, Impact, DevRev ticket list. Sign in once with PIN `city`, then press **Alt+I** so the title card is on screen when you walk up. Space starts the pitch.
+3. Laptop tabs in this order: Operations, Workflow, Vendors, Impact, DevRev ticket list. Sign in once with PIN `city`, then stay on **Operations**. Press **Alt+I** to play the opener when you start speaking.
 4. After the live report, do **not** press Reset or a storm button (the storm resets the data).
 Live: resident `https://172-232-2-16.sslip.io/`, city `https://city.172-232-2-16.sslip.io/`.
 

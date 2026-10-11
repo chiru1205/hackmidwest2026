@@ -38,7 +38,7 @@ Write-Host "Opened the resident app (left) and the city portal (right)." -Foregr
 Write-Host "  1. In the right window, enter the PIN: city"
 Write-Host "  2. Left window: Allow location if asked (or tap the map to place the pin in Kansas City)."
 Write-Host "  3. 'My requests' on the left must be empty."
-Write-Host "  4. Right window: after the PIN, press Alt+I to show the title card. Space starts the pitch."
+Write-Host "  4. Right window: after the PIN, stay on Operations. Press Alt+I to play the opener when you start speaking; Space dismisses it."
 Write-Host "  5. Turn on Do Not Disturb (Win+N, then the bell) so no notification pops up on screen."
 Write-Host ""
 Write-Host "To record the backup video: press Win+Shift+R (Snipping Tool screen recording), drag over the whole screen, Start."
