@@ -48,7 +48,7 @@ def build_vision_model():
     if os.getenv("AWS_BEARER_TOKEN_BEDROCK") or os.getenv("AWS_ACCESS_KEY_ID") or os.getenv("AWS_PROFILE"):
         from strands.models import BedrockModel
         return BedrockModel(model_id=os.getenv("BEDROCK_HAIKU_ID") or "us.anthropic.claude-haiku-5-5",
-                            region_name=os.getenv("AWS_REGION") or "us-west-2"), "bedrock"
+                            region_name=os.getenv("AWS_REGION") or "us-west-2", temperature=0.0), "bedrock"
     if os.getenv("ANTHROPIC_API_KEY"):
         from strands.models.anthropic import AnthropicModel
         return AnthropicModel(client_args={"api_key": os.getenv("ANTHROPIC_API_KEY")},

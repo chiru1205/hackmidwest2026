@@ -152,9 +152,11 @@ async def submit_report(user_id: str, lat: float, lng: float, accuracy_m: float 
         tri = None
         if photo and flags.vision and not simulated:
             tri = await adapters.analyze_photo(photo, note, category, ctx.emit)
-        if tri is not None:
-            if not tri.is_valid and not relaxed:
+        if tri is not None and not tri.is_valid:
+            if not relaxed:
                 return _reject("invalid photo", tri.invalid_reason or "That photo doesn't show an infrastructure issue.")
+            tri = None  # demo mode: an unreadable photo must not set the category; fall back to the note
+        if tri is not None:
             category, severity = tri.category, tri.severity
             hazard, hdesc = tri.is_safety_hazard or hazard, tri.hazard_description or hdesc
             ctx.step("intake", "done", (time.perf_counter() - t0) * 1000, f"vision: {category}, severity {severity}")
