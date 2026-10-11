@@ -56,7 +56,7 @@ export default function Intro({ onDone }: { onDone: () => void }) {
           <motion.span {...rise(1.7)}>Every fix</motion.span>
           <motion.span className="is-here" {...rise(2.0)}>starts here.</motion.span>
         </h2>
-        <motion.p className="intro-sub" {...rise(2.45)}>One front door. Faster fixes for the city and everyone who lives in it.</motion.p>
+        <motion.p className="intro-sub" {...rise(2.45)}>One front door. Faster fixes for any city, town or rural municipality.</motion.p>
         <motion.p className="intro-hint" {...rise(2.9)}>Press Space to begin</motion.p>
       </div>
     </div>
