@@ -267,7 +267,7 @@ export const mockApi: Api = {
     const list = nearbyClusters(lat, lng, category, radius);
     return { clusters: list, edge: edge(list.length > 0) };
   },
-  async submitReport(r: ReportInput) { await sleep(500); return doReport(r, r.photo ? "first" : "first"); },
+  async submitReport(r: ReportInput) { await sleep(500); return doReport({ ...r, category: r.category ?? "pothole" }, "first"); },
   async confirm(id, lat, lng, acc) {
     await sleep(250);
     const c = clusters.find((x) => x.id === id);

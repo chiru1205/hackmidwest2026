@@ -86,7 +86,7 @@ const DUE_DAYS = { P1: 2, P2: 5, P3: 10, P4: 14 } as const;
 const STAGE: Record<RequestStatus, string> = { reported: "Reported", assigned: "Crew assigned", in_progress: "Work in progress", awaiting_verification: "Awaiting verification", fixed: "Fixed" };
 
 /** Build a request from a fresh ReportResult and show it at once; the server version replaces it on refetch (same id). */
-export function insertFromResult(res: ReportResult, o: { photo?: Blob | null; note: string; category: string; severity: number }): string | null {
+export function insertFromResult(res: ReportResult, o: { photo?: Blob | null; note: string }): string | null {
   const c = res.cluster;
   if (!c || (res.outcome !== "created" && res.outcome !== "merged")) return null;
   const now = new Date().toISOString();
@@ -110,9 +110,8 @@ export function insertFromResult(res: ReportResult, o: { photo?: Blob | null; no
     ticket_id: res.ticket?.id ?? c.ticket_id ?? null, crew: c.vendor ?? null, due, priority_bucket: c.bucket, rationale: c.rationale,
     detected: { category: c.category, severity: c.severity, is_hazard: c.is_hazard, hazard_description: c.hazard_description },
     my_points: res.points_awarded, created_at: c.first_reported_at, updated_at: now, timeline,
-    my_note: o.note.trim() || null, my_category: o.category, my_severity: o.severity, my_reported_at: now,
+    my_note: o.note.trim() || null, my_category: c.category, my_severity: c.severity, my_reported_at: now,
   };
-  const ex = readExtras(); ex[c.id] = { my_category: o.category, my_severity: o.severity }; writeExtras(ex);
   pending.set(c.id, Date.now());
   set({ list: [req, ...(state.list ?? []).filter((r) => r.id !== c.id)], error: null });
   void refreshRequests();

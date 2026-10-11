@@ -13,7 +13,6 @@ export const oneOfLine = (n: number) => (n > 1 ? `You're one of ${n.toLocaleStri
 
 /** What the citizen themselves reported on this issue. */
 export function YourReport({ r }: { r: CitizenRequest }) {
-  const chosen = r.my_category || r.category;
   const detected = r.detected.category;
   const where = [r.neighborhood, districtLabel(r.district)].filter(Boolean).join(" · ");
   const one = oneOfLine(r.neighbors);
@@ -30,11 +29,11 @@ export function YourReport({ r }: { r: CitizenRequest }) {
       </div>
       <dl className="cz-yr__dl">
         <div><dt><Tag size={13} strokeWidth={1.75} aria-hidden /> Category</dt>
-          <dd data-testid="my-category">You chose <b>{catLabel(chosen)}</b>{chosen === detected ? "; we saw the same" : <>; we detected <b>{catLabel(detected)}</b></>}</dd></div>
+          <dd data-testid="my-category">Identified as <b>{catLabel(detected)}</b></dd></div>
         <div><dt><MapPin size={13} strokeWidth={1.75} aria-hidden /> Where</dt>
           <dd>{[r.address, where].filter(Boolean).join(" · ") || "Kansas City"}{r.zones.length > 0 && <span className="cz-yr__zones"> · {r.zones.join(", ")}</span>}</dd></div>
         <div><dt><Clock size={13} strokeWidth={1.75} aria-hidden /> When</dt><dd>{fmtWhen(r.my_reported_at || r.created_at)}</dd></div>
-        {r.my_severity != null && <div><dt>Severity</dt><dd>You rated it {r.my_severity} of 5</dd></div>}
+        {r.detected.severity != null && <div><dt>Severity</dt><dd>Rated {r.detected.severity} of 5</dd></div>}
       </dl>
     </section>
   );
@@ -43,11 +42,10 @@ export function YourReport({ r }: { r: CitizenRequest }) {
 /** Compact version for the list card. */
 export function YourReportMini({ r }: { r: CitizenRequest }) {
   const one = oneOfLine(r.neighbors);
-  const chosen = r.my_category || r.category;
   return (
     <div className="cz-rcard__mine">
       <b>Your report</b>
-      <span>{r.my_note ? `"${r.my_note}"` : "No note"} · {catLabel(chosen)}{chosen !== r.detected.category ? ` (we detected ${catLabel(r.detected.category)})` : ""}</span>
+      <span>{r.my_note ? `"${r.my_note}"` : "No note"} · {catLabel(r.detected.category)}</span>
       {one && <span className="cz-rcard__one">{one}</span>}
     </div>
   );

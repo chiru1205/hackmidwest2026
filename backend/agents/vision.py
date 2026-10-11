@@ -11,7 +11,10 @@ from backend.integrations.ai import usage
 log = logging.getLogger("civicflow.vision")
 PROMPT = ("You triage citizen photos of city infrastructure problems. Decide if the photo shows a real "
           "infrastructure issue, its category, a severity 1-5, whether it is a safety hazard, and a short "
-          "hazard description.")
+          "hazard description. The citizen did not choose a category: identify the main problem from the photo "
+          "itself (pothole, streetlight out, traffic signal, sidewalk damage, manhole cover, road debris, graffiti, "
+          "illegal dumping, downed tree, flooding) and use 'other' only if none fits. A street at dusk with a lamp "
+          "is not a pothole; judge what is actually broken.")
 
 
 def vision_on() -> bool:
@@ -66,7 +69,7 @@ async def triage_photo(image: bytes, note: str, category_hint: str | None) -> tu
         image = _shrink(image)
         from strands import Agent
         agent = Agent(model=model, system_prompt=PROMPT, callback_handler=None)
-        content = [{"text": f"Citizen note: {note or '(none)'}. Category chosen by citizen: {category_hint or 'unknown'}."},
+        content = [{"text": f"Citizen note: {note or '(none)'}." + (f" Category chosen by citizen: {category_hint}." if category_hint else "")},
                    {"image": {"format": "jpeg", "source": {"bytes": image}}}]
         res = await agent.invoke_async(content, structured_output_model=Triage)
         ok = res.structured_output is not None

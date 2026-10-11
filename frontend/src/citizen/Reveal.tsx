@@ -219,7 +219,7 @@ export default function Reveal({ result, onClose, onSee, localPhoto }: { result:
               ) : (
                 <>
                   <motion.div variants={item} className="cz-rv__head">
-                    <span className="cz-rv__eyebrow"><CatIcon cat={c?.category ?? "other"} size={14} /> {catLabel(c?.category ?? "")}{c?.neighborhood ? ` · ${c.neighborhood}` : ""}</span>
+                    <span className="cz-rv__eyebrow"><CatIcon cat={c?.category ?? "other"} size={14} /> Identified: {catLabel(c?.category ?? "")}{c?.neighborhood ? ` · ${c.neighborhood}` : ""}</span>
                     {c && areaLine(c) && <span className="cz-rv__area t-caption">{areaLine(c)}</span>}
                     {merged ? (
                       alreadyCounted ? (

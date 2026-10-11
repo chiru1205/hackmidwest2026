@@ -84,6 +84,15 @@ def publish_stats() -> None:
     events.publish("stats.updated", {"stats": store.stats().model_dump()})
 
 
+async def _suggest_from_note(note: str) -> dict:
+    try:
+        from backend.integrations.ai import suggest
+        return await suggest.suggest(note)
+    except Exception as e:
+        log.warning("note suggestion failed: %s", e)
+        return {"category": "other", "confidence": 0.0, "source": "none"}
+
+
 async def submit_report(user_id: str, lat: float, lng: float, accuracy_m: float = 20.0, category: str | None = None,
                         note: str = "", severity: int | None = None, photo: bytes | None = None,
                         photo_ext: str = ".jpg", *, confirm_cluster_id: str | None = None,
@@ -150,10 +159,13 @@ async def submit_report(user_id: str, lat: float, lng: float, accuracy_m: float 
             hazard, hdesc = tri.is_safety_hazard or hazard, tri.hazard_description or hdesc
             ctx.step("intake", "done", (time.perf_counter() - t0) * 1000, f"vision: {category}, severity {severity}")
         else:
-            category = category if category in CATEGORIES else "pothole"
+            src = "form"
+            if category not in CATEGORIES:  # the citizen picked nothing: read the note (Akamai embeddings, then keywords)
+                sg = await _suggest_from_note(note)
+                category, src = (sg["category"], sg["source"]) if sg["confidence"] >= 0.5 else ("other", "none")
             severity = max(1, min(5, int(severity or 3)))
             ctx.step("intake", "done", (time.perf_counter() - t0) * 1000,
-                     f"form: {category}, severity {severity}" + (", hazard keywords" if hazard else ""), "form")
+                     f"{src}: {category}, severity {severity}" + (", hazard keywords" if hazard else ""), "form")
         report.category = category
     else:
         severity = target.severity

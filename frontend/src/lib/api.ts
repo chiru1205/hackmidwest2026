@@ -6,7 +6,7 @@ import { mockApi } from "../mock";
 import { ROLE, authHeaders, lockStaff, staffToken } from "./auth";
 
 export interface ReportInput {
-  lat: number; lng: number; accuracy_m: number; category: Category; note: string; severity?: number;
+  lat: number; lng: number; accuracy_m: number; category?: Category; note: string; severity?: number;
   photo?: Blob | null;
   /** set when a demo preset / ?demo=1 is active so the server may accept out-of-area spots */
   demoOverride?: boolean;
@@ -70,7 +70,8 @@ const realApi: Api = {
   submitReport: (r) => {
     const f = new FormData();
     f.set("lat", String(r.lat)); f.set("lng", String(r.lng)); f.set("accuracy_m", String(r.accuracy_m));
-    f.set("category", r.category); f.set("note", r.note);
+    if (r.category) f.set("category", r.category);
+    f.set("note", r.note);
     if (r.severity) f.set("severity", String(r.severity));
     if (r.demoOverride) f.set("demo_override", "1");
     if (r.photo) f.set("photo", r.photo, "photo.jpg");

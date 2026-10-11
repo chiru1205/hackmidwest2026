@@ -3,12 +3,11 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { createPortal } from "react-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import { Camera, Check, ImagePlus, LoaderCircle, LocateFixed, MapPinOff, RefreshCw, RotateCcw, School, Send, ShieldAlert, Siren, TriangleAlert, X } from "lucide-react";
-import type { Category, ReportResult } from "@contracts";
+import type { ReportResult } from "@contracts";
 import { api, fetchGeofence, type GeofenceInfo, type GeoZone } from "../lib/api";
-import { CATEGORIES, PRESETS, catLabel } from "../lib/const";
+import { PRESETS } from "../lib/const";
 import { compressImage, UnsupportedImageError } from "../lib/image";
 import { Button, Pill, spring } from "../components/ui";
-import { CatIcon } from "./common";
 import { useOverlayRoot } from "./overlay";
 import { useLoc } from "./loc";
 import PinMap from "./PinMap";
@@ -16,8 +15,7 @@ import Reveal from "./Reveal";
 import { insertFromResult } from "./requestsStore";
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
-const SCAN_STEPS = ["Uploading your report", "Checking the area", "Scoring priority", "Dispatching a crew"];
-const SEVERITY = ["Minor", "Noticeable", "Real problem", "Serious", "Dangerous"];
+const SCAN_STEPS = ["Uploading your photo", "Identifying the problem", "Checking the area", "Scoring priority", "Dispatching a crew"];
 
 const fmtSize = (n: number) => (n >= 1048576 ? `${(n / 1048576).toFixed(1)} MB` : `${Math.max(1, Math.round(n / 1024))} KB`);
 const locHint = () => {
@@ -34,13 +32,9 @@ export default function Report() {
   const overlay = useOverlayRoot();
   const nav = useNavigate();
   const { search } = useLocation();
-  const [category, setCategory] = useState<Category>("pothole");
   const [note, setNote] = useState("");
-  const [severity, setSeverity] = useState(3);
   const [photo, setPhoto] = useState<Blob | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
-  const [explicit, setExplicit] = useState(false);
-  const [sugg, setSugg] = useState<{ category: Category; confidence: number; source: string } | null>(null);
   const [scanning, setScanning] = useState(false);
   const [scanStep, setScanStep] = useState(0);
   const [photoInfo, setPhotoInfo] = useState<{ name: string; size: number } | null>(null);
@@ -59,21 +53,8 @@ export default function Report() {
     return () => { live = false; clearTimeout(t); };
   }, [loc?.lat, loc?.lng]); // eslint-disable-line react-hooks/exhaustive-deps
   const outside = geo?.in_service_area === false;
-  const blocked = !loc || (outside && !demoOn);
-
-  // category suggestion from the note (endpoint may not exist yet: stay silent)
-  useEffect(() => {
-    const text = note.trim();
-    if (explicit || text.length < 8) { setSugg(null); return; }
-    let live = true;
-    const t = setTimeout(() => {
-      fetch(`/api/suggest?text=${encodeURIComponent(text)}`)
-        .then((r) => (r.ok ? r.json() : null))
-        .then((j) => { if (live) setSugg(j && j.category && CATEGORIES.some((c) => c.id === j.category) ? j : null); })
-        .catch(() => { if (live) setSugg(null); });
-    }, 500);
-    return () => { live = false; clearTimeout(t); };
-  }, [note, explicit]);
+  const hasInput = !!photo || note.trim().length >= 8;
+  const blocked = !loc || !hasInput || (outside && !demoOn);
 
   useEffect(() => () => { if (preview) URL.revokeObjectURL(preview); }, [preview]);
 
@@ -114,8 +95,8 @@ export default function Report() {
     const sent = photo;
     return run(
       async () => {
-        const r = await api.submitReport({ lat: loc.lat, lng: loc.lng, accuracy_m: loc.accuracy_m, category, note, severity, photo, demoOverride: demoOn });
-        insertFromResult(r, { photo: sent, note, category, severity });
+        const r = await api.submitReport({ lat: loc.lat, lng: loc.lng, accuracy_m: loc.accuracy_m, note, photo, demoOverride: demoOn });
+        insertFromResult(r, { photo: sent, note });
         return r;
       },
       () => { setRevealPhoto(sent ? URL.createObjectURL(sent) : null); setNote(""); setPhoto(null); setPreview(null); setPhotoInfo(null); },
@@ -126,7 +107,7 @@ export default function Report() {
   const srcLabel = loc?.source === "gps" ? "Your GPS" : loc?.source === "pin" ? "Pinned by you" : "Demo location";
   const pinned = loc && (loc.source === "pin" || loc.source === "override") ? { lat: loc.lat, lng: loc.lng } : null;
   const gpsDot = loc?.source === "gps" ? { lat: loc.lat, lng: loc.lng } : null;
-  const whyDisabled = !loc ? "Allow location or place the pin" : "Move the pin inside Kansas City to send a report.";
+  const whyDisabled = !loc ? "Allow location or place the pin" : !hasInput ? "Add a photo (or describe the problem) so we can identify it." : "Move the pin inside Kansas City to send a report.";
 
   return (
     <div className="cz-page cz-report">
@@ -160,7 +141,7 @@ export default function Report() {
             </motion.button>
             <div className="cz-cam__copy">
               <b>Snap the problem</b>
-              <span>A photo helps the crew find it fast</span>
+              <span>We identify the problem from your photo</span>
             </div>
             <button type="button" className="cz-cam__lib" onClick={() => libRef.current?.click()}>
               <ImagePlus size={16} strokeWidth={1.75} aria-hidden /> Choose from library
@@ -241,45 +222,10 @@ export default function Report() {
         <div className="cz-loc__hint t-caption">Tap the map to place the pin, then drag it to fix the spot.</div>
       </section>
 
-      {/* category */}
-      <section aria-labelledby="cz-cat">
-        <h2 className="cz-sec" id="cz-cat">What is it?</h2>
-        <div className="cz-cats" role="radiogroup" aria-labelledby="cz-cat">
-          {CATEGORIES.map((c) => (
-            <button key={c.id} type="button" role="radio" aria-checked={category === c.id} className={`cz-cat ${category === c.id ? "is-on" : ""}`} onClick={() => { setExplicit(true); setSugg(null); setCategory(c.id); }}>
-              <span className="cz-cat__ic"><CatIcon cat={c.id} size={22} /></span>
-              <span className="cz-cat__lbl">{c.label}</span>
-            </button>
-          ))}
-        </div>
-      </section>
-
-      {/* note + severity */}
+      {/* optional note */}
       <section>
-        <label className="cz-sec" htmlFor="cz-note">Anything we should know?</label>
+        <label className="cz-sec" htmlFor="cz-note">Anything we should know? <span className="t-caption">Optional</span></label>
         <textarea id="cz-note" className="cz-input" rows={2} value={note} onChange={(e) => setNote(e.target.value)} placeholder="Deep hole in the right lane" />
-        <AnimatePresence>
-          {!explicit && sugg && sugg.confidence >= 0.5 && sugg.category !== category && (
-            <motion.button key={sugg.category} type="button" className="cz-suggest" initial={{ opacity: 0, y: 6, scale: 0.96 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, scale: 0.96 }} transition={spring.snappy}
-              onClick={() => { setCategory(sugg.category); setSugg(null); }}>
-              <span className="cz-suggest__ic"><CatIcon cat={sugg.category} size={14} /></span>
-              <span>Looks like {catLabel(sugg.category)}. Use this?</span>
-              {sugg.source === "akamai-embedding" && <span className="cz-suggest__src">suggested by Akamai AI</span>}
-            </motion.button>
-          )}
-        </AnimatePresence>
-      </section>
-
-      <section aria-labelledby="cz-sev">
-        <div className="cz-sec cz-sec--row" id="cz-sev"><span>How bad is it?</span><b key={severity} className="cz-sev__now">{SEVERITY[severity - 1]}</b></div>
-        <div className="cz-sev" role="radiogroup" aria-labelledby="cz-sev">
-          <span className="cz-sev__track" aria-hidden><motion.i initial={false} animate={{ width: `${((severity - 1) / 4) * 100}%` }} transition={spring.snappy} /></span>
-          {SEVERITY.map((l, i) => (
-            <button key={l} type="button" role="radio" aria-checked={severity === i + 1} aria-label={`${i + 1} of 5, ${l}`} className={`cz-sev__st ${severity >= i + 1 ? "is-on" : ""} ${severity === i + 1 ? "is-cur" : ""}`} onClick={() => setSeverity(i + 1)}>
-              <i>{i + 1}</i>
-            </button>
-          ))}
-        </div>
       </section>
 
       {error && (
