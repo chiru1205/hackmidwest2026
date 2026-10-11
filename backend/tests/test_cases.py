@@ -38,14 +38,14 @@ def ids(res):
 @pytest.fixture
 def mixed(monkeypatch):
     ts = [
-        tk(1, "awaiting_verification", "P2", 500),
-        tk(2, "in_progress", "P1", 100, overdue=True),
+        tk(1, "awaiting_verification", "P2", 1500),
+        tk(2, "in_progress", "P1", 1100, overdue=True),
         tk(3, "queued", "P3", 2 * DAY),                       # no crew
         tk(4, "assigned", "P4", 3 * DAY),                     # assigned, so not "no crew"
-        tk(5, "in_progress", "P1", 50, esc=True),
+        tk(5, "in_progress", "P1", 1050, esc=True),
         tk(6, "resolved", "P1", 9000, overdue=True, esc=True),  # resolved: no reasons at all
         tk(7, "in_progress", "P3", 9000),
-        tk(8, "queued", "P1", 60),                            # fresh queued
+        tk(8, "queued", "P1", 1060),                            # fresh queued
     ]
     feed(monkeypatch, ts)
     return ts
@@ -63,7 +63,7 @@ def test_reasons():
 def test_groups_and_counts(mixed):
     needs = cases.list_cases("needs")
     assert set(ids(needs)) == {"CF-1", "CF-2", "CF-3", "CF-5"} and needs["total"] == 4
-    assert needs["counts"] == {"open": 7, "approval": 1, "overdue": 1, "escalated": 1, "no_crew": 1, "needs_you": 4, "agent_closed": 0}
+    assert needs["counts"] == {"open": 7, "new": 0, "approval": 1, "overdue": 1, "escalated": 1, "no_crew": 1, "needs_you": 4, "agent_closed": 0}
     assert ids(cases.list_cases("approval")) == ["CF-1"]
     assert ids(cases.list_cases("overdue")) == ["CF-2"]
     assert ids(cases.list_cases("escalated")) == ["CF-5"]
@@ -94,8 +94,8 @@ def test_sort_order(mixed):
 
 def test_needs_list_is_ordered_by_rail_group_first(monkeypatch):
     # a P4 awaiting approval must come before a P1 overdue case, so every page holds whole groups in rail order
-    feed(monkeypatch, [tk(1, "in_progress", "P1", 100, overdue=True), tk(2, "awaiting_verification", "P4", 100),
-                       tk(3, "in_progress", "P1", 100, esc=True), tk(4, "queued", "P2", 2 * DAY)])
+    feed(monkeypatch, [tk(1, "in_progress", "P1", 1000, overdue=True), tk(2, "awaiting_verification", "P4", 1000),
+                       tk(3, "in_progress", "P1", 1000, esc=True), tk(4, "queued", "P2", 2 * DAY)])
     assert ids(cases.list_cases("needs")) == ["CF-2", "CF-1", "CF-3", "CF-4"]
     assert ids(cases.list_cases("all"))[0] == "CF-1"  # browsing keeps pure urgency order
 
@@ -350,3 +350,17 @@ def test_understood_chip_names_only_what_the_saved_trace_shows(monkeypatch):
     assert chip([]) == "Civic Flow" and chip([form]) == "Civic Flow"
     assert chip([vision]) == "AI vision" and chip([note]) == "Akamai AI"
     assert chip([vision, judge]) == "AI vision + Akamai AI"
+
+
+def test_new_reason_lands_first_and_expires():
+    assert cases.reasons_of(tk(1, "queued", age=120)) == ["new"]
+    assert cases.reasons_of(tk(1, "queued", age=cases.NEW_WITHIN_S + 1)) == []
+    assert cases.reasons_of(tk(1, "resolved", age=60)) == []
+    assert cases.reasons_of(tk(1, "awaiting_verification", age=60)) == ["new", "approval"]
+
+
+def test_new_group_is_listed_first_and_counted(monkeypatch):
+    feed(monkeypatch, [tk(1, "awaiting_verification", "P2", 5000), tk(2, "queued", "P4", 30), tk(3, "in_progress", "P1", 7000, overdue=True)])
+    res = cases.list_cases("needs")
+    assert ids(res)[0] == "CF-2" and res["counts"]["new"] == 1
+    assert ids(cases.list_cases("new")) == ["CF-2"]

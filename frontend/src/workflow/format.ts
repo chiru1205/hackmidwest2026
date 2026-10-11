@@ -1,6 +1,6 @@
 import type { CaseRow } from "../lib/api";
 
-type Row = Pick<CaseRow, "stage_key" | "priority_bucket" | "due" | "overdue" | "escalated" | "reporters" | "vendor">;
+type Row = Pick<CaseRow, "stage_key" | "priority_bucket" | "due" | "overdue" | "escalated" | "reporters" | "vendor" | "age_s">;
 
 export const plural = (n: number, one: string, many = `${one}s`) => `${n.toLocaleString()} ${n === 1 ? one : many}`;
 
@@ -36,7 +36,8 @@ export function overdueBy(t: Pick<Row, "due">, now: number): number | null {
 /** Short rail line: "P1 · overdue 1d", "P2 · 4h left", "P3 · escalated". */
 export function railMeta(t: Row, now: number): string {
   const parts: string[] = [t.priority_bucket];
-  if (t.stage_key === "resolved") return `${t.priority_bucket} · resolved`;  // no countdown or crew nag on a closed case
+  if (t.stage_key === "resolved") return `${t.priority_bucket} · resolved`;
+  if (t.age_s < 600) parts.push("just in");  // no countdown or crew nag on a closed case
   const late = overdueBy(t, now);
   if (t.overdue) parts.push(late != null && late > 0 ? `overdue ${shortDur(late)}` : "overdue");
   else if (late != null && late < 0) parts.push(`${shortDur(-late)} left`);

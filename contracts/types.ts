@@ -131,8 +131,8 @@ export interface CitizenRequest {
 }
 
 // ---- Workflow page "case journey": GET /api/devrev/cases, GET /api/devrev/ticket/{id}/case
-export type CaseReason = "approval" | "overdue" | "escalated" | "no_crew";
-export interface CaseCounts { open: number; approval: number; overdue: number; escalated: number; no_crew: number; needs_you: number; agent_closed: number }
+export type CaseReason = "new" | "approval" | "overdue" | "escalated" | "no_crew";
+export interface CaseCounts { open: number; new: number; approval: number; overdue: number; escalated: number; no_crew: number; needs_you: number; agent_closed: number }
 export interface CaseRow extends BoardTicket { reasons: CaseReason[] }
 export interface CaseList { source: "devrev" | "local board"; as_of: string; total: number; counts: CaseCounts; items: CaseRow[]; semantic: boolean }
 export interface FactorBar { label: string; value: string; pct: number }

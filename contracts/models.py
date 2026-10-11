@@ -355,6 +355,7 @@ class TicketEventRow(BaseModel):
 # ---- Workflow page "case journey": GET /api/devrev/cases, GET /api/devrev/ticket/{id}/case
 class CaseCounts(BaseModel):
     open: int = 0            # all open (not resolved) cases
+    new: int = 0             # reported in the last 10 minutes (just in)
     approval: int = 0        # stage awaiting_verification: the crew says fixed, a person must approve
     overdue: int = 0         # past due and not resolved
     escalated: int = 0       # escalated and not resolved
@@ -364,7 +365,7 @@ class CaseCounts(BaseModel):
 
 
 class CaseRow(BoardTicket):
-    reasons: list[Literal["approval", "overdue", "escalated", "no_crew"]] = []   # why this case needs a person
+    reasons: list[Literal["new", "approval", "overdue", "escalated", "no_crew"]] = []   # why this case needs a person
 
 
 class CaseList(BaseModel):

@@ -5,6 +5,7 @@ import type { CaseCounts, CaseReason, CaseRow } from "../lib/api";
 import { cleanTitle, railMeta } from "./format";
 
 export const GROUPS: { reason: CaseReason; label: string }[] = [
+  { reason: "new", label: "New, just in" },
   { reason: "approval", label: "Awaiting your approval" },
   { reason: "overdue", label: "Overdue" },
   { reason: "escalated", label: "Escalated" },

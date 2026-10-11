@@ -77,6 +77,8 @@ Setup asks for these. To add or change one later, open the file `.env` in Notepa
 | `winget` not found | Install Git, Python 3.12 and Node.js (LTS) by hand from their websites, then run setup again |
 
 ## Demo script (3 minutes)
+> **This section is out of date. Use [docs/DEMO.md](docs/DEMO.md) (cue cards, fallbacks, pre-flight) and `scripts/demo_prep.ps1`.**
+
 Two screens. **Phone = citizen app** (`/`, local `localhost:5173`, deployed `https://<domain>/`). **Laptop or projector = city portal** (local `localhost:5174` via `npm run dev:city`, deployed `https://city.<domain>/`). Sign in to the portal with the PIN **city**. Citizens never see other people's reports, tickets, ops or analytics; the PIN is demo-level, not real security.
 
 1. **Frame it (20 s)**, city portal `/ops`: Kansas City gets about 167,000 requests a year (see the City impact panel). One storm, many reports, one ticket per issue. Click **Streetlights**, then **Flooding** under *Run the story*: hundreds of reports collapse into a few dozen issues, and the KPI bar shows **Work orders avoided (est.)**. Reset (circular arrow) when done.

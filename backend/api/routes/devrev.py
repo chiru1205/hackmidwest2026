@@ -41,7 +41,7 @@ async def get_journey(ticket_id: str):
 
 
 @router.get("/devrev/cases")
-async def get_cases(group: str = Query("needs", pattern="^(needs|approval|overdue|escalated|no_crew|all)$"),
+async def get_cases(group: str = Query("needs", pattern="^(needs|new|approval|overdue|escalated|no_crew|all)$"),
                     q: str = "", district: str = "", limit: int = Query(30, ge=1, le=100), offset: int = Query(0, ge=0)):
     if not q.strip():
         case_search.warm_once()  # opening the list is the cue to build the smart-search index, so the first search is not empty

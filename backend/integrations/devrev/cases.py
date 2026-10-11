@@ -10,8 +10,9 @@ from contracts.models import CaseDetail, CaseList
 
 from . import actions, board, case_search, events, raw_rows
 
-GROUPS = ("needs", "approval", "overdue", "escalated", "no_crew", "all")
-REASONS = ("approval", "overdue", "escalated", "no_crew")
+GROUPS = ("needs", "new", "approval", "overdue", "escalated", "no_crew", "all")
+REASONS = ("new", "approval", "overdue", "escalated", "no_crew")
+NEW_WITHIN_S = 600  # a case reported in the last 10 minutes is "just in" and lands at the top of the rail
 NO_CREW_AFTER_S = 86400
 BUCKET_RANK = {"P1": 0, "P2": 1, "P3": 2, "P4": 3}
 DEVREV_STAGE = {"queued": "queued", "assigned": "queued", "in_progress": "work_in_progress",
@@ -28,6 +29,8 @@ class NotFound(Exception):
 def reasons_of(t: dict) -> list[str]:
     done = t["stage_key"] == "resolved"
     out = []
+    if not done and t["age_s"] < NEW_WITHIN_S:
+        out.append("new")
     if t["stage_key"] == "awaiting_verification":
         out.append("approval")
     if t["overdue"] and not done:
@@ -82,7 +85,7 @@ def _closest(needle: str, rows: list[tuple[dict, list[str]]], pick: list[tuple[d
 def list_cases(group: str = "needs", q: str = "", district: str = "", limit: int = 30, offset: int = 0) -> dict:
     tickets, source, as_of = board.all_tickets()
     rows = [(t, reasons_of(t)) for t in tickets]
-    counts = {"open": 0, "approval": 0, "overdue": 0, "escalated": 0, "no_crew": 0, "needs_you": 0,
+    counts = {"open": 0, "new": 0, "approval": 0, "overdue": 0, "escalated": 0, "no_crew": 0, "needs_you": 0,
               "agent_closed": agent_closed()}
     for t, rs in rows:
         counts["open"] += t["stage_key"] != "resolved"
