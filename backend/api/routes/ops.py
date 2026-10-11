@@ -58,17 +58,22 @@ async def advance(ticket_id: str, body: AdvanceBody):
 
 @router.get("/vendor/orders", response_model=list[VendorOrder], dependencies=[Depends(require_staff)])
 async def vendor_orders(vendor: Optional[str] = None):
+    from backend.integrations.devrev import live as dr_live
+    only_devrev = dr_live.configured()  # live DevRev: vendors see only work orders that really exist in DevRev
     out = []
     for c in sorted(store.clusters.values(), key=lambda c: -c.priority):
         if c.status == "fixed" or not c.vendor:
             continue
         if vendor and vendor.lower() not in c.vendor.lower():
             continue
+        ticket = adapters.get_ticket(c.ticket_id)
+        if only_devrev and not any(t.startswith("devrev:") for t in (ticket.tags if ticket else [])):
+            continue
         try:
             due = datetime.fromisoformat(c.first_reported_at.replace("Z", "+00:00")) + timedelta(days=DUE_DAYS[c.bucket])
         except Exception:
             due = datetime.now(timezone.utc)
-        out.append(VendorOrder(cluster=c, ticket=adapters.get_ticket(c.ticket_id),
+        out.append(VendorOrder(cluster=c, ticket=ticket,
                                due=due.isoformat().replace("+00:00", "Z")))
     return out
 

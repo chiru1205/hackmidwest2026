@@ -113,6 +113,13 @@ def _sync_create(tid: str, cluster: Cluster, title: str, body: str, vendor: str 
         finally:
             c.close()
     log.info("Civic Flow %s mirrored to DevRev %s", tid, dr.get("display_id"))
+    try:  # tell open pages the ticket now has its DevRev link (vendor list only shows DevRev-backed orders)
+        from backend.api import events as sse
+        t = get_ticket(tid)
+        if t is not None:
+            sse.publish("ticket.updated", {"ticket": t.model_dump(mode="json")})
+    except Exception:
+        pass
     try:
         from . import events
         events.record("created", tid, dr.get("display_id"), f"{dr.get('display_id')} created in DevRev: {title}"[:200], "DevRev")
