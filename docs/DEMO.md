@@ -11,32 +11,63 @@ Three moments the room should remember (everything else serves these):
 
 Two screens: **phone** = the resident, **laptop** = the city portal (PIN `city`) with a DevRev tab beside it. Two people if you can: one speaks, one drives.
 
-## The script (word for word; about 330 spoken words; stage directions in brackets)
+## The transcript (line by line, as you would actually say it; about 340 spoken words)
+**YOU** = what you say. **[DO]** = what happens on screen or in your hands (say nothing). Short lines on purpose: breathe between them.
 
-**0:00 Hook** [stand, phone in hand, laptop on the Operations map behind you; start without a slide, without "hi, we're..."]
-> "Picture this. It's pouring in Kansas City, and by morning **three hundred and forty people** have reported the same flooded street. In most cities that means three hundred and forty tickets, three hundred and forty triage decisions, and three hundred and forty people who never hear anything back."
-> [one-second pause]
-> "We built the version where it's **one**. This is **Civic Flow**: any problem in the city, one photo from a resident, one ticket for the city, and a reply to the resident."
+### 0:00 The hook [phone in your hand, laptop showing the Operations map behind you]
+1. **YOU:** "Picture this. It's pouring in Kansas City."
+2. **YOU:** "By morning, three hundred and forty people have reported the same flooded street."
+3. **YOU:** "In most cities, that's three hundred and forty tickets... and three hundred and forty people who never hear back."
+4. [DO: pause for one full second]
+5. **YOU:** "We built the version where it's **one**."
+6. **YOU:** "This is Civic Flow. Anything that breaks in the city. One photo from a resident. One ticket for the city. And the resident actually hears back."
 
-**0:25 Moment 1: the collapse** [click **Flooding** under "Run the story"; say nothing for two seconds while the map fills]
-> "This is a simulated storm. Watch the map. Hundreds of reports... and they collapse. Not by matching coordinates: by matching **meaning**. 'Water all over the road' and 'the street is a river' are the same problem, and **Akamai's embeddings** know it. Hundreds of reports, a few dozen issues. Every one of those is a work order the city never has to triage."
+### 0:25 Moment 1: the collapse [laptop: Operations]
+7. [DO: click **Flooding** under "Run the story"; say nothing for two seconds while the map fills]
+8. **YOU:** "This is a simulated storm. Watch the map."
+9. [DO: let the counter climb; the reports fold into issues]
+10. **YOU:** "And they collapse. Not by matching coordinates... by matching **meaning**."
+11. **YOU:** "'Water all over the road' and 'the street's a river' are the same problem. **Akamai's embeddings** know that."
+12. **YOU:** "Hundreds of reports. A few dozen issues. Every duplicate is a work order the city never has to triage."
 
-**0:55 Moment 2: the photo** [phone: Report > pick the downed tree photo > Send. Do not pick a category. After Send, stop talking and let the screen work for about four seconds]
-> "Now what a resident sees. No form. No dropdown. Just a photo."
-> [reveal appears: "Identified: Downed tree"]
-> "A downed tree, severity four, a safety hazard. **Claude on AWS Bedrock** read the photo. Agents built with **Strands**, running on **Akamai's hosted models**, checked for duplicates, ranked the urgency and picked the crew. And she sees all of it: who's coming and by when."
+### 0:55 Moment 2: the photo [phone: hold it up so the room can see]
+13. [DO: tap Report, choose the **downed tree** photo, tap Send. Do not pick a category]
+14. **YOU:** "Now the resident. No form. No dropdown. Just a photo."
+15. [DO: stop talking for three or four seconds while the screen works]
+16. [DO: the reveal appears: "Identified: Downed tree"]
+17. **YOU:** "Downed tree. Severity four. Safety hazard."
+18. **YOU:** "**Claude on AWS Bedrock** read the photo. Agents built with **Strands**, running on **Akamai's models**, checked for duplicates, ranked the urgency, and picked the crew."
+19. **YOU:** "And she sees all of it. Who's coming. And by when."
 
-**1:35 Moment 3: the loop** [laptop: Workflow; the case is at the top under "New, just in". Point at the journey line. Click the Vendors tab for three seconds ("the crew's queue"), back to Workflow. Click **Start work**, **Attach after-photo**, **Request verification**]
-> "On the city side it is the first thing the supervisor sees: one report, one **real DevRev ticket**. Change it in DevRev and our board follows; act here and DevRev follows. The crew sees the same job in their queue."
-> [the agent line appears]
-> "Now the question every city asks about AI: *what if it's wrong?* So the model is not the judge. The agent compares before and after and recommends, but **code decides what it may close**. A safety hazard like this? A person always decides. The AI can hand a case to a human. It can never overrule policy."
-> [click **Approve and close**; turn the phone toward the room]
-> "I approve. DevRev closes the ticket. And she gets **Fixed**."
+### 1:35 Moment 3: the loop closes [laptop: Workflow]
+20. [DO: switch to Workflow; the case is at the top under "New, just in"; point at it]
+21. **YOU:** "On the city side, this is the first thing the supervisor sees. One report. One **real DevRev ticket**."
+22. [DO: click the DevRev tab for three seconds, then back]
+23. **YOU:** "Change it there, our board follows. Act here, DevRev follows."
+24. [DO: click the Vendors tab for three seconds, then back to Workflow]
+25. **YOU:** "The crew sees the same job in their queue."
+26. [DO: click **Start work**, then **Attach after-photo**, then **Request verification**]
+27. **YOU:** "The crew's done. They send a photo."
+28. [DO: wait for the agent line to appear (10 to 20 seconds); keep talking, do not stand in silence]
+29. **YOU:** "Now, every city asks the same thing about AI. What if it's wrong?"
+30. **YOU:** "So the model isn't the judge. The agent recommends. But **code** decides what it's allowed to close."
+31. **YOU:** "A safety hazard like this? A person always decides. The AI can hand a case to a human. It can never overrule the policy."
+32. [DO: click **Approve and close**; turn the phone toward the room]
+33. **YOU:** "So I approve. DevRev closes the ticket. And she gets..."
+34. [DO: hold the phone up; "Fixed!" shows; wait one beat]
+35. **YOU:** "...Fixed."
 
-**2:30 Proof and close** [laptop: Impact; slide the "Check our math" control once]
-> "Zoom out: reports in, tickets out, work orders avoided, staff hours saved. Kansas City's real open data; the savings are labeled estimates you can change. Residents see progress, crews get clear jobs, and the city does the work **once**."
-> [stop moving; look at the room]
-> "Real data. Real tickets. Running right now on Akamai Cloud, reading photos with AWS, living in DevRev. **A thousand voices, one ticket, and nobody left in the dark.** Thank you."
+### 2:30 The proof and the close [laptop: Impact]
+36. [DO: switch to Impact; drag the "Check our math" slider once]
+37. **YOU:** "Zoom out. Reports in, tickets out, work orders avoided, staff hours saved. Real Kansas City data. The savings are estimates, and you can change the assumptions."
+38. **YOU:** "Residents see progress. Crews get clear jobs. And the city does the work once."
+39. [DO: stop moving; look at the room]
+40. **YOU:** "Real data. Real tickets. Running right now on Akamai Cloud, reading photos with AWS, living in DevRev."
+41. **YOU:** "A thousand voices. One ticket. Nobody left in the dark."
+42. **YOU:** "Thank you."
+
+### Timing check
+Hook 0:00 to 0:25, collapse to 0:55, photo to 1:35, loop to 2:30, close to 3:00. If you are behind at the loop, skip lines 22 to 25 (the DevRev and Vendors tab flashes) and keep the rest. If you are ahead, open **How it's built** after line 42 and say: "That's what is running underneath, live."
 
 ## Delivery notes (these matter as much as the words)
 - **Silence is a tool.** Let the collapse and the "Identified" reveal land before you talk. The product is doing the selling.
