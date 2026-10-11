@@ -145,6 +145,8 @@ try {
     'VALKEY_URL'       = 'redis://127.0.0.1:6379/0'
     'DEMO_MODE'        = $DemoMode
     'VITE_MOCK'        = '0'
+    'PLATFORM_HOSTING' = 'Akamai Cloud (Linode)'
+    'PLATFORM_REGION'  = 'Chicago'
   }
   $dropKeys = @($override.Keys)
   if ($CityPass -ne '') { $dropKeys += @('CITY_USER', 'CITY_PASS_HASH') }
