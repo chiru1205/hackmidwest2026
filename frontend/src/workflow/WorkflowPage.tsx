@@ -127,7 +127,11 @@ export default function WorkflowPage() {
     if (!list || autoDone.current) return;
     if (sel) { autoDone.current = true; return; }
     const first = groupCases(list.items)[0]?.items[0] ?? list.items[0];
-    if (first) { autoDone.current = true; select(first); }
+    if (first) { autoDone.current = true; select(first); return; }
+    if (list.mode === "needs" && !list.q && list.counts.open > 0) {  // nothing needs a person: still open the most urgent open case
+      autoDone.current = true;
+      devrevCases({ group: "all", limit: 1 }).then((r) => { if (r.items[0]) select(r.items[0]); }).catch(() => { autoDone.current = false; });
+    }
   }, [list, sel, select]);
 
   const refreshAll = useCallback(() => { loadList(); loadDetail(); }, [loadList, loadDetail]);
