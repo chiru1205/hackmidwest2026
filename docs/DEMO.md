@@ -1,73 +1,72 @@
 # Civic Flow: the pitch (3 minutes, no slides)
 
 ## The idea to land
-**A thousand voices, one ticket, nobody left in the dark.**
-Cities do not have a reporting problem. They have a *duplicate* problem (the same issue reported hundreds of times) and a *silence* problem (residents never hear back). Civic Flow fixes both: one app for any city issue, one ticket per issue, and a reply to every resident.
+**From a resident's photo to a fixed street.**
+Every local government (city, town, county) that looks after trees, traffic, potholes, signals, drains and streetlights runs the same broken loop: a call here, an email there, a spreadsheet, a guess at priority, a crew sent by phone, and the resident never hears back. Civic Flow is the **front door and the whole workflow behind it**: it understands the report, works out whose job and how urgent it is, merges the duplicates, opens one ticket, routes the crew, verifies the fix, tells the resident, and shows leadership what it all costs and saves.
+
+Merging duplicates is **one** step of that loop, not the product. Say so: it is the part that shows at scale.
 
 Three moments the room should remember (everything else serves these):
-1. **The collapse.** Hundreds of reports about one flooded street fold into one issue on the map.
-2. **The photo that needs no form.** A resident sends a picture; the system says "Downed tree, severity 4, hazard", picks the crew, and shows her who is coming.
-3. **The loop closing.** A person clicks Approve on the laptop, the DevRev ticket closes, and **"Fixed!" lands on the phone**.
+1. **The photo that needs no form.** A resident sends a picture. The system says "Downed tree, severity 4, safety hazard", knows where it is, and shows her who is coming.
+2. **The scale.** In a storm, hundreds of reports become a few dozen real jobs on the map.
+3. **The loop closing.** A person clicks Approve, the DevRev ticket closes, and **"Fixed!" lands on the phone**.
 
-Two screens: **phone** = the resident, **laptop** = the city portal (PIN `city`) with a DevRev tab beside it. Two people if you can: one speaks, one drives.
+Two windows on one laptop (see "One device" below): **left** = the resident, **right** = the municipality's portal (PIN `city`), with a DevRev tab beside it. Two people if you can: one speaks, one drives.
 
 ## The transcript (line by line, as you would actually say it; about 340 spoken words)
 **YOU** = what you say. **[DO]** = what happens on screen or in your hands (say nothing). Short lines on purpose: breathe between them.
 
 ### 0:00 The hook [phone in your hand, laptop showing the Operations map behind you]
-1. **YOU:** "Picture this. It's pouring in Kansas City."
-2. **YOU:** "By morning, three hundred and forty people have reported the same flooded street."
-3. **YOU:** "In most cities, that's three hundred and forty tickets... and three hundred and forty people who never hear back."
+1. **YOU:** "Picture a tree coming down across a road. In any town."
+2. **YOU:** "One neighbor calls the front desk. Another sends an email. A third posts it on Facebook."
+3. **YOU:** "Three people, three desks. The crew hears about it two days later. And nobody tells the neighbors a thing."
 4. [DO: pause for one full second]
-5. **YOU:** "We built the version where it's **one**."
-6. **YOU:** "This is Civic Flow. Anything that breaks in the city. One photo from a resident. One ticket for the city. And the resident actually hears back."
+5. **YOU:** "Every local government that looks after trees, traffic, potholes and storm drains lives like this."
+6. **YOU:** "This is Civic Flow. The front door, and the workflow behind it. From a resident's photo... to a fixed street."
 
-### 0:25 Moment 1: the collapse [laptop: Operations]
+### 0:25 Scale: a storm [laptop: Operations]
 7. [DO: click **Flooding** under "Run the story"; say nothing for two seconds while the map fills]
-8. **YOU:** "This is a simulated storm. Watch the map."
-9. [DO: let the counter climb; the reports fold into issues]
-10. **YOU:** "And they collapse. Not by matching coordinates... by matching **meaning**."
-11. **YOU:** "'Water all over the road' and 'the street's a river' are the same problem. **Akamai's embeddings** know that."
-12. **YOU:** "Hundreds of reports. A few dozen issues. Every duplicate is a work order the city never has to triage."
+8. **YOU:** "Now a storm. This one's simulated: hundreds of reports about the same flooded street."
+9. [DO: the reports fold into issues; the counter climbs]
+10. **YOU:** "In most places, that's hundreds of calls and hundreds of work orders. Here they collapse into a few dozen real jobs. Matched by **meaning**, not just location. **Akamai's embeddings** know 'water all over the road' and 'the street's a river' are the same problem."
 
-### 0:55 Moment 2: the photo [phone: hold it up so the room can see]
-13. [DO: tap Report, choose the **downed tree** photo, tap Send. Do not pick a category]
-14. **YOU:** "Now the resident. No form. No dropdown. Just a photo."
-15. [DO: stop talking for three or four seconds while the screen works]
-16. [DO: the reveal appears: "Identified: Downed tree"]
-17. **YOU:** "Downed tree. Severity four. Safety hazard."
-18. **YOU:** "**Claude on AWS Bedrock** read the photo. Agents built with **Strands**, running on **Akamai's models**, checked for duplicates, ranked the urgency, and picked the crew."
-19. **YOU:** "And she sees all of it. Who's coming. And by when."
+### 0:55 The resident [phone: hold it up so the room can see]
+11. [DO: tap Report, choose the **downed tree** photo, tap Send. Do not pick a category]
+12. **YOU:** "Now the resident. No form. No phone call. Just a photo."
+13. [DO: stop talking for three or four seconds while the screen works]
+14. [DO: the reveal appears: "Identified: Downed tree"]
+15. **YOU:** "Downed tree. Severity four. Safety hazard."
+16. **YOU:** "**Claude on AWS Bedrock** read the photo. The system knows exactly where it is: which district, whether it's near a school, so it knows how urgent it is and which crew owns it. Agents built with **Strands**, running on **Akamai's models**, did the thinking."
+17. **YOU:** "And she sees all of it. Who's coming. And by when."
 
-### 1:35 Moment 3: the loop closes [laptop: Workflow]
-20. [DO: switch to Workflow; the case is at the top under "New, just in"; point at it]
-21. **YOU:** "On the city side, this is the first thing the supervisor sees. One report. One **real DevRev ticket**."
-22. [DO: click the DevRev tab for three seconds, then back]
-23. **YOU:** "Change it there, our board follows. Act here, DevRev follows."
-24. [DO: click the Vendors tab for three seconds, then back to Workflow]
-25. **YOU:** "The crew sees the same job in their queue."
-26. [DO: click **Start work**, then **Attach after-photo**, then **Request verification**]
-27. **YOU:** "The crew's done. They send a photo."
-28. [DO: wait for the agent line to appear (10 to 20 seconds); keep talking, do not stand in silence]
-29. **YOU:** "Now, every city asks the same thing about AI. What if it's wrong?"
-30. **YOU:** "So the model isn't the judge. The agent recommends. But **code** decides what it's allowed to close."
-31. **YOU:** "A safety hazard like this? A person always decides. The AI can hand a case to a human. It can never overrule the policy."
-32. [DO: click **Approve and close**; turn the phone toward the room]
-33. **YOU:** "So I approve. DevRev closes the ticket. And she gets..."
-34. [DO: hold the phone up; "Fixed!" shows; wait one beat]
-35. **YOU:** "...Fixed."
+### 1:35 The loop closes [laptop: Workflow]
+18. [DO: switch to Workflow; the case is at the top under "New, just in"; point at it]
+19. **YOU:** "On the municipality's side, this is the first thing the supervisor sees. One report. One **real DevRev ticket**."
+20. [DO: click the DevRev tab for three seconds, then back]
+21. **YOU:** "Change it there, our board follows. Act here, DevRev follows."
+22. [DO: click the Vendors tab for three seconds, then back to Workflow]
+23. **YOU:** "The crew sees the same job in their queue."
+24. [DO: click **Start work**, then **Attach after-photo**, then **Request verification**]
+25. **YOU:** "The crew's done. They send a photo."
+26. [DO: the agent line takes 10 to 20 seconds; keep talking, do not stand in silence]
+27. **YOU:** "Now, everyone asks the same thing about AI. What if it's wrong?"
+28. **YOU:** "So the model isn't the judge. The agent recommends. But **code** decides what it's allowed to close."
+29. **YOU:** "A safety hazard like this? A person always decides. The AI can hand a case to a human. It can never overrule the policy."
+30. [DO: click **Approve and close**; turn the phone toward the room]
+31. **YOU:** "So I approve. DevRev closes the ticket. And she gets..."
+32. [DO: hold the phone up; "Fixed!" shows; wait one beat]
+33. **YOU:** "...Fixed."
 
-### 2:30 The proof and the close [laptop: Impact]
-36. [DO: switch to Impact; drag the "Check our math" slider once]
-37. **YOU:** "Zoom out. Reports in, tickets out, work orders avoided, staff hours saved. Real Kansas City data. The savings are estimates, and you can change the assumptions."
-38. **YOU:** "Residents see progress. Crews get clear jobs. And the city does the work once."
-39. [DO: stop moving; look at the room]
-40. **YOU:** "Real data. Real tickets. Running right now on Akamai Cloud, reading photos with AWS, living in DevRev."
-41. **YOU:** "A thousand voices. One ticket. Nobody left in the dark."
-42. **YOU:** "Thank you."
+### 2:30 What leadership sees, and the close [laptop: Impact]
+34. [DO: switch to Impact; drag the "Check our math" slider once]
+35. **YOU:** "And for leadership: how many reports, how many real jobs, how much staff time it saves. Real Kansas City data; the savings are estimates you can change."
+36. [DO: stop moving; look at the room]
+37. **YOU:** "Kansas City is where we built it. But every town, county and city has trees to remove, traffic to manage and roads to fix."
+38. **YOU:** "Running right now on Akamai Cloud, reading photos with AWS, living in DevRev."
+39. **YOU:** "Civic Flow. From a resident's photo... to a fixed street. Thank you."
 
 ### Timing check
-Hook 0:00 to 0:25, collapse to 0:55, photo to 1:35, loop to 2:30, close to 3:00. If you are behind at the loop, skip lines 22 to 25 (the DevRev and Vendors tab flashes) and keep the rest. If you are ahead, open **How it's built** after line 42 and say: "That's what is running underneath, live."
+Hook 0:00 to 0:25, storm to 0:55, resident to 1:35, loop to 2:30, close to 3:00. If you are behind at the loop, skip lines 20 to 23 (the DevRev and Vendors tab flashes) and keep the rest. If you are ahead, open **How it's built** after line 39 and say: "That's what is running underneath, live."
 
 ## One device: how to run and record it (you only need the laptop)
 The resident app is a web page, so it runs in a phone-shaped window next to the city portal on the same screen. Everyone in the room sees both, and one recording captures the whole demo.
@@ -90,8 +89,8 @@ The resident app is a web page, so it runs in a phone-shaped window next to the 
 - **DevRev:** "The ticket is the shared workspace for people and agents: stage, severity, the agent's verdicts on the timeline, and a two-way sync, so a change in DevRev shows up in our board within seconds."
 
 ## Why it should win (one line per category, if a judge asks)
-- **Impact:** every city has the duplicate and the silence problem; the numbers are from Kansas City's open data.
-- **Innovation:** matching by meaning plus an agent whose limits are enforced in code, not by the prompt.
+- **Impact:** every local government that looks after roads, trees and traffic runs this broken loop; the numbers are from Kansas City's open data.
+- **Innovation:** one flow from photo to fixed street, with matching by meaning and an agent whose limits are enforced in code, not by the prompt.
 - **Completeness:** deployed, real tickets, real data, a working loop from photo to "Fixed!".
 - **Design:** one calm light interface per audience: resident, supervisor, crew, leadership.
 
@@ -117,7 +116,8 @@ Live: resident `https://172-232-2-16.sslip.io/`, city `https://city.172-232-2-16
 | Is the DevRev ticket real? | Yes. Change its stage in DevRev and the board follows within seconds. |
 | What do residents see? | Only their own reports, and how many neighbors reported the same issue after they submit. |
 | What does it cost to run? | One small Akamai Cloud server; AI calls are per new report, and merged duplicates add no extra model calls. |
-| Is it only for potholes? | No: ten kinds of issues (flooding, trees, signals, streetlights, sidewalks, dumping, graffiti and more). The demo shows flooding and a downed tree. |
+| Is it only for potholes? Only for cities? | No. It covers ten kinds of public-works issues (flooding, trees, signals, streetlights, sidewalks, dumping, graffiti, potholes and more) for any local government that controls them: a city, a town or a county. Kansas City is the first deployment. |
+| Could another municipality use it? | Yes. It needs that municipality's boundary, districts or wards, and crew list, which is a data step rather than new software. Today it is configured for Kansas City. |
 
 ## If something goes wrong
 | Problem | Do |
