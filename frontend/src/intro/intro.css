@@ -24,7 +24,7 @@
   font: 700 clamp(34px, 7vh, 62px)/1.08 var(--font-display, "Bricolage Grotesque Variable", sans-serif); letter-spacing: -.035em;
 }
 .intro-tag .is-here { color: #2552f0; }
-.intro-sub { margin: 14px 0 0; max-width: 46ch; font-size: clamp(14px, 2.2vh, 18px); line-height: 1.45; color: #4b5873; }
+.intro-sub { margin: 14px 0 0; max-width: 52ch; text-wrap: balance; font-size: clamp(14px, 2.2vh, 18px); line-height: 1.45; color: #4b5873; }
 .intro-hint { margin: 22px 0 0; font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: #8793ad; }
 
 @media (max-width: 640px) {
