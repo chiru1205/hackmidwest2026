@@ -1,8 +1,8 @@
 # Civic Flow: the pitch (3 minutes, no slides)
 
 ## The idea to land
-**911 for everything else.**
-Problems reach a local government (city, town, county) through five disconnected channels: 911, the police desk, the front desk phone, a council member's email, social media. Each one is retyped, passed on and lost, so the crew finds out days later and the resident never hears back. Civic Flow is the **front door and the whole workflow behind it**: it understands the report, works out whose job and how urgent it is, merges the duplicates, opens one ticket, routes the crew, verifies the fix, tells the resident, and shows leadership what it all costs and saves.
+**Every fix starts here.**
+Problems reach a local government (city, town, county) through disconnected channels: phone calls, the front desk, a council member's email, social media. Each one is retyped, passed on and lost, so the crew finds out days later and the resident never hears back. Civic Flow is the **front door and the whole workflow behind it**: it understands the report, works out whose job and how urgent it is, merges the duplicates, opens one ticket, routes the crew, verifies the fix, tells the resident, and shows leadership what it all costs and saves.
 
 Merging duplicates is **one** step of that loop, not the product. Say so: it is the part that shows at scale.
 
@@ -17,12 +17,12 @@ Two windows on one laptop (see "One device" below): **left** = the resident, **r
 **YOU** = what you say. **[DO]** = what happens on screen or in your hands (say nothing). Short lines on purpose: breathe between them.
 
 ### 0:00 The opener [live Operations screen; press Alt+I so the opener plays over it; phone in your hand]
-1. [DO: Alt+I. The five ways in (911, police, phone, email, social media) fly into the logo and "911 for everything else." appears. Start speaking as it settles; do not wait in silence]
-2. **YOU:** "A tree comes down. Who do you call?"
-3. **YOU:** "Most people call 911. Or the police. Or the front desk. Or they email a council member, or post it on social media."
-4. **YOU:** "Every one of those lines was built for something else."
+1. [DO: Alt+I. The ways problems reach a city (phone call, email, social media, front desk, council member) fly into the logo and "Every fix starts here." appears. Start speaking as it settles; do not wait in silence]
+2. **YOU:** "Every fix starts the same way. Somebody notices."
+3. **YOU:** "Then it goes... somewhere. A phone call. An email to a council member. A post on social media. A word at the front desk."
+4. **YOU:** "And by the time it reaches a crew, days are gone."
 5. [DO: pause for one full second; press **Space**; the overlay clears and the Operations map is live behind it]
-6. **YOU:** "That's the gap. Civic Flow is **911 for everything else**: the non-emergencies. A resident sends a photo... and the fix starts in seconds."
+6. **YOU:** "Civic Flow is where every fix starts. One front door. A resident sends a photo... and the fix is on its way in seconds."
 
 ### 0:25 Scale: a storm [laptop: Operations]
 7. [DO: click **Flooding** under "Run the story"; say nothing for two seconds while the map fills]
@@ -63,18 +63,18 @@ Two windows on one laptop (see "One device" below): **left** = the resident, **r
 36. [DO: stop moving; look at the room]
 37. **YOU:** "Kansas City is where we built it. But every town, county and city has trees to remove, traffic to manage and roads to fix."
 38. **YOU:** "Running right now on Akamai Cloud, reading photos with AWS, living in DevRev."
-39. **YOU:** "Civic Flow. 911 for everything else. Thank you."
+39. **YOU:** "Civic Flow. Every fix starts here. Thank you."
 
 ### Timing check
 Opener 0:00 to 0:25, storm to 0:55, resident to 1:35, loop to 2:30, close to 3:00. If you are behind at the loop, skip lines 20 to 23 (the DevRev and Vendors tab flashes) and keep the rest. If you are ahead, open **How it's built** after line 39 and say: "That's what is running underneath, live."
 
 ## The logo and the opening line
 - **Logo:** a "C" that is a loop. Reports stream in from the top (the dots) and a blue check closes the loop. Files are in `docs/brand/` (`logo-mark.svg`, `logo-mark-1024.png`, `logo-horizontal.png`, `banner.png` for the submission page).
-- **Opening line (use this):** **"911 for everything else."** The insight: when a tree falls or a signal goes dark, people call 911, the police or the front desk, or email a council member, or post on social media. Every one of those lines was built for something else, and there is no good front door for what is *not* an emergency. Civic Flow is that front door, with the workflow behind it. Under it: "Not an emergency? Tell your city once. Watch it get fixed."
-- **Say "non-emergency" out loud** at least once, so nobody thinks Civic Flow dispatches emergencies. It takes the non-emergencies off the emergency lines.
-- **Be exact about what it is:** Civic Flow is the one front door residents use, with the workflow behind it. It does not pull in 911 or phone feeds today. Say "one front door **instead of** five", never "we collect all five".
-- **The opener:** a short overlay on the **live Operations screen** (the map shows through, blurred), not a slide. About two seconds of animation: the five channels fly into the logo, then the line appears. Sign in with the PIN, then press **Alt+I** from any page; **Space**, Enter, Escape or a click dismisses it. Also reachable at `https://city.172-232-2-16.sslip.io/ops?intro=1`.
-- **Alternates if you want to swap the line:** "The city that answers back." / "Fixes, not forms." / "Keep the city flowing."
+- **Opening line (use this):** **"Every fix starts here."** The focus is speed and the front door: a fix can only start once the right crew knows, and today that news travels through phone calls, emails, social media and the front desk. Civic Flow is the single place where it starts, so it starts sooner. Under it: "One front door. Faster fixes for the city and everyone who lives in it."
+- **Keep the focus on the fix, not on any one channel.** Do not lead with 911 or the police: it pulls the room toward emergencies. Civic Flow handles non-emergency public-works issues; emergencies still belong to 911 (see the question table).
+- **Be exact about what it is:** Civic Flow is the one front door residents use, with the workflow behind it. It does not pull in phone or other feeds today. Say "one front door **instead of** many", never "we collect them all".
+- **The opener:** a short overlay on the **live Operations screen** (the map shows through, blurred), not a slide. About two seconds of animation: five ways a problem reaches a city fly into the logo, then the line appears. Sign in with the PIN, then press **Alt+I** from any page; **Space**, Enter, Escape or a click dismisses it. Also reachable at `https://city.172-232-2-16.sslip.io/ops?intro=1`.
+- **Alternates if you want to swap the line:** "Fixed before the second call." / "The city that answers back." / "Fixes, not forms."
 
 ## One device: how to run and record it (you only need the laptop)
 The resident app is a web page, so it runs in a phone-shaped window next to the city portal on the same screen. Everyone in the room sees both, and one recording captures the whole demo.
@@ -85,7 +85,7 @@ The resident app is a web page, so it runs in a phone-shaped window next to the 
 
 ## Delivery notes (these matter as much as the words)
 - **Silence is a tool.** Let the collapse and the "Identified" reveal land before you talk. The product is doing the selling.
-- **One sentence to repeat:** "911 for everything else." It is on the opener, so say it again right after "Fixed!" and as your last line.
+- **One sentence to repeat:** "Every fix starts here." It is on the opener, so say it again right after "Fixed!" and as your last line.
 - **Never apologize or say "prototype", "just", or "basically".** Say "simulated" once, plainly, for the storm.
 - **Name the technology as what it *did*,** not as a logo: embeddings *matched meaning*, vision *read the photo*, agents *ranked and routed*, DevRev *holds the case*.
 - **Practice the first 20 seconds and the last 15 until you can do them without looking.** The middle is driven by the screen.
@@ -124,6 +124,7 @@ Live: resident `https://172-232-2-16.sslip.io/`, city `https://city.172-232-2-16
 | Is the DevRev ticket real? | Yes. Change its stage in DevRev and the board follows within seconds. |
 | What do residents see? | Only their own reports, and how many neighbors reported the same issue after they submit. |
 | What does it cost to run? | One small Akamai Cloud server; AI calls are per new report, and merged duplicates add no extra model calls. |
+| Is this for emergencies? | No. It is for non-emergency public-works issues (trees, signals, streetlights, potholes, drains, sidewalks). Emergencies still go to 911. |
 | Is it only for potholes? Only for cities? | No. It covers ten kinds of public-works issues (flooding, trees, signals, streetlights, sidewalks, dumping, graffiti, potholes and more) for any local government that controls them: a city, a town or a county. Kansas City is the first deployment. |
 | Could another municipality use it? | Yes. It needs that municipality's boundary, districts or wards, and crew list, which is a data step rather than new software. Today it is configured for Kansas City. |
 
