@@ -16,57 +16,68 @@ Two windows on one laptop (see "One device" below): **left** = the resident, **r
 ## The transcript (line by line, as you would actually say it; about 340 spoken words)
 **YOU** = what you say. **[DO]** = what happens on screen or in your hands (say nothing). Short lines on purpose: breathe between them.
 
-### 0:00 The hook [phone in your hand, laptop showing the Operations map behind you]
-1. **YOU:** "Picture a tree coming down across a road. In any town."
-2. **YOU:** "One neighbor calls the front desk. Another sends an email. A third posts it on Facebook."
-3. **YOU:** "Three people, three desks. The crew hears about it two days later. And nobody tells the neighbors a thing."
-4. [DO: pause for one full second]
-5. **YOU:** "Every local government that looks after trees, traffic, potholes and storm drains lives like this."
-6. **YOU:** "This is Civic Flow. The front door, and the workflow behind it. From a resident's photo... to a fixed street."
+### 0:00 The opener [title card on the laptop; phone in your hand]
+1. [DO: the title card is on screen (Alt+I brings it up): the logo draws itself and "Snap. Route. Fixed." appears. Hold four seconds in silence and look at the room]
+2. **YOU:** "Snap. Route. Fixed. That's Civic Flow."
+3. **YOU:** "Every local government has the same front door: a phone call, an email, a post on Facebook. And behind it... a spreadsheet and a guess."
+4. **YOU:** "A tree comes down. One neighbor calls. Another emails. A third posts it. Three desks. The crew hears about it two days later. And nobody tells the neighbors a thing."
+5. [DO: pause for one full second]
+6. **YOU:** "We built what should be behind that door. A resident snaps a photo. We route it to the right crew, in the right order. And we don't stop until it's fixed... and she's been told."
+7. [DO: press **Space**; the Operations map appears]
 
 ### 0:25 Scale: a storm [laptop: Operations]
-7. [DO: click **Flooding** under "Run the story"; say nothing for two seconds while the map fills]
-8. **YOU:** "Now a storm. This one's simulated: hundreds of reports about the same flooded street."
-9. [DO: the reports fold into issues; the counter climbs]
-10. **YOU:** "In most places, that's hundreds of calls and hundreds of work orders. Here they collapse into a few dozen real jobs. Matched by **meaning**, not just location. **Akamai's embeddings** know 'water all over the road' and 'the street's a river' are the same problem."
+8. [DO: click **Flooding** under "Run the story"; say nothing for two seconds while the map fills]
+9. **YOU:** "Now a storm. This one's simulated: hundreds of reports about the same flooded street."
+10. [DO: the reports fold into issues; the counter climbs]
+11. **YOU:** "In most places, that's hundreds of calls and hundreds of work orders. Here they collapse into a few dozen real jobs. Matched by **meaning**, not just location. **Akamai's embeddings** know 'water all over the road' and 'the street's a river' are the same problem."
 
 ### 0:55 The resident [phone: hold it up so the room can see]
-11. [DO: tap Report, choose the **downed tree** photo, tap Send. Do not pick a category]
-12. **YOU:** "Now the resident. No form. No phone call. Just a photo."
-13. [DO: stop talking for three or four seconds while the screen works]
-14. [DO: the reveal appears: "Identified: Downed tree"]
-15. **YOU:** "Downed tree. Severity four. Safety hazard."
-16. **YOU:** "**Claude on AWS Bedrock** read the photo. The system knows exactly where it is: which district, whether it's near a school, so it knows how urgent it is and which crew owns it. Agents built with **Strands**, running on **Akamai's models**, did the thinking."
-17. **YOU:** "And she sees all of it. Who's coming. And by when."
+12. [DO: tap Report, choose the **downed tree** photo, tap Send. Do not pick a category]
+13. **YOU:** "Now the resident. No form. No phone call. Just a photo."
+14. [DO: stop talking for three or four seconds while the screen works]
+15. [DO: the reveal appears: "Identified: Downed tree"]
+16. **YOU:** "Downed tree. Severity four. Safety hazard."
+17. **YOU:** "**Claude on AWS Bedrock** read the photo. The system knows exactly where it is: which district, whether it's near a school, so it knows how urgent it is and which crew owns it. Agents built with **Strands**, running on **Akamai's models**, did the thinking."
+18. **YOU:** "And she sees all of it. Who's coming. And by when."
 
 ### 1:35 The loop closes [laptop: Workflow]
-18. [DO: switch to Workflow; the case is at the top under "New, just in"; point at it]
-19. **YOU:** "On the municipality's side, this is the first thing the supervisor sees. One report. One **real DevRev ticket**."
-20. [DO: click the DevRev tab for three seconds, then back]
-21. **YOU:** "Change it there, our board follows. Act here, DevRev follows."
-22. [DO: click the Vendors tab for three seconds, then back to Workflow]
-23. **YOU:** "The crew sees the same job in their queue."
-24. [DO: click **Start work**, then **Attach after-photo**, then **Request verification**]
-25. **YOU:** "The crew's done. They send a photo."
-26. [DO: the agent line takes 10 to 20 seconds; keep talking, do not stand in silence]
-27. **YOU:** "Now, everyone asks the same thing about AI. What if it's wrong?"
-28. **YOU:** "So the model isn't the judge. The agent recommends. But **code** decides what it's allowed to close."
-29. **YOU:** "A safety hazard like this? A person always decides. The AI can hand a case to a human. It can never overrule the policy."
-30. [DO: click **Approve and close**; turn the phone toward the room]
-31. **YOU:** "So I approve. DevRev closes the ticket. And she gets..."
-32. [DO: hold the phone up; "Fixed!" shows; wait one beat]
-33. **YOU:** "...Fixed."
+19. [DO: switch to Workflow; the case is at the top under "New, just in"; point at it]
+20. **YOU:** "On the municipality's side, this is the first thing the supervisor sees. One report. One **real DevRev ticket**."
+21. [DO: click the DevRev tab for three seconds, then back]
+22. **YOU:** "Change it there, our board follows. Act here, DevRev follows."
+23. [DO: click the Vendors tab for three seconds, then back to Workflow]
+24. **YOU:** "The crew sees the same job in their queue."
+25. [DO: click **Start work**, then **Attach after-photo**, then **Request verification**]
+26. **YOU:** "The crew's done. They send a photo."
+27. [DO: the agent line takes 10 to 20 seconds; keep talking, do not stand in silence]
+28. **YOU:** "Now, everyone asks the same thing about AI. What if it's wrong?"
+29. **YOU:** "So the model isn't the judge. The agent recommends. But **code** decides what it's allowed to close."
+30. **YOU:** "A safety hazard like this? A person always decides. The AI can hand a case to a human. It can never overrule the policy."
+31. [DO: click **Approve and close**; turn the phone toward the room]
+32. **YOU:** "So I approve. DevRev closes the ticket. And she gets..."
+33. [DO: hold the phone up; "Fixed!" shows; wait one beat]
+34. **YOU:** "...Fixed."
 
 ### 2:30 What leadership sees, and the close [laptop: Impact]
-34. [DO: switch to Impact; drag the "Check our math" slider once]
-35. **YOU:** "And for leadership: how many reports, how many real jobs, how much staff time it saves. Real Kansas City data; the savings are estimates you can change."
-36. [DO: stop moving; look at the room]
-37. **YOU:** "Kansas City is where we built it. But every town, county and city has trees to remove, traffic to manage and roads to fix."
-38. **YOU:** "Running right now on Akamai Cloud, reading photos with AWS, living in DevRev."
-39. **YOU:** "Civic Flow. From a resident's photo... to a fixed street. Thank you."
+35. [DO: switch to Impact; drag the "Check our math" slider once]
+36. **YOU:** "And for leadership: how many reports, how many real jobs, how much staff time it saves. Real Kansas City data; the savings are estimates you can change."
+37. [DO: stop moving; look at the room]
+38. **YOU:** "Kansas City is where we built it. But every town, county and city has trees to remove, traffic to manage and roads to fix."
+39. **YOU:** "Running right now on Akamai Cloud, reading photos with AWS, living in DevRev."
+40. **YOU:** "Civic Flow. From a resident's photo... to a fixed street. Thank you."
 
 ### Timing check
-Hook 0:00 to 0:25, storm to 0:55, resident to 1:35, loop to 2:30, close to 3:00. If you are behind at the loop, skip lines 20 to 23 (the DevRev and Vendors tab flashes) and keep the rest. If you are ahead, open **How it's built** after line 39 and say: "That's what is running underneath, live."
+Opener 0:00 to 0:25, storm to 0:55, resident to 1:35, loop to 2:30, close to 3:00. If you are behind at the loop, skip lines 21 to 24 (the DevRev and Vendors tab flashes) and keep the rest. If you are ahead, open **How it's built** after line 40 and say: "That's what is running underneath, live."
+
+## The logo and the opening line
+- **Logo:** a "C" that is a loop. Reports stream in from the top (the dots) and a blue check closes the loop: *from a photo to a fixed street*. Files are in `docs/brand/` (`logo-mark.svg`, `logo-mark-1024.png`, `logo-horizontal.png`, `banner.png` for the submission page).
+- **Opening line (use this):** **"Snap. Route. Fixed."** Three beats that map to the product: the resident snaps, the system routes (identify, prioritize, dispatch), the loop closes when it's fixed. Under it: "From a resident's photo to a fixed street. For every local government."
+- **Other options if you want to swap:**
+  - "Broken to fixed. Faster."
+  - "Because 'we'll look into it' isn't a fix."
+  - "Close the loop on every street."
+  - "Every report, one path, one fix."
+- **The title card:** `https://city.172-232-2-16.sslip.io/intro` needs no PIN. In the portal press **Alt+I** to bring it up from any page; **Space**, Enter or a click begins (it goes to Operations). It is the app's own launch screen, about five seconds, not a slide.
 
 ## One device: how to run and record it (you only need the laptop)
 The resident app is a web page, so it runs in a phone-shaped window next to the city portal on the same screen. Everyone in the room sees both, and one recording captures the whole demo.
@@ -97,7 +108,7 @@ The resident app is a web page, so it runs in a phone-shaped window next to the 
 ## Before you go on stage (7:30 AM, and again right before)
 1. `powershell -ExecutionPolicy Bypass -File scripts\demo_prep.ps1` (resets the data, warms the AI, prints READY or NOT READY; creates no reports or tickets). Run it twice if the first run shows any WARN.
 2. Phone: open `https://172-232-2-16.sslip.io/?newuser=1`, allow location. "My requests" must be empty. Have the **downed tree** photo ready.
-3. Laptop tabs in this order: Operations, Workflow, Vendors, Impact, DevRev ticket list. Sign in once with PIN `city`. Start on **Operations**.
+3. Laptop tabs in this order: Operations, Workflow, Vendors, Impact, DevRev ticket list. Sign in once with PIN `city`, then press **Alt+I** so the title card is on screen when you walk up. Space starts the pitch.
 4. After the live report, do **not** press Reset or a storm button (the storm resets the data).
 Live: resident `https://172-232-2-16.sslip.io/`, city `https://city.172-232-2-16.sslip.io/`.
 

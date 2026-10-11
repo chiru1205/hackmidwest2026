@@ -1,0 +1,18 @@
+.intro {
+  min-height: 100vh; box-sizing: border-box; padding: 32px 24px; cursor: pointer;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; gap: 4px;
+  background: radial-gradient(circle at 50% 38%, #ffffff 0%, #eef2fb 52%, #e1e9f8 100%);
+  color: #0f1a33; font-family: var(--font-body, Inter, system-ui, sans-serif);
+}
+.intro-mark { width: clamp(120px, 20vmin, 200px); height: auto; filter: drop-shadow(0 18px 30px rgba(11, 27, 51, .22)); margin-bottom: 18px; }
+.intro-word {
+  margin: 0; font: 700 clamp(44px, 9vmin, 92px)/1 var(--font-display, "Bricolage Grotesque Variable", sans-serif); letter-spacing: -.04em;
+}
+.intro-word span { color: #2552f0; }
+.intro-tag {
+  margin: 14px 0 0; display: flex; flex-wrap: wrap; justify-content: center; gap: 0 .35em;
+  font: 700 clamp(30px, 6.4vmin, 64px)/1.1 var(--font-display, "Bricolage Grotesque Variable", sans-serif); letter-spacing: -.03em; color: #0f1a33;
+}
+.intro-tag .is-fixed { color: #2552f0; }
+.intro-sub { margin: 18px 0 0; font-size: clamp(15px, 2.4vmin, 22px); color: #4b5873; max-width: 40ch; line-height: 1.45; }
+.intro-hint { margin: 44px 0 0; font-size: 13px; letter-spacing: .06em; text-transform: uppercase; color: #8793ad; }
