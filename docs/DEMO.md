@@ -1,80 +1,129 @@
 # Civic Flow: the pitch (3 minutes, no slides)
 
-## The idea to land
-**Every fix starts here.**
-Problems reach a local government (city, town, county) through disconnected channels: phone calls, the front desk, a council member's email, social media. Each one is retyped, passed on and lost, so the crew finds out days later and the resident never hears back. Civic Flow is the **front door and the whole workflow behind it**: it understands the report, works out whose job and how urgent it is, merges the duplicates, opens one ticket, routes the crew, verifies the fix, tells the resident, and shows leadership what it all costs and saves.
+**Civic Flow. Less Red Tape. More Action.**
+An **AI-powered, largely autonomous** platform that connects residents, local governments (any city, town or rural municipality) and the crews doing the work. The AI handles the routine on its own (identify, prioritize, merge duplicates, route, update the resident); people decide what needs judgment.
 
-Merging duplicates is **one** step of that loop, not the product. Say so: it is the part that shows at scale.
+The script below is the approved wording (your version). Lines marked **[ADDED]** are small additions for the AI/autonomy point and the sponsor mentions; delete any you do not want. **[DO: ...]** is what you do on screen; say nothing while doing it.
 
-Three moments the room should remember (everything else serves these):
-1. **The photo that needs no form.** A resident sends a picture. The system says "Downed tree, severity 4, safety hazard", knows where it is, and shows her who is coming.
-2. **The scale.** In a storm, hundreds of reports become a few dozen real jobs on the map.
-3. **The loop closing.** A person clicks Approve, the DevRev ticket closes, and **"Fixed!" lands on the phone**.
+Two windows on one laptop (see "One device" below): **left** = the resident (phone-shaped window), **right** = the city portal (PIN `city`) with a DevRev tab beside it. Two people if you can: one speaks, one drives.
 
-Two windows on one laptop (see "One device" below): **left** = the resident, **right** = the municipality's portal (PIN `city`), with a DevRev tab beside it. Two people if you can: one speaks, one drives.
+---
 
-## The transcript (line by line, as you would actually say it; about 340 spoken words)
-**YOU** = what you say. **[DO]** = what happens on screen or in your hands (say nothing). Short lines on purpose: breathe between them.
+## [0:00-0:35 | The Hook]
+**[DO: on the Operations screen press Alt+I; the opener plays (five ways a problem reaches a city fly into the logo, "Less Red Tape. More Action."). Press Space after about three seconds. Then start the Flooding storm: click "Flooding" under "Run the story" as you say the second paragraph, so the map fills with reports while you talk.]**
 
-### 0:00 The opener [live Operations screen; press Alt+I so the opener plays over it; phone in your hand]
-1. [DO: Alt+I. The ways problems reach a city (phone call, email, social media, front desk, council member) fly into the logo and "Every fix starts here." appears. Start speaking as it settles; do not wait in silence]
-2. **YOU:** "Every fix starts the same way. Somebody notices."
-3. **YOU:** "Then it goes... somewhere. A phone call. An email to a council member. A post on social media. A word at the front desk."
-4. **YOU:** "And by the time it reaches a crew, days are gone."
-5. [DO: pause for one full second; press **Space**; the overlay clears and the Operations map is live behind it]
-6. **YOU:** "Civic Flow is where every fix starts. One front door. A resident sends a photo... and the fix is on its way in seconds."
+Imagine a storm hits your city tonight.
 
-### 0:25 Scale: a storm [laptop: Operations]
-7. [DO: click **Flooding** under "Run the story"; say nothing for two seconds while the map fills]
-8. **YOU:** "Now a storm. This one's simulated: hundreds of reports about the same flooded street."
-9. [DO: the reports fold into issues; the counter climbs]
-10. **YOU:** "In most places, that's hundreds of calls and hundreds of work orders. Here they collapse into a few dozen real jobs. Matched by **meaning**, not just location. **Akamai's embeddings** know 'water all over the road' and 'the street's a river' are the same problem."
+Trees are down. Roads are blocked. Streetlights are out.
 
-### 0:55 The resident [phone: hold it up so the room can see]
-11. [DO: tap Report, choose the **downed tree** photo, tap Send. Do not pick a category]
-12. **YOU:** "Now the resident. No form. No phone call. Just a photo."
-13. [DO: stop talking for three or four seconds while the screen works]
-14. [DO: the reveal appears: "Identified: Downed tree"]
-15. **YOU:** "Downed tree. Severity four. Safety hazard."
-16. **YOU:** "**Claude on AWS Bedrock** read the photo. The system knows exactly where it is: which district, whether it's near a school, so it knows how urgent it is and which crew owns it. Agents built with **Strands**, running on **Akamai's models**, did the thinking."
-17. **YOU:** "And she sees all of it. Who's coming. And by when."
+Hundreds of residents start reporting problems. Some call city hall. Others send emails, post on social media, or contact their council members.
 
-### 1:35 The loop closes [laptop: Workflow]
-18. [DO: switch to Workflow; the case is at the top under "New, just in"; point at it]
-19. **YOU:** "On the municipality's side, this is the first thing the supervisor sees. One report. One **real DevRev ticket**."
-20. [DO: click the DevRev tab for three seconds, then back]
-21. **YOU:** "Change it there, our board follows. Act here, DevRev follows."
-22. [DO: click the Vendors tab for three seconds, then back to Workflow]
-23. **YOU:** "The crew sees the same job in their queue."
-24. [DO: click **Start work**, then **Attach after-photo**, then **Request verification**]
-25. **YOU:** "The crew's done. They send a photo."
-26. [DO: the agent line takes 10 to 20 seconds; keep talking, do not stand in silence]
-27. **YOU:** "Now, everyone asks the same thing about AI. What if it's wrong?"
-28. **YOU:** "So the model isn't the judge. The agent recommends. But **code** decides what it's allowed to close."
-29. **YOU:** "A safety hazard like this? A person always decides. The AI can hand a case to a human. It can never overrule the policy."
-30. [DO: click **Approve and close**; turn the phone toward the room]
-31. **YOU:** "So I approve. DevRev closes the ticket. And she gets..."
-32. [DO: hold the phone up; "Fixed!" shows; wait one beat]
-33. **YOU:** "...Fixed."
+Now imagine being the city employee trying to make sense of all that information.
 
-### 2:30 What leadership sees, and the close [laptop: Impact]
-34. [DO: switch to Impact; drag the "Check our math" slider once]
-35. **YOU:** "And for leadership: how many reports, how many real jobs, how much staff time it saves. Real Kansas City data; the savings are estimates you can change."
-36. [DO: stop moving; look at the room]
-37. **YOU:** "Kansas City is where we built it. But every town, county and city has trees to remove, traffic to manage and roads to fix."
-38. **YOU:** "Running right now on Akamai Cloud, reading photos with AWS, living in DevRev."
-39. **YOU:** "Civic Flow. Every fix starts here. Thank you."
+Hundreds of messages. Multiple departments. Duplicate complaints.
 
-### Timing check
-Opener 0:00 to 0:25, storm to 0:55, resident to 1:35, loop to 2:30, close to 3:00. If you are behind at the loop, skip lines 20 to 23 (the DevRev and Vendors tab flashes) and keep the rest. If you are ahead, open **How it's built** after line 39 and say: "That's what is running underneath, live."
+And one simple question: Who's actually fixing the problem?
+
+That's the problem we're solving with Civic Flow.
+
+## [0:35-1:15 | The Solution]
+**[DO: phone window: Report, choose the downed-tree photo, Send. No category. Stop talking for three or four seconds when the screen starts working; the reveal appears.]**
+
+Civic Flow is an AI-powered platform that connects residents, local governments, and the crews doing the work.
+
+Here's how simple it is.
+
+A resident sees a fallen tree blocking a road.
+
+They take a picture and send it.
+No complicated forms. No guessing which department to contact.
+
+Our AI identifies the problem, determines its urgency, recognizes the location, and routes it to the right team.
+
+**[ADDED]** And it does all of that on its own. Nobody sorts, tags or forwards anything. People step in only where judgment matters.
+
+**[ADDED]** Claude on AWS Bedrock reads the photo, and agents built with Strands, running on Akamai's models, do the thinking.
+
+And here's where it gets powerful.
+
+## [1:15-1:55 | The Wow Moment]
+**[DO: point at the Operations counters (reports in, unique issues, work orders avoided) as you say the numbers. At "It follows the entire process", switch to Workflow: the new case is at the top under "New, just in". Click Start work, Attach after-photo, Request verification.]**
+
+Imagine 300 residents reporting the same 30 fallen trees.
+
+Traditional systems might create 300 separate complaints.
+
+Civic Flow recognizes that those reports describe the same incidents and combines them into 30 actionable jobs.
+
+**[ADDED]** It matches them by meaning, not just location, using Akamai's embeddings.
+
+That's fewer duplicates, less confusion, and faster coordination.
+
+But Civic Flow doesn't stop when the work order is created.
+
+It follows the entire process.
+
+**[ADDED]** Every case is a real DevRev ticket, and it stays in sync both ways.
+
+From the first photo to the assigned crew, from the completed repair to the final resident notification.
+
+## [1:55-2:30 | Why It Matters]
+**[DO: stay on Workflow while the agent line appears (10 to 20 seconds). At "their problem was addressed" click Approve and close, then turn the phone window toward the room: "Fixed!". At "For leadership" switch to the Impact page and drag the "Check our math" slider once.]**
+
+**[ADDED]** While the crew's repair photo is checked by an AI agent, a person always makes the final call on anything risky.
+
+For residents, it means transparency.
+
+They know their voice was heard, their issue was assigned, and their problem was addressed.
+
+For city employees, it means less time sorting through complaints and more time solving them.
+
+For leadership, it means visibility into response times, workloads, costs, and opportunities to save money.
+
+We're not building another complaint box.
+We're building the connection between a community's problems and its solutions.
+
+## [2:30-3:00 | The Big Finish]
+**[DO: stop moving; look at the room. At the last line press Alt+I so the opener card with the tagline is on screen.]**
+
+Think about what this could mean.
+
+A pothole doesn't get forgotten.
+
+A fallen tree doesn't sit unnoticed.
+
+And a resident doesn't have to call five times just to get an answer.
+
+Because technology shouldn't make government more complicated.
+It should make government work better.
+
+Our vision is simple:
+
+Every problem gets heard.
+
+Every action gets tracked.
+
+And every resident gets an answer.
+
+**[ADDED]** Running right now on Akamai Cloud, reading photos with AWS, living in DevRev.
+
+Civic Flow.
+Less Red Tape. More Action.
+
+---
+
+### Timing and fallbacks
+- The storm click resets the demo data, so it must happen **before** the live photo (it does: second paragraph of the Hook).
+- The narration says "30 fallen trees" while the storm on screen is flooding. It is an "imagine", so say it as written and point at the counters; if you want it to match the screen, say "30 problems".
+- If you are behind at 1:55, skip the **[ADDED]** lines first.
+- If the agent line is slow, keep talking; if it is not there by "problem was addressed", say nothing about it and click Approve (a person can always approve).
 
 ## The logo and the opening line
-- **Logo:** a "C" that is a loop. Reports stream in from the top (the dots) and a blue check closes the loop. Files are in `docs/brand/` (`logo-mark.svg`, `logo-mark-1024.png`, `logo-horizontal.png`, `banner.png` for the submission page).
-- **Opening line (use this):** **"Every fix starts here."** The focus is speed and the front door: a fix can only start once the right crew knows, and today that news travels through phone calls, emails, social media and the front desk. Civic Flow is the single place where it starts, so it starts sooner. Under it: "One front door. Faster fixes for any city, town or rural municipality."
-- **Keep the focus on the fix, not on any one channel.** Do not lead with 911 or the police: it pulls the room toward emergencies. Civic Flow handles non-emergency public-works issues; emergencies still belong to 911 (see the question table).
-- **Be exact about what it is:** Civic Flow is the one front door residents use, with the workflow behind it. It does not pull in phone or other feeds today. Say "one front door **instead of** many", never "we collect them all".
-- **The opener:** a short overlay on the **live Operations screen** (the map shows through, blurred), not a slide. About two seconds of animation: five ways a problem reaches a city fly into the logo, then the line appears. Sign in with the PIN, then press **Alt+I** from any page; **Space**, Enter, Escape or a click dismisses it. Also reachable at `https://city.172-232-2-16.sslip.io/ops?intro=1`.
-- **Alternates if you want to swap the line:** "Fixed before the second call." / "The city that answers back." / "Fixes, not forms."
+- **Logo:** a "C" that is a loop. Reports stream in from the top (the dots) and a blue check closes the loop. Files are in `docs/brand/` and live at `https://172-232-2-16.sslip.io/brand/` (`logo-mark.svg`, `logo-mark-1024.png`, `logo-horizontal.png`, `banner.png`).
+- **Tagline: "Less Red Tape. More Action."** Under it on the card: "AI-powered and autonomous. Faster fixes for any city, town or rural municipality."
+- **The opener card:** a short overlay on the **live Operations screen** (the map shows through, blurred), not a slide. About two seconds of animation: five ways a problem reaches a city (phone call, email, city hall, council member, social media) fly into the logo, then the tagline appears. Sign in with the PIN, then press **Alt+I** from any page; **Space**, Enter, Escape or a click dismisses it. Also at `https://city.172-232-2-16.sslip.io/ops?intro=1`.
+- **Be exact about what "autonomous" means:** the AI handles intake, identification, urgency, de-duplication, routing and resident updates on its own. Crews do the repair. A case closes automatically only for low-risk cases when the agent is confident (Auto mode); a safety hazard, a school or hospital zone, a high priority or anything unsure always goes to a person.
+- **Be exact about what it is:** Civic Flow is the one front door residents use, with the workflow behind it. It does not pull in phone, email or social media feeds today. Say "one front door **instead of** many", never "we collect them all".
 
 ## One device: how to run and record it (you only need the laptop)
 The resident app is a web page, so it runs in a phone-shaped window next to the city portal on the same screen. Everyone in the room sees both, and one recording captures the whole demo.
@@ -85,7 +134,7 @@ The resident app is a web page, so it runs in a phone-shaped window next to the 
 
 ## Delivery notes (these matter as much as the words)
 - **Silence is a tool.** Let the collapse and the "Identified" reveal land before you talk. The product is doing the selling.
-- **One sentence to repeat:** "Every fix starts here." It is on the opener, so say it again right after "Fixed!" and as your last line.
+- **One sentence to repeat:** "Less Red Tape. More Action." It is on the opener card and is your last line.
 - **Never apologize or say "prototype", "just", or "basically".** Say "simulated" once, plainly, for the storm.
 - **Name the technology as what it *did*,** not as a logo: embeddings *matched meaning*, vision *read the photo*, agents *ranked and routed*, DevRev *holds the case*.
 - **Practice the first 20 seconds and the last 15 until you can do them without looking.** The middle is driven by the screen.
@@ -124,6 +173,7 @@ Live: resident `https://172-232-2-16.sslip.io/`, city `https://city.172-232-2-16
 | Is the DevRev ticket real? | Yes. Change its stage in DevRev and the board follows within seconds. |
 | What do residents see? | Only their own reports, and how many neighbors reported the same issue after they submit. |
 | What does it cost to run? | One small Akamai Cloud server; AI calls are per new report, and merged duplicates add no extra model calls. |
+| Is it autonomous? | For the routine, yes: it identifies the issue, ranks urgency, merges duplicates, routes it to the right crew and updates the resident on its own. People decide what needs judgment: a safety hazard, a school or hospital zone, a high-priority case or anything the agent is unsure about always goes to a person. |
 | Is this for emergencies? | No. It is for non-emergency public-works issues (trees, signals, streetlights, potholes, drains, sidewalks). Emergencies still go to 911. |
 | Is it only for potholes? Only for cities? | No. It covers ten kinds of public-works issues (flooding, trees, signals, streetlights, sidewalks, dumping, graffiti, potholes and more) for any local government that controls them: a city, a town or a county. Kansas City is the first deployment. |
 | Could another municipality use it? | Yes. It needs that municipality's boundary, districts or wards, and crew list, which is a data step rather than new software. Today it is configured for Kansas City. |
