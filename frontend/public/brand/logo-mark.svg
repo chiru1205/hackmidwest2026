@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" width="96" height="96" role="img" aria-label="Civic Flow">
+  <defs>
+    <linearGradient id="cf-tile" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#14264A"/>
+      <stop offset="1" stop-color="#0B1B33"/>
+    </linearGradient>
+  </defs>
+  <rect width="96" height="96" rx="26" fill="url(#cf-tile)"/>
+  <!-- reports streaming in -->
+  <circle cx="86" cy="17" r="2.6" fill="#fff" opacity=".28"/>
+  <circle cx="79" cy="22" r="3.2" fill="#fff" opacity=".5"/>
+  <circle cx="72" cy="27.5" r="3.8" fill="#fff" opacity=".78"/>
+  <!-- the loop (a C) -->
+  <path d="M63 33 A25 25 0 1 0 63 66" fill="none" stroke="#fff" stroke-width="9" stroke-linecap="round"/>
+  <!-- closed by a check -->
+  <circle cx="66" cy="68" r="13" fill="#2457FF" stroke="#0B1B33" stroke-width="4"/>
+  <path d="M59.5 68.5l4.8 4.8 8.2-9.6" fill="none" stroke="#fff" stroke-width="3.8" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
