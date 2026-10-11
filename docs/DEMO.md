@@ -1,7 +1,7 @@
 # Civic Flow: the pitch (3 minutes, no slides)
 
 ## The idea to land
-**Hear it once. Fix it fast.**
+**911 for everything else.**
 Problems reach a local government (city, town, county) through five disconnected channels: 911, the police desk, the front desk phone, a council member's email, social media. Each one is retyped, passed on and lost, so the crew finds out days later and the resident never hears back. Civic Flow is the **front door and the whole workflow behind it**: it understands the report, works out whose job and how urgent it is, merges the duplicates, opens one ticket, routes the crew, verifies the fix, tells the resident, and shows leadership what it all costs and saves.
 
 Merging duplicates is **one** step of that loop, not the product. Say so: it is the part that shows at scale.
@@ -17,64 +17,64 @@ Two windows on one laptop (see "One device" below): **left** = the resident, **r
 **YOU** = what you say. **[DO]** = what happens on screen or in your hands (say nothing). Short lines on purpose: breathe between them.
 
 ### 0:00 The opener [live Operations screen; press Alt+I so the opener plays over it; phone in your hand]
-1. [DO: Alt+I. The five ways in (911, police, phone, email, social media) fly into the logo and "Hear it once. Fix it fast." appears. Start speaking as it settles; do not wait in silence]
-2. **YOU:** "A tree comes down. How does the city find out?"
-3. **YOU:** "A 911 call. A police report. A call to the front desk. An email to a council member. A post on social media."
-4. **YOU:** "Five channels. Five people retyping it. None of them talking to each other."
-5. **YOU:** "So the crew finds out days later... if at all."
-6. [DO: press **Space**; the overlay clears and the Operations map is live behind it]
-7. **YOU:** "Civic Flow is one front door instead. A resident sends a photo... and the fix starts in seconds."
+1. [DO: Alt+I. The five ways in (911, police, phone, email, social media) fly into the logo and "911 for everything else." appears. Start speaking as it settles; do not wait in silence]
+2. **YOU:** "A tree comes down. Who do you call?"
+3. **YOU:** "Most people call 911. Or the police. Or the front desk. Or they email a council member, or post it on social media."
+4. **YOU:** "Every one of those lines was built for something else."
+5. [DO: pause for one full second; press **Space**; the overlay clears and the Operations map is live behind it]
+6. **YOU:** "That's the gap. Civic Flow is **911 for everything else**: the non-emergencies. A resident sends a photo... and the fix starts in seconds."
 
 ### 0:25 Scale: a storm [laptop: Operations]
-8. [DO: click **Flooding** under "Run the story"; say nothing for two seconds while the map fills]
-9. **YOU:** "Now a storm. This one's simulated: hundreds of reports about the same flooded street."
-10. [DO: the reports fold into issues; the counter climbs]
-11. **YOU:** "In most places, that's hundreds of calls and hundreds of work orders. Here they collapse into a few dozen real jobs. Matched by **meaning**, not just location. **Akamai's embeddings** know 'water all over the road' and 'the street's a river' are the same problem."
+7. [DO: click **Flooding** under "Run the story"; say nothing for two seconds while the map fills]
+8. **YOU:** "Now a storm. This one's simulated: hundreds of reports about the same flooded street."
+9. [DO: the reports fold into issues; the counter climbs]
+10. **YOU:** "In most places, that's hundreds of calls and hundreds of work orders. Here they collapse into a few dozen real jobs. Matched by **meaning**, not just location. **Akamai's embeddings** know 'water all over the road' and 'the street's a river' are the same problem."
 
 ### 0:55 The resident [phone: hold it up so the room can see]
-12. [DO: tap Report, choose the **downed tree** photo, tap Send. Do not pick a category]
-13. **YOU:** "Now the resident. No form. No phone call. Just a photo."
-14. [DO: stop talking for three or four seconds while the screen works]
-15. [DO: the reveal appears: "Identified: Downed tree"]
-16. **YOU:** "Downed tree. Severity four. Safety hazard."
-17. **YOU:** "**Claude on AWS Bedrock** read the photo. The system knows exactly where it is: which district, whether it's near a school, so it knows how urgent it is and which crew owns it. Agents built with **Strands**, running on **Akamai's models**, did the thinking."
-18. **YOU:** "And she sees all of it. Who's coming. And by when."
+11. [DO: tap Report, choose the **downed tree** photo, tap Send. Do not pick a category]
+12. **YOU:** "Now the resident. No form. No phone call. Just a photo."
+13. [DO: stop talking for three or four seconds while the screen works]
+14. [DO: the reveal appears: "Identified: Downed tree"]
+15. **YOU:** "Downed tree. Severity four. Safety hazard."
+16. **YOU:** "**Claude on AWS Bedrock** read the photo. The system knows exactly where it is: which district, whether it's near a school, so it knows how urgent it is and which crew owns it. Agents built with **Strands**, running on **Akamai's models**, did the thinking."
+17. **YOU:** "And she sees all of it. Who's coming. And by when."
 
 ### 1:35 The loop closes [laptop: Workflow]
-19. [DO: switch to Workflow; the case is at the top under "New, just in"; point at it]
-20. **YOU:** "On the municipality's side, this is the first thing the supervisor sees. One report. One **real DevRev ticket**."
-21. [DO: click the DevRev tab for three seconds, then back]
-22. **YOU:** "Change it there, our board follows. Act here, DevRev follows."
-23. [DO: click the Vendors tab for three seconds, then back to Workflow]
-24. **YOU:** "The crew sees the same job in their queue."
-25. [DO: click **Start work**, then **Attach after-photo**, then **Request verification**]
-26. **YOU:** "The crew's done. They send a photo."
-27. [DO: the agent line takes 10 to 20 seconds; keep talking, do not stand in silence]
-28. **YOU:** "Now, everyone asks the same thing about AI. What if it's wrong?"
-29. **YOU:** "So the model isn't the judge. The agent recommends. But **code** decides what it's allowed to close."
-30. **YOU:** "A safety hazard like this? A person always decides. The AI can hand a case to a human. It can never overrule the policy."
-31. [DO: click **Approve and close**; turn the phone toward the room]
-32. **YOU:** "So I approve. DevRev closes the ticket. And she gets..."
-33. [DO: hold the phone up; "Fixed!" shows; wait one beat]
-34. **YOU:** "...Fixed."
+18. [DO: switch to Workflow; the case is at the top under "New, just in"; point at it]
+19. **YOU:** "On the municipality's side, this is the first thing the supervisor sees. One report. One **real DevRev ticket**."
+20. [DO: click the DevRev tab for three seconds, then back]
+21. **YOU:** "Change it there, our board follows. Act here, DevRev follows."
+22. [DO: click the Vendors tab for three seconds, then back to Workflow]
+23. **YOU:** "The crew sees the same job in their queue."
+24. [DO: click **Start work**, then **Attach after-photo**, then **Request verification**]
+25. **YOU:** "The crew's done. They send a photo."
+26. [DO: the agent line takes 10 to 20 seconds; keep talking, do not stand in silence]
+27. **YOU:** "Now, everyone asks the same thing about AI. What if it's wrong?"
+28. **YOU:** "So the model isn't the judge. The agent recommends. But **code** decides what it's allowed to close."
+29. **YOU:** "A safety hazard like this? A person always decides. The AI can hand a case to a human. It can never overrule the policy."
+30. [DO: click **Approve and close**; turn the phone toward the room]
+31. **YOU:** "So I approve. DevRev closes the ticket. And she gets..."
+32. [DO: hold the phone up; "Fixed!" shows; wait one beat]
+33. **YOU:** "...Fixed."
 
 ### 2:30 What leadership sees, and the close [laptop: Impact]
-35. [DO: switch to Impact; drag the "Check our math" slider once]
-36. **YOU:** "And for leadership: how many reports, how many real jobs, how much staff time it saves. Real Kansas City data; the savings are estimates you can change."
-37. [DO: stop moving; look at the room]
-38. **YOU:** "Kansas City is where we built it. But every town, county and city has trees to remove, traffic to manage and roads to fix."
-39. **YOU:** "Running right now on Akamai Cloud, reading photos with AWS, living in DevRev."
-40. **YOU:** "Civic Flow. Hear it once. Fix it fast. Thank you."
+34. [DO: switch to Impact; drag the "Check our math" slider once]
+35. **YOU:** "And for leadership: how many reports, how many real jobs, how much staff time it saves. Real Kansas City data; the savings are estimates you can change."
+36. [DO: stop moving; look at the room]
+37. **YOU:** "Kansas City is where we built it. But every town, county and city has trees to remove, traffic to manage and roads to fix."
+38. **YOU:** "Running right now on Akamai Cloud, reading photos with AWS, living in DevRev."
+39. **YOU:** "Civic Flow. 911 for everything else. Thank you."
 
 ### Timing check
-Opener 0:00 to 0:25, storm to 0:55, resident to 1:35, loop to 2:30, close to 3:00. If you are behind at the loop, skip lines 21 to 24 (the DevRev and Vendors tab flashes) and keep the rest. If you are ahead, open **How it's built** after line 40 and say: "That's what is running underneath, live."
+Opener 0:00 to 0:25, storm to 0:55, resident to 1:35, loop to 2:30, close to 3:00. If you are behind at the loop, skip lines 20 to 23 (the DevRev and Vendors tab flashes) and keep the rest. If you are ahead, open **How it's built** after line 39 and say: "That's what is running underneath, live."
 
 ## The logo and the opening line
 - **Logo:** a "C" that is a loop. Reports stream in from the top (the dots) and a blue check closes the loop. Files are in `docs/brand/` (`logo-mark.svg`, `logo-mark-1024.png`, `logo-horizontal.png`, `banner.png` for the submission page).
-- **Opening line (use this):** **"Hear it once. Fix it fast."** The point is speed: the city hears about a problem once, in one place, and the fix starts the moment a resident takes a photo. Under it: "One front door instead of 911 calls, police reports, phone calls, emails and social media."
+- **Opening line (use this):** **"911 for everything else."** The insight: when a tree falls or a signal goes dark, people call 911, the police or the front desk, or email a council member, or post on social media. Every one of those lines was built for something else, and there is no good front door for what is *not* an emergency. Civic Flow is that front door, with the workflow behind it. Under it: "Not an emergency? Tell your city once. Watch it get fixed."
+- **Say "non-emergency" out loud** at least once, so nobody thinks Civic Flow dispatches emergencies. It takes the non-emergencies off the emergency lines.
 - **Be exact about what it is:** Civic Flow is the one front door residents use, with the workflow behind it. It does not pull in 911 or phone feeds today. Say "one front door **instead of** five", never "we collect all five".
 - **The opener:** a short overlay on the **live Operations screen** (the map shows through, blurred), not a slide. About two seconds of animation: the five channels fly into the logo, then the line appears. Sign in with the PIN, then press **Alt+I** from any page; **Space**, Enter, Escape or a click dismisses it. Also reachable at `https://city.172-232-2-16.sslip.io/ops?intro=1`.
-- **Other lines if you want to swap:** "Five ways in. One way to fix it." / "Stop hearing about it five ways." / "One front door. Faster fixes."
+- **Alternates if you want to swap the line:** "The city that answers back." / "Fixes, not forms." / "Keep the city flowing."
 
 ## One device: how to run and record it (you only need the laptop)
 The resident app is a web page, so it runs in a phone-shaped window next to the city portal on the same screen. Everyone in the room sees both, and one recording captures the whole demo.
@@ -85,7 +85,7 @@ The resident app is a web page, so it runs in a phone-shaped window next to the 
 
 ## Delivery notes (these matter as much as the words)
 - **Silence is a tool.** Let the collapse and the "Identified" reveal land before you talk. The product is doing the selling.
-- **One sentence to repeat:** "Hear it once. Fix it fast." It is on the opener, so say it again right after "Fixed!" and as your last line.
+- **One sentence to repeat:** "911 for everything else." It is on the opener, so say it again right after "Fixed!" and as your last line.
 - **Never apologize or say "prototype", "just", or "basically".** Say "simulated" once, plainly, for the storm.
 - **Name the technology as what it *did*,** not as a logo: embeddings *matched meaning*, vision *read the photo*, agents *ranked and routed*, DevRev *holds the case*.
 - **Practice the first 20 seconds and the last 15 until you can do them without looking.** The middle is driven by the screen.

@@ -9,7 +9,7 @@ const CHANNELS = [
 ];
 const STEP = 118; // px between chip centers: the chips slide this far (times their distance from the middle) into the logo
 
-/** The demo opener: a short overlay on the live app. Five ways in converge into the mark, then "Hear it once. Fix it fast."
+/** The demo opener: a short overlay on the live app. Five ways in converge into the mark, then "911 for everything else."
  *  Space, Enter, Escape or a click dismisses it. Under prefers-reduced-motion the finished frame is shown at once. */
 export default function Intro({ onDone }: { onDone: () => void }) {
   const reduced = !!useReducedMotion();
@@ -27,7 +27,7 @@ export default function Intro({ onDone }: { onDone: () => void }) {
   const rise = (delay: number) => ({ initial: reduced ? false : ({ opacity: 0, y: 12 } as const), animate: { opacity: 1, y: 0 }, transition: t(delay) });
 
   return (
-    <div className="intro-scrim" role="dialog" aria-modal="true" aria-label="Civic Flow: hear it once, fix it fast" onClick={onDone}>
+    <div className="intro-scrim" role="dialog" aria-modal="true" aria-label="Civic Flow: 911 for everything else" onClick={onDone}>
       <div className="intro-card" onClick={(e) => e.stopPropagation()}>
         <div className="intro-stage" aria-hidden="true">
           <div className="intro-chips">
@@ -53,11 +53,11 @@ export default function Intro({ onDone }: { onDone: () => void }) {
 
         <motion.div className="intro-word" {...rise(1.45)}>Civic<span>Flow</span></motion.div>
         <h2 className="intro-tag">
-          <motion.span {...rise(1.7)}>Hear it once.</motion.span>
-          <motion.span className="is-fast" {...rise(2.05)}>Fix it fast.</motion.span>
+          <motion.span className="is-911" {...rise(1.7)}>911</motion.span>
+          <motion.span {...rise(2.0)}>for everything else.</motion.span>
         </h2>
-        <motion.p className="intro-sub" {...rise(2.4)}>One front door instead of 911 calls, police reports, phone calls, emails and social media.</motion.p>
-        <motion.p className="intro-hint" {...rise(2.8)}>Press Space to begin</motion.p>
+        <motion.p className="intro-sub" {...rise(2.45)}>Not an emergency? Tell your city once. Watch it get fixed.</motion.p>
+        <motion.p className="intro-hint" {...rise(2.9)}>Press Space to begin</motion.p>
       </div>
     </div>
   );
