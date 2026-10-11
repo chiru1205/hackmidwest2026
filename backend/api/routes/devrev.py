@@ -7,7 +7,7 @@ from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel
 
-from backend.integrations.devrev import actions, board, events
+from backend.integrations.devrev import actions, board, cases, events
 
 from ..auth import require_staff
 
@@ -30,6 +30,20 @@ async def get_journey(ticket_id: str):
     if j is None:
         raise HTTPException(404, "ticket not found")
     return j
+
+
+@router.get("/devrev/cases")
+async def get_cases(group: str = Query("needs", pattern="^(needs|approval|overdue|escalated|no_crew|all)$"),
+                    q: str = "", district: str = "", limit: int = Query(30, ge=1, le=100), offset: int = Query(0, ge=0)):
+    return await asyncio.to_thread(cases.list_cases, group, q, district, limit, offset)
+
+
+@router.get("/devrev/ticket/{ticket_id}/case")
+async def get_case(ticket_id: str):
+    try:
+        return await asyncio.to_thread(cases.case_detail, ticket_id)
+    except cases.NotFound:
+        raise HTTPException(404, "ticket not found")
 
 
 @router.post("/devrev/ticket/{ticket_id}/action")

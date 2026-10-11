@@ -352,6 +352,73 @@ class TicketEventRow(BaseModel):
     source: Literal["DevRev", "Civic Flow"]
 
 
+# ---- Workflow page "case journey": GET /api/devrev/cases, GET /api/devrev/ticket/{id}/case
+class CaseCounts(BaseModel):
+    open: int = 0            # all open (not resolved) cases
+    approval: int = 0        # stage awaiting_verification: the crew says fixed, a person must approve
+    overdue: int = 0         # past due and not resolved
+    escalated: int = 0       # escalated and not resolved
+    no_crew: int = 0         # queued with no crew for more than 24 h
+    needs_you: int = 0       # distinct cases in any of the four groups above
+
+
+class CaseRow(BoardTicket):
+    reasons: list[Literal["approval", "overdue", "escalated", "no_crew"]] = []   # why this case needs a person
+
+
+class CaseList(BaseModel):
+    source: Literal["devrev", "local board"]
+    as_of: str
+    total: int               # rows matching the filter (not just this page)
+    counts: CaseCounts       # always for the whole board, ignoring q/group
+    items: list[CaseRow] = []
+
+
+class FactorBar(BaseModel):
+    label: str               # "Severity", "Neighbors reporting", "Safety hazard", "Location"
+    value: str               # "4 of 5", "211", "Yes", "Arterial corridor"
+    pct: float = 0.0         # 0-100, the bar fill
+
+
+class DevrevRecord(BaseModel):
+    """Only fields that really exist on the DevRev ticket (works.get)."""
+    display_id: Optional[str] = None     # "TKT-8"
+    stage: Optional[str] = None          # DevRev's own stage name, e.g. "work_in_progress"
+    severity: Optional[str] = None
+    part: Optional[str] = None           # applies_to_part, e.g. "PROD-1"
+    owner: Optional[str] = None          # e.g. "DEVU-3"
+    external_ref: Optional[str] = None   # our cluster id
+    web_url: Optional[str] = None        # "Open in DevRev" (None when DEVREV_WEB_BASE is not set)
+    synced: bool = False                 # False for local-only tickets that are not mirrored
+
+
+class Station(BaseModel):
+    key: Literal["reported", "understood", "ticket", "crew", "verify", "told"]
+    title: str
+    detail: str
+    state: Literal["done", "now", "todo"]
+    chip: str                            # e.g. "Civic Flow", "Bedrock + Akamai AI", "DevRev - TKT-8"
+    chip_source: Literal["civicflow", "devrev"]
+    ts: Optional[str] = None             # when it happened (None for todo)
+
+
+class CaseDetail(BaseModel):
+    ticket: BoardTicket
+    category: str
+    address: Optional[str] = None
+    before_photo_url: Optional[str] = None
+    after_photo_url: Optional[str] = None            # the crew's fix photo, when one exists
+    crew_note: Optional[str] = None                  # the latest verification/comment note from the crew
+    priority_score: float = 0.0                      # 0-100
+    rationale: str = ""
+    factors: list[FactorBar] = []
+    duplicates_avoided: int = 0                      # reporters - 1
+    devrev: DevrevRecord = DevrevRecord()
+    stations: list[Station] = []
+    timeline: list[JourneyStep] = []                 # the existing journey steps, newest last
+    can: list[Literal["start", "request_verification", "approve", "escalate", "reopen"]] = []  # actions allowed now
+
+
 # ---- citizen app (GET /api/me/requests): one citizen's view of an issue they reported or confirmed
 class CitizenTimelineItem(BaseModel):
     ts: str

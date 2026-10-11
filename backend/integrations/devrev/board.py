@@ -19,7 +19,8 @@ SEV_RANK = {"blocker": 0, "high": 1, "medium": 2, "low": 3}
 DUE_DAYS = {"P1": 2, "P2": 5, "P3": 10, "P4": 14}
 PER_STAGE = 25
 TTL_S = 4.0
-_cache: dict = {"at": 0.0, "data": None}
+MAX_PAGES = 300  # 30,000 works; a safety stop, not a working limit
+_cache: dict = {"at": 0.0, "data": None, "gen": 0, "closed": {}}
 _lock = threading.Lock()
 
 
@@ -69,7 +70,7 @@ def fetch_works() -> list[dict] | None:
     out: list[dict] = []
     cursor = None
     ids = set(_clusters().keys())
-    for _ in range(20):
+    for _ in range(MAX_PAGES):
         body: dict = {"type": ["ticket"], "limit": 100}
         if cursor:
             body["cursor"] = cursor
@@ -83,6 +84,8 @@ def fetch_works() -> list[dict] | None:
         cursor = j.get("next_cursor")
         if not cursor:
             break
+    else:
+        log.warning("works.list still had more pages after %d; the board is showing a partial list", MAX_PAGES)
     return out
 
 
@@ -164,38 +167,71 @@ def assemble(tickets: list[dict], source: str, now: datetime) -> dict:
                        "median_ttr": human(_pct(ttr, 0.5))}}
 
 
+def closed_epoch(cf_id: str) -> float:
+    """When a resolved ticket was closed (epoch seconds) from the last snapshot; 0 when unknown."""
+    return _cache["closed"].get(cf_id, 0.0)
+
+
+def collect(now: datetime) -> tuple[list[dict], str, set[str]]:
+    """Every board ticket (no per-stage truncation), the data source, and the cluster ids mirrored in that source."""
+    works = fetch_works() if live.configured() else None
+    source = "devrev"
+    if works is None:
+        works, source = _local_works(), "local board"
+    cl = _clusters()
+    cfmap = _cf_by_cluster()
+    metas = events.all_meta()
+    tickets = []
+    closed: dict[str, float] = {}
+    for w in works:
+        c = cl.get(w["ref"])
+        cf = w.get("cf_id") or cfmap.get(w["ref"]) or (c.ticket_id if c else None)
+        if c is None or not cf:
+            continue
+        t = make_ticket(w, cf, metas.get(cf, {}), c, now)
+        if t:
+            tickets.append(t)
+            if t["stage_key"] == "resolved" and w["closed"]:
+                closed[cf] = w["closed"].timestamp()
+    _cache["closed"] = closed
+    return tickets, source, ({w["ref"] for w in works} if source == "devrev" else set(cl))
+
+
 def build(force: bool = False) -> dict:
+    """Cached snapshot. One rebuild at a time: while another thread is rebuilding, callers get the last snapshot
+    instead of queueing on the lock (unless the cache was invalidated by an action, which waits for fresh data)."""
     from . import _ensure_poller
     _ensure_poller()  # pull in DevRev-side changes once the board is in use
-    with _lock:
-        if not force and _cache["data"] and time.monotonic() - _cache["at"] < TTL_S:
+    fresh = lambda: not force and _cache["data"] and time.monotonic() - _cache["at"] < TTL_S  # noqa: E731
+    if fresh():
+        return _cache["data"]
+    serve_stale = not force and _cache["data"] is not None and _cache["at"] > 0
+    if not _lock.acquire(blocking=not serve_stale):
+        return _cache["data"]
+    try:
+        if fresh():
             return _cache["data"]
-        works = fetch_works() if live.configured() else None
-        source = "devrev"
-        if works is None:
-            works, source = _local_works(), "local board"
-        cl = _clusters()
-        cfmap = _cf_by_cluster()
-        metas = events.all_meta()
+        gen = _cache["gen"]
         now = datetime.now(timezone.utc)
-        tickets = []
-        for w in works:
-            c = cl.get(w["ref"])
-            cf = w.get("cf_id") or cfmap.get(w["ref"]) or (c.ticket_id if c else None)
-            if c is None or not cf:
-                continue
-            t = make_ticket(w, cf, metas.get(cf, {}), c, now)
-            if t:
-                tickets.append(t)
+        tickets, source, mirrored = collect(now)
         data = assemble(tickets, source, now)
-        mirrored = {w["ref"] for w in works} if source == "devrev" else set(cl)
-        data["totals"]["unsynced"] = len(set(cl) - mirrored)
-        _cache.update(at=time.monotonic(), data=data)
+        data["totals"]["unsynced"] = len(set(_clusters()) - mirrored)
+        # an action that invalidated the cache while we were reading leaves this snapshot already stale
+        _cache.update(at=time.monotonic() if _cache["gen"] == gen else 0.0, data=data, tickets=tickets)
         return data
+    finally:
+        _lock.release()
+
+
+def all_tickets() -> tuple[list[dict], str, str]:
+    """(every ticket on the board, source, as_of) from the same cached snapshot as build()."""
+    data = build()
+    return list(_cache.get("tickets") or []), data["source"], data["as_of"]
 
 
 def invalidate() -> None:
     _cache["at"] = 0.0
+    _cache["gen"] += 1
 
 
 def current_work(cf_id: str):
@@ -295,8 +331,8 @@ def journey(cf_id: str) -> dict | None:
                   "detail": (", ".join(geo) or "Kansas City") + ("; " + "; ".join(c.zones) if c.zones else "; no priority zone")})
     dd = trace.get("dedup") or trace.get("judge")
     steps.append({"ts": at(3), "source": "civicflow", "kind": "dedup",
-                  "title": "Duplicate check" if c.reporter_count <= 1 else f"{c.reporter_count} reports merged into one ticket",
-                  "detail": (dd or {}).get("summary") or ("No nearby match, new issue" if c.reporter_count <= 1
+                  "title": "Duplicate check" if c.report_count <= 1 else f"{c.report_count} reports merged into one ticket",
+                  "detail": (dd or {}).get("summary") or ("No nearby match, new issue" if c.report_count <= 1
                                                           else f"{c.report_count} reports from {c.reporter_count} residents")})
     steps.append({"ts": at(4), "source": "civicflow", "kind": "priority", "title": f"Priority {c.bucket} ({c.priority:.0f}/100)",
                   "detail": (c.rationale or (trace.get("priority") or {}).get("summary") or "")[:300]})

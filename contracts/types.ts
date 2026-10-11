@@ -129,3 +129,24 @@ export interface CitizenRequest {
   my_points: number; created_at: string; updated_at: string; timeline: CitizenTimelineItem[];
   my_note?: string | null; my_category?: Category | null; my_severity?: number | null; my_reported_at?: string | null;
 }
+
+// ---- Workflow page "case journey": GET /api/devrev/cases, GET /api/devrev/ticket/{id}/case
+export type CaseReason = "approval" | "overdue" | "escalated" | "no_crew";
+export interface CaseCounts { open: number; approval: number; overdue: number; escalated: number; no_crew: number; needs_you: number }
+export interface CaseRow extends BoardTicket { reasons: CaseReason[] }
+export interface CaseList { source: "devrev" | "local board"; as_of: string; total: number; counts: CaseCounts; items: CaseRow[] }
+export interface FactorBar { label: string; value: string; pct: number }
+export interface DevrevRecord {
+  display_id: string | null; stage: string | null; severity: string | null; part: string | null; owner: string | null;
+  external_ref: string | null; web_url: string | null; synced: boolean;
+}
+export interface Station {
+  key: "reported" | "understood" | "ticket" | "crew" | "verify" | "told"; title: string; detail: string;
+  state: "done" | "now" | "todo"; chip: string; chip_source: "civicflow" | "devrev"; ts: string | null;
+}
+export type CaseAction = "start" | "request_verification" | "approve" | "escalate" | "reopen";
+export interface CaseDetail {
+  ticket: BoardTicket; category: string; address: string | null; before_photo_url: string | null; after_photo_url: string | null;
+  crew_note: string | null; priority_score: number; rationale: string; factors: FactorBar[]; duplicates_avoided: number;
+  devrev: DevrevRecord; stations: Station[]; timeline: JourneyStep[]; can: CaseAction[];
+}

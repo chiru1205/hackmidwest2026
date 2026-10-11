@@ -103,7 +103,7 @@ async def run(cf_id: str, action: str, note: str | None) -> dict:
         pipeline.set_status(cluster, "in_progress", "Work started")
         events.set_meta(cf_id, awaiting=False)
     elif action == "request_verification":
-        events.set_meta(cf_id, awaiting=True)
+        events.set_meta(cf_id, awaiting=True, evidence=meta["evidence"] + (1 if note else 0))  # the crew's note is evidence
         pipeline.set_status(cluster, cluster.status, "Awaiting verification")
     elif action == "approve":
         events.set_meta(cf_id, awaiting=False, evidence=meta["evidence"] + (1 if note else 0))

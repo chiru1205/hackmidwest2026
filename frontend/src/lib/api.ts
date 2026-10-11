@@ -195,3 +195,13 @@ export const devrevJourney = (id: string) => req<DevrevJourney>(`/api/devrev/tic
 export const devrevAction = (id: string, action: DevrevActionName, note?: string | null) =>
   post<DevrevActionResult>(`/api/devrev/ticket/${encodeURIComponent(id)}/action`, { action, note: note ?? null });
 export const devrevEvents = (limit = 30) => req<DevrevEvent[]>(`/api/devrev/events${qs({ limit })}`);
+
+/* ---- Workflow page "case journey" (rail + one case at a time) ---- */
+export type {
+  CaseAction, CaseCounts, CaseDetail, CaseList, CaseReason, CaseRow, DevrevRecord, FactorBar, Station,
+} from "@contracts";
+export interface CaseListParams { group?: "needs" | "approval" | "overdue" | "escalated" | "no_crew" | "all"; q?: string; district?: string; limit?: number; offset?: number }
+export const devrevCases = (params: CaseListParams = {}, signal?: AbortSignal) =>
+  req<import("@contracts").CaseList>(`/api/devrev/cases${qs({ ...params })}`, { signal });
+export const devrevCase = (id: string, signal?: AbortSignal) =>
+  req<import("@contracts").CaseDetail>(`/api/devrev/ticket/${encodeURIComponent(id)}/case`, { signal });

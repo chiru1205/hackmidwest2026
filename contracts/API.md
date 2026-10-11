@@ -114,3 +114,8 @@ class EdgeKV: def get(self, namespace, group, item) -> Any | None; def put(self,
 - Hotspot: one seeded cluster near 39.0420, -94.5950 (Country Club Plaza area) with 211 unique reporters, severity 4, P1/P2, with a ticket, used for the "You + 212 neighbors" demo moment.
 - Demo users: `u_you` (the phone user), plus about 25 named seed users for the leaderboard.
 - Neighborhood for a point: nearest of a small list of KC neighborhoods (Westport, Crossroads, Plaza, River Market, Brookside, Waldo, Midtown).
+
+
+## Workflow page "case journey" (staff only, X-Role-Token)
+- `GET /api/devrev/cases?group=needs|approval|overdue|escalated|no_crew|all&q=&district=&limit=30&offset=0` -> `CaseList`. `group` defaults to `needs`. `q` matches title, TKT-/CF- ids, crew, neighborhood, district (case-insensitive). Sorted by urgency (priority bucket, then overdue, then oldest). Filtering, search and paging run on the server over the whole board; `counts` always describes the whole board.
+- `GET /api/devrev/ticket/{id}/case` (id = CF- or TKT- id) -> `CaseDetail`: the six journey `stations`, before/after photos, the crew note, the priority score with factor bars, the real DevRev record, the timeline and the `can` list of actions allowed now. Actions still use `POST /api/devrev/ticket/{id}/action`.
