@@ -143,37 +143,53 @@ def _ensure_poller() -> None:
 def _poll_loop() -> None:
     import time
 
-    import httpx
-
     base = os.getenv("API_INTERNAL_URL", "http://127.0.0.1:8000")
     while True:
         time.sleep(int(os.getenv("DEVREV_POLL_S", "5")))
         try:
-            c = _conn()
-            try:
-                rows = c.execute("SELECT * FROM tickets WHERE devrev_id IS NOT NULL").fetchall()
-            finally:
-                c.close()
-            stages = live.stages_by_ref([r["cluster_id"] for r in rows])
-            for r in rows:
-                new = stages.get(r["cluster_id"])
-                if new in live.KNOWN_STAGES and new != r["devrev_stage"]:
-                    r = raw_row(r["id"]) or r  # re-read: an app action may have just written this stage itself
-                    if new == r["devrev_stage"]:
-                        continue
-                    _record_external_change(r, new)
-                    with _lock:
-                        cc = _conn()
-                        try:
-                            cc.execute("UPDATE tickets SET devrev_stage=? WHERE id=?", (new, r["id"]))
-                            cc.commit()
-                        finally:
-                            cc.close()
-                    if new != r["stage"]:
-                        httpx.post(f"{base}/api/tickets/{r['id']}/advance", json={"stage": new}, timeout=10)
-                        log.info("DevRev moved %s to %s; applied locally", r["id"], new)
+            poll_once(base)
         except Exception as e:  # never let the poller die
             log.warning("DevRev poll error: %s", type(e).__name__)
+
+
+def _apply_locally(base: str, ticket_id: str, stage: str) -> bool:
+    """Move the local ticket through the app's own advance endpoint. It needs the staff token, and a close or cancel also
+    needs the in-process secret (people and crews cannot close a ticket there; only a close that already happened in DevRev)."""
+    import httpx
+
+    from backend.api import auth
+    headers = {"X-Civicflow-Internal": auth.internal_token()}
+    if auth.city_token():
+        headers["X-Role-Token"] = auth.city_token()
+    try:
+        return httpx.post(f"{base}/api/tickets/{ticket_id}/advance", json={"stage": stage}, headers=headers, timeout=10).status_code < 400
+    except Exception:
+        return False
+
+
+def poll_once(base: str) -> None:
+    c = _conn()
+    try:
+        rows = c.execute("SELECT * FROM tickets WHERE devrev_id IS NOT NULL").fetchall()
+    finally:
+        c.close()
+    stages = live.stages_by_ref([r["cluster_id"] for r in rows])
+    for r in rows:
+        new = stages.get(r["cluster_id"])
+        if new in live.KNOWN_STAGES and new != r["devrev_stage"]:
+            r = raw_row(r["id"]) or r  # re-read: an app action may have just written this stage itself
+            if new == r["devrev_stage"]:
+                continue
+            old = r["devrev_stage"]
+            set_devrev_stage_seen(r["id"], new)
+            if new != r["stage"]:
+                if not _apply_locally(base, r["id"], new):
+                    # keep the old stage so the next poll sees the change again and retries; nothing is recorded yet
+                    set_devrev_stage_seen(r["id"], old or "")
+                    log.warning("DevRev moved %s to %s; could not apply locally, will retry", r["id"], new)
+                    continue
+                log.info("DevRev moved %s to %s; applied locally", r["id"], new)
+            _record_external_change(r, new)
 
 
 def _record_external_change(r, new: str) -> None:

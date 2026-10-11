@@ -64,7 +64,7 @@ def x(sql: str, params=()) -> None:
 
 def default_counters() -> dict:
     return {"total_reports": 0, "duplicates_absorbed": 0, "llm_calls_avoided": 0,
-            "edge_hits": 0, "edge_misses": 0, "edge_ms_sum": 0.0, "edge_n": 0}
+            "edge_hits": 0, "edge_misses": 0, "edge_ms_sum": 0.0, "edge_n": 0, "semantic_merges": 0}
 
 
 def init() -> None:
@@ -115,6 +115,26 @@ def meta_set(k: str, v: str) -> None:
 
 def persist_counters() -> None:
     meta_set("counters", json.dumps(counters))
+
+
+LATENCY_KEY, LATENCY_KEEP = "report_to_ticket_s", 200
+
+
+def record_latency(seconds: float) -> None:
+    """Rolling list of how long the pipeline took from receiving a report to returning the new ticket."""
+    try:
+        items = json.loads(meta_get(LATENCY_KEY) or "[]")
+        items.append(round(float(seconds), 3))
+        meta_set(LATENCY_KEY, json.dumps(items[-LATENCY_KEEP:]))
+    except Exception:
+        pass
+
+
+def latencies() -> list[float]:
+    try:
+        return [float(v) for v in json.loads(meta_get(LATENCY_KEY) or "[]")]
+    except Exception:
+        return []
 
 
 def timeline_add(cluster_id: str, label: str, detail: str = "") -> None:

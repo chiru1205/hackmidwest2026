@@ -1,6 +1,6 @@
 import { ExternalLink } from "lucide-react";
 import type { CaseDetail } from "../lib/api";
-import { relTime } from "./format";
+import { SRC_CLASS, SRC_LABEL, relTime, srcOf } from "./format";
 
 const STAGE_LABEL: Record<string, string> = { queued: "Queued", work_in_progress: "In progress", resolved: "Resolved" };
 /** Civic Flow's own working steps are noise here; this card is about what DevRev has and what changed there. */
@@ -44,14 +44,14 @@ export function DevRevCard({ d, now }: { d: CaseDetail; now: number }) {
         {earlier > 0 && <p className="wf-dr-more">{earlier} earlier {earlier === 1 ? "event" : "events"} not shown</p>}
         <ol className="wf-dr-tl">
           {steps.map((s, i) => {
-            const dev = s.source === "devrev";
+            const src = srcOf(s.source);
             return (
               <li key={`${s.ts}-${s.kind}-${i}`}>
-                <i className={dev ? "is-dev" : "is-cf"} aria-hidden />
+                <i className={SRC_CLASS[src]} aria-hidden />
                 <span className="wf-dr-step">
                   <b>{s.title}</b>{s.detail && <span className="wf-dr-detail">{s.detail}</span>}
                   <span className="wf-dr-meta">
-                    <span className={`wf-dr-src ${dev ? "is-dev" : "is-cf"}`}>{dev ? "DevRev" : "Civic Flow"}</span>
+                    <span className={`wf-dr-src ${SRC_CLASS[src]}`}>{SRC_LABEL[src]}</span>
                     {relTime(s.ts, now)}
                   </span>
                 </span>

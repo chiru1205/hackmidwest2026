@@ -4,11 +4,13 @@ import { AppHeader, sectionOf } from "../components/shell/AppHeader";
 import Ops from "../ops/Ops";
 import Vendor from "../vendor/Vendor";
 import WorkflowPage from "../workflow/WorkflowPage";
+import ImpactPage from "../impact/ImpactPage";
+import UnderTheHood from "../impact/UnderTheHood";
 import Kit from "../components/shell/Kit";
 import { isStaffUnlocked } from "../lib/auth";
 import Gate from "./Gate";
 
-/** City staff app: PIN gate, then Operations / Vendors / Workflow. */
+/** City staff app: PIN gate, then Operations / Vendors / Workflow / Impact. /under-the-hood is a judges' page, linked from the Ops footer only. */
 export default function CityApp() {
   const [unlocked, setUnlocked] = useState(isStaffUnlocked);
   const { pathname } = useLocation();
@@ -28,6 +30,8 @@ export default function CityApp() {
             <Route path="/ops" element={<Ops />} />
             <Route path="/vendor" element={<Vendor />} />
             <Route path="/workflow" element={<WorkflowPage />} />
+            <Route path="/impact" element={<ImpactPage />} />
+            <Route path="/under-the-hood" element={<UnderTheHood />} />
             {import.meta.env.DEV && <Route path="/__kit" element={<Kit />} />}
             <Route path="*" element={<Navigate to="/ops" replace />} />
           </Routes>

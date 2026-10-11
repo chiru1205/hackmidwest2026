@@ -79,6 +79,11 @@ def _bump_user(uid: str, kind: str, photo: bool) -> None:
             (1 if photo else 0, uid))
 
 
+def note_semantic_merge() -> None:
+    """A report joined an issue because the embedding judge matched it, a merge distance and category alone would not make."""
+    store.counters["semantic_merges"] = int(store.counters.get("semantic_merges", 0)) + 1
+
+
 def publish_stats() -> None:
     store.persist_counters()
     events.publish("stats.updated", {"stats": store.stats().model_dump()})
@@ -176,6 +181,7 @@ async def submit_report(user_id: str, lat: float, lng: float, accuracy_m: float 
     created_cluster: Cluster | None = None
     async with store.alock:
         edge_info: EdgeInfo | None = None
+        sem_merge = False
         decision = {"action": "merge", "cluster": target, "score": 1.0, "distance_m": 0.0, "scores": {}}
         used_llm = False
         if target is None:
@@ -192,6 +198,7 @@ async def submit_report(user_id: str, lat: float, lng: float, accuracy_m: float 
                 if sem is not None and sem["verdict"] != "unsure":
                     if sem["verdict"] == "merge" and sem["cluster"].id in store.clusters:
                         decision = {**decision, "action": "merge", "cluster": store.clusters[sem["cluster"].id]}
+                        sem_merge = True
                     else:
                         decision = {**decision, "action": "create", "cluster": None}
                     ctx.step("judge", "done", (time.perf_counter() - t0) * 1000,
@@ -215,6 +222,8 @@ async def submit_report(user_id: str, lat: float, lng: float, accuracy_m: float 
             live = store.clusters.get(decision["cluster"].id)
             result = _merge(live, report, photo is not None, severity, hazard, hdesc, ctx, relaxed, simulated,
                             edge_info, used_llm, confirm=target is not None)
+            if sem_merge and result.report_id:
+                note_semantic_merge()
         else:
             created_cluster = _create(report, lat, lng, category, severity, hazard, hdesc, photo_url, simulated, ctx)
             result = None
@@ -222,6 +231,8 @@ async def submit_report(user_id: str, lat: float, lng: float, accuracy_m: float 
     # ---- 5. new cluster: rationale + ticket + vendor (outside the lock; may call an LLM)
     if created_cluster is not None:
         result = await _finish_create(created_cluster, report, ctx, simulated, edge_info)
+        if not simulated and result.ticket is not None:
+            store.record_latency(time.perf_counter() - t_all)
     if not quiet_stats:
         publish_stats()
     if not simulated:

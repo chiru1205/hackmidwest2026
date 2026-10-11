@@ -205,3 +205,15 @@ export const devrevCases = (params: CaseListParams = {}, signal?: AbortSignal) =
   req<import("@contracts").CaseList>(`/api/devrev/cases${qs({ ...params })}`, { signal });
 export const devrevCase = (id: string, signal?: AbortSignal) =>
   req<import("@contracts").CaseDetail>(`/api/devrev/ticket/${encodeURIComponent(id)}/case`, { signal });
+
+/* ---- agentic verification, Impact and platform pages (contract wrappers) ---- */
+export type { AgentVerdict, AutonomyPolicy, ImpactLive, PlatformInfo } from "@contracts";
+export const devrevAutonomy = () => req<import("@contracts").AutonomyPolicy>("/api/devrev/autonomy");
+export const setDevrevAutonomy = (mode: "off" | "suggest" | "auto") => post<import("@contracts").AutonomyPolicy>("/api/devrev/autonomy", { mode });
+export const impactLive = () => req<import("@contracts").ImpactLive>("/api/impact/live");
+export const platformInfo = () => req<import("@contracts").PlatformInfo>("/api/platform");
+export const devrevAfterPhoto = (id: string, photo: Blob) => {
+  const f = new FormData();
+  f.set("photo", photo, "after.jpg");
+  return req<{ ok: boolean; after_photo_url: string | null; error?: string | null }>(`/api/devrev/ticket/${encodeURIComponent(id)}/after-photo`, { method: "POST", body: f });
+};

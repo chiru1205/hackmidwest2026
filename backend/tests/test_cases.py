@@ -10,6 +10,14 @@ ASOF = "2026-10-10T12:00:00Z"
 DAY = 86400.0
 
 
+@pytest.fixture(autouse=True)
+def _scratch_db(tmp_path, monkeypatch):
+    """Case lists and details read the agent verdicts and counts from the events DB: keep it off the dev database."""
+    from backend.integrations.devrev import events
+    monkeypatch.setenv("DB_PATH", str(tmp_path / "cases.db"))
+    monkeypatch.setattr(events, "_ready", False)
+
+
 def tk(i, key="in_progress", bucket="P3", age=3600.0, overdue=False, esc=False, **kw):
     t = {"id": f"CF-{i}", "devrev_id": f"TKT-{i}", "title": f"[{bucket}] Pothole - {i} Main St", "cluster_id": f"c_{i}",
          "stage_key": key, "severity": "medium", "priority_bucket": bucket, "vendor": "KC Road Crew Co.", "owner": None,
@@ -55,7 +63,7 @@ def test_reasons():
 def test_groups_and_counts(mixed):
     needs = cases.list_cases("needs")
     assert set(ids(needs)) == {"CF-1", "CF-2", "CF-3", "CF-5"} and needs["total"] == 4
-    assert needs["counts"] == {"open": 7, "approval": 1, "overdue": 1, "escalated": 1, "no_crew": 1, "needs_you": 4}
+    assert needs["counts"] == {"open": 7, "approval": 1, "overdue": 1, "escalated": 1, "no_crew": 1, "needs_you": 4, "agent_closed": 0}
     assert ids(cases.list_cases("approval")) == ["CF-1"]
     assert ids(cases.list_cases("overdue")) == ["CF-2"]
     assert ids(cases.list_cases("escalated")) == ["CF-5"]
@@ -188,7 +196,7 @@ def test_detail_by_tkt_id_and_station_text(monkeypatch):
     d = cases.case_detail("tkt-1")
     st = {s["key"]: s for s in d["stations"]}
     assert st["reported"]["detail"] == "5 neighbors sent photos and notes"
-    assert st["understood"]["chip"] == "Bedrock + Akamai AI" and st["understood"]["chip_source"] == "civicflow"
+    assert st["understood"]["chip"] == "Civic Flow" and st["understood"]["chip_source"] == "civicflow"   # no model ran for this case
     assert st["ticket"]["chip"] == "DevRev - TKT-1" and st["ticket"]["chip_source"] == "devrev"
     # the chip names DevRev's own stage (awaiting verification is a Civic Flow flag, DevRev says in progress)
     assert st["crew"]["detail"] == "KC Road Crew Co." and st["crew"]["chip"] == "DevRev - In progress"
@@ -282,6 +290,8 @@ def test_routes_validate_and_404(monkeypatch):
     from fastapi.testclient import TestClient
 
     from backend.api.main import app
+    from backend.integrations.devrev import case_search
+    monkeypatch.setattr(case_search.embed, "enabled", lambda: False)   # opening the list may start an index build: never in a test
     wire(monkeypatch)
     feed(monkeypatch, [tk(1)])
     c = TestClient(app)
@@ -321,3 +331,22 @@ def test_build_serves_the_last_snapshot_while_another_thread_rebuilds(monkeypatc
     release.set()
     t.join(5)
     assert board.build()["source"] == "local board"
+
+
+def test_understood_chip_names_only_what_the_saved_trace_shows(monkeypatch):
+    import json
+
+    from backend.api import store
+    c = Cluster(id="c_9", category="pothole", lat=39.0, lng=-94.5, first_reported_at=ASOF, last_reported_at=ASOF)
+
+    def chip(trace):
+        monkeypatch.setattr(store, "meta_get", lambda k: json.dumps(trace) if k == "trace:c_9" else None)
+        return cases.understood_chip(c)
+
+    vision = {"node": "intake", "status": "done", "summary": "vision: pothole, severity 3", "model": None}
+    form = {"node": "intake", "status": "done", "summary": "form: pothole, severity 3", "model": "form"}
+    note = {"node": "intake", "status": "done", "summary": "akamai-embedding: pothole, severity 3", "model": "form"}
+    judge = {"node": "judge", "status": "done", "summary": "merge", "model": "akamai:hackathon-embedding"}
+    assert chip([]) == "Civic Flow" and chip([form]) == "Civic Flow"
+    assert chip([vision]) == "AI vision" and chip([note]) == "Akamai AI"
+    assert chip([vision, judge]) == "AI vision + Akamai AI"

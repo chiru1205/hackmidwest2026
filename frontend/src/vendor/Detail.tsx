@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
-import confetti from "canvas-confetti";
-import { Camera, CheckCircle2, Copy, ImagePlus, Play, Quote, X, Users, TriangleAlert } from "lucide-react";
+import { Camera, CheckCircle2, Copy, ImagePlus, Play, Quote, ShieldCheck, X, Users, TriangleAlert } from "lucide-react";
 import type { VendorOrder } from "@contracts";
 import { api } from "../lib/api";
 import { catLabel } from "../lib/const";
@@ -12,13 +11,13 @@ import {
 } from "../components/ui";
 import { GeoChips, districtOf, zonesOf } from "../ops/geo";
 import { CategoryIcon, MapThumb, Photo, Prop, Timeline, type TLStep } from "./parts";
-import { SEVERITY_LABEL, STAGE_LABEL, ago, dueInfo, fmtDate, placeOf, stageOf, titleOf } from "./util";
+import { SEVERITY_LABEL, STAGE_LABEL, ago, dueFor, fmtDate, placeOf, stageOf, titleOf, type OrderView } from "./util";
 
 const STEPS = ["Arrive on site", "Cone off area", "Patch", "Compact", "Photograph"];
 const stepStore = new Map<string, boolean[]>();
 
 export interface DetailProps {
-  order: VendorOrder;
+  order: OrderView;
   afterUrl?: string;
   onStart: (o: VendorOrder) => Promise<void>;
   onFix: (o: VendorOrder, blob: Blob | null, url: string | null) => Promise<void>;
@@ -28,7 +27,8 @@ export default function Detail({ order, afterUrl, onStart, onFix }: DetailProps)
   const { cluster: c, ticket: t } = order;
   const stage = stageOf(order);
   const done = stage === "resolved";
-  const due = dueInfo(order.due, done);
+  const awaiting = stage === "awaiting_verification";
+  const due = dueFor(order);
   const toast = useToast();
   const reduced = useReducedMotion();
   const info = useAsync(() => api.cluster(c.id), [c.id, stage]);
@@ -65,8 +65,7 @@ export default function Detail({ order, afterUrl, onStart, onFix }: DetailProps)
     try {
       await onFix(order, blob, preview);
       setCelebrate(true);
-      if (!reduced) confetti({ particleCount: 70, spread: 70, startVelocity: 32, origin: { y: 0.35 }, colors: ["#12B981", "#2457FF", "#0B1B33"], disableForReducedMotion: true });
-      toast(`${t?.id ?? "Order"} marked fixed. Neighbors are being notified.`);
+      toast("Submitted for verification. The city will confirm.");
     } catch (e) { setErr(String((e as Error).message ?? e)); }
     finally { setBusy(null); }
   }
@@ -86,12 +85,13 @@ export default function Detail({ order, afterUrl, onStart, onFix }: DetailProps)
         </div>
         <h2 className="vd-d-title">{titleOf(c)}</h2>
         <div className="vd-d-sub">
-          {!done && <><span className={`vd-due is-${due.tone}`}>{due.text}</span><span aria-hidden>{"·"}</span></>}
+          {!done && !awaiting && <><span className={`vd-due is-${due.tone}`}>{due.text}</span><span aria-hidden>{"·"}</span></>}
           <span>Reported {ago(c.first_reported_at)}</span>
         </div>
         <div className="vd-d-actions">
           {stage === "queued" && <Button icon={<Play />} onClick={start} loading={busy === "start"} variant="secondary">Start work</Button>}
-          {!done && <Button icon={<CheckCircle2 />} onClick={fix} loading={busy === "fix"}>Mark fixed</Button>}
+          {stage === "in_progress" && <Button icon={<CheckCircle2 />} onClick={fix} loading={busy === "fix"}>Submit for verification</Button>}
+          {awaiting && <span className="vd-done-note"><ShieldCheck size={18} strokeWidth={1.75} /> Submitted. The city will confirm.</span>}
           {done && <span className="vd-done-note"><CheckCircle2 size={18} strokeWidth={1.75} /> Resolved{c.fixed_at ? ` ${ago(c.fixed_at)}` : ""}</span>}
         </div>
         {err && <div className="vd-inline-err" role="alert"><TriangleAlert size={16} /> {err}</div>}
@@ -103,7 +103,7 @@ export default function Detail({ order, afterUrl, onStart, onFix }: DetailProps)
             <motion.circle cx="26" cy="26" r="23" fill="none" stroke="currentColor" strokeWidth="3" initial={{ pathLength: 0 }} animate={{ pathLength: 1 }} transition={{ duration: reduced ? 0 : 0.5 }} />
             <motion.path d="M15 27 l8 8 l15 -17" fill="none" stroke="currentColor" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round" initial={{ pathLength: 0 }} animate={{ pathLength: 1 }} transition={{ duration: reduced ? 0 : 0.4, delay: reduced ? 0 : 0.35 }} />
           </svg>
-          <div><strong>Fixed. Loop closed.</strong><span>{c.reporter_count} reporters are being told the road is repaired.</span></div>
+          <div><strong>Submitted for verification.</strong><span>The city will confirm the repair, then {c.reporter_count === 1 ? "the reporter is" : `${c.reporter_count} reporters are`} told it is fixed.</span></div>
         </motion.div>
       )}
 
@@ -116,7 +116,7 @@ export default function Detail({ order, afterUrl, onStart, onFix }: DetailProps)
         <Prop label="Priority"><PriorityBadge bucket={c.bucket} score={c.priority} size="sm" /></Prop>
         <Prop label="Severity">{t ? SEVERITY_LABEL[t.severity] ?? t.severity : `${c.severity}/5`} <span className="vd-faint">{"·"} {c.severity}/5</span></Prop>
         <Prop label="Vendor">{c.vendor ?? "Unassigned"}</Prop>
-        <Prop label="Reporters"><span className="vd-reporters"><Users size={14} strokeWidth={1.75} /> <b className="t-num">{c.reporter_count}</b> neighbors</span></Prop>
+        <Prop label="Reporters"><span className="vd-reporters"><Users size={14} strokeWidth={1.75} /> <b className="t-num">{c.reporter_count}</b> {c.reporter_count === 1 ? "neighbor" : "neighbors"}</span></Prop>
         <Prop label="Reported">{fmtDate(c.first_reported_at)}</Prop>
         <Prop label="Due"><span className={`vd-due is-${due.tone}`}>{fmtDate(order.due, false)}</span></Prop>
         <Prop label="Category"><span className="vd-cat"><CategoryIcon category={c.category} size={15} /> {catLabel(c.category)}</span></Prop>
@@ -146,7 +146,7 @@ export default function Detail({ order, afterUrl, onStart, onFix }: DetailProps)
           {STEPS.map((s, i) => (
             <li key={s}>
               <label className={checks[i] ? "is-on" : ""}>
-                <input type="checkbox" checked={checks[i]} onChange={() => toggle(i)} disabled={done} />
+                <input type="checkbox" checked={checks[i]} onChange={() => toggle(i)} disabled={done || awaiting} />
                 <span className="vd-check" aria-hidden><svg viewBox="0 0 16 16"><path d="M3.5 8.5l3 3 6-6.5" /></svg></span>
                 <span>{s}</span>
               </label>
@@ -166,11 +166,11 @@ export default function Detail({ order, afterUrl, onStart, onFix }: DetailProps)
             {shownAfter ? (
               <div className="vd-after">
                 <img src={shownAfter} alt="After repair" />
-                {!done && <IconButton className="vd-after__x" icon={<X />} label="Remove after photo" variant="glass" size="sm" onClick={() => { setBlob(null); setPreview(null); }} />}
+                {!done && !awaiting && <IconButton className="vd-after__x" icon={<X />} label="Remove after photo" variant="glass" size="sm" onClick={() => { setBlob(null); setPreview(null); }} />}
               </div>
             ) : (
               <button
-                type="button" className={`vd-drop ${drag ? "is-drag" : ""}`} disabled={done}
+                type="button" className={`vd-drop ${drag ? "is-drag" : ""}`} disabled={done || awaiting}
                 onClick={() => input.current?.click()}
                 onDragOver={(e) => { e.preventDefault(); setDrag(true); }}
                 onDragLeave={() => setDrag(false)}
@@ -196,11 +196,11 @@ export default function Detail({ order, afterUrl, onStart, onFix }: DetailProps)
 }
 
 export function StagePill({ stage, size = "md" }: { stage: ReturnType<typeof stageOf>; size?: "sm" | "md" }) {
-  const variant = stage === "resolved" ? "success" : stage === "in_progress" ? "in_progress" : "neutral";
+  const variant = stage === "resolved" ? "success" : stage === "in_progress" ? "in_progress" : stage === "awaiting_verification" ? "primary" : "neutral";
   return <Pill variant={variant} dot={stage === "in_progress" ? "pulse" : true} size={size}>{STAGE_LABEL[stage]}</Pill>;
 }
 
-function buildTimeline(o: VendorOrder, server: { ts: string; label: string; detail: string }[]): TLStep[] {
+function buildTimeline(o: OrderView, server: { ts: string; label: string; detail: string }[]): TLStep[] {
   const { cluster: c, ticket: t } = o;
   const stage = stageOf(o);
   const find = (re: RegExp) => server.find((e) => re.test(e.label));
@@ -215,6 +215,7 @@ function buildTimeline(o: VendorOrder, server: { ts: string; label: string; deta
   if (t) steps.push({ key: "ticket", label: "Ticket created", detail: t.id, ts: tCreated, state: "done" });
   steps.push({ key: "vendor", label: "Vendor assigned", detail: c.vendor ?? "Pending", ts: tCreated, state: c.vendor ? "done" : "todo" });
   steps.push({ key: "prog", label: "Work in progress", detail: stage !== "queued" ? "Crew on site" : "Waiting for crew", ts: prog?.ts ?? t?.updated_at, state: stage === "queued" ? "current" : "done" });
-  steps.push({ key: "fixed", label: "Fixed", detail: stage === "resolved" ? "Reporters notified" : undefined, ts: fixed?.ts ?? c.fixed_at ?? undefined, state: stage === "resolved" ? "done" : stage === "in_progress" ? "current" : "todo", tone: "success" });
+  steps.push({ key: "verify", label: "Verification", detail: stage === "awaiting_verification" ? "Submitted. The city will confirm" : stage === "resolved" ? "Confirmed" : undefined, ts: undefined, state: stage === "resolved" ? "done" : stage === "in_progress" || stage === "awaiting_verification" ? "current" : "todo" });
+  steps.push({ key: "fixed", label: "Fixed", detail: stage === "resolved" ? "Reporters notified" : undefined, ts: fixed?.ts ?? c.fixed_at ?? undefined, state: stage === "resolved" ? "done" : "todo", tone: "success" });
   return steps;
 }

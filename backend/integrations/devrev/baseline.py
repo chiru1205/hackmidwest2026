@@ -78,6 +78,7 @@ def apply_local_flags(only: list[str] | None = None) -> None:
     so the poller does not treat it as an outside change."""
     from . import events
     plan = {t["cluster_id"]: t for t in load_plan()}
+    have = existing(list(plan))  # planned tickets that exist in DevRev (created by the prefill script or an earlier run)
     c = _conn()
     try:
         rows = c.execute("SELECT id, cluster_id FROM tickets").fetchall()
@@ -88,11 +89,16 @@ def apply_local_flags(only: list[str] | None = None) -> None:
         if not t:
             continue
         events.set_meta(r["id"], awaiting=(t["stage"] == "awaiting_verification"), escalated=False)
+        stage = DEVREV_STAGE.get(t["stage"], "queued")
+        w = have.get(r["cluster_id"])
         with _lock:
             cc = _conn()
             try:
-                cc.execute("UPDATE tickets SET devrev_stage=? WHERE id=? AND devrev_id IS NOT NULL",
-                           (DEVREV_STAGE.get(t["stage"], "queued"), r["id"]))
+                if w:  # link this local ticket to its DevRev ticket (the vendor list and the poller need the link)
+                    cc.execute("UPDATE tickets SET devrev_id=?, devrev_display=?, devrev_stage=? WHERE id=?",
+                               (w["id"], w.get("display_id"), stage, r["id"]))
+                else:
+                    cc.execute("UPDATE tickets SET devrev_stage=? WHERE id=? AND devrev_id IS NOT NULL", (stage, r["id"]))
                 cc.commit()
             finally:
                 cc.close()

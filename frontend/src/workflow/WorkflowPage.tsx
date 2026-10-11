@@ -1,20 +1,24 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
-import { Inbox, Send, TriangleAlert } from "lucide-react";
+import { Bot, Inbox, Send, TriangleAlert } from "lucide-react";
 import type { Category } from "@contracts";
 import { Page } from "../components/shell/Page";
 import { Button, EmptyState, Skeleton, useMediaQuery, useReducedMotion, useToast } from "../components/ui";
-import { api, devrevCase, devrevCases, type CaseDetail, type CaseRow } from "../lib/api";
+import { api, devrevAutonomy, devrevCase, devrevCases, setDevrevAutonomy, type AutonomyPolicy, type CaseDetail, type CaseRow } from "../lib/api";
+import { AutonomyCard } from "./Autonomy";
 import { Decision, NextStep } from "./Decision";
 import { DevRevCard } from "./DevRevCard";
 import { CaseHero } from "./Journey";
 import { Rail, groupCases, type RailList } from "./Rail";
 import { WhyCard } from "./WhyCard";
-import { useDebounced, useNow, usePoll } from "./useLive";
+import { plural } from "./format";
+import { useBurstPoll, useDebounced, useNow, usePoll } from "./useLive";
 import "./workflow.css";
 
 const PAGE = 30;
 const POLL_MS = 5000;
+const AGENT_POLL_MS = 2000;   // while the agent is checking a fix
+const AGENT_POLL_MAX_MS = 60_000;
 const PLAZA = { lat: 39.042, lng: -94.595 };
 const KC = { lat: 39.0997, lng: -94.5786 };
 const errMsg = (e: unknown, fallback: string) => (e instanceof Error && e.message ? e.message : fallback);
@@ -69,7 +73,7 @@ export default function WorkflowPage() {
       if (poll && prev && prev.mode === m && prev.q === query) items = [...items, ...prev.items.slice(PAGE)];
       const seen = new Set<string>();
       items = items.filter((c) => !seen.has(c.id) && !!seen.add(c.id));
-      setList({ mode: m, q: query, items, total: rs[0].total, counts: rs[0].counts });
+      setList({ mode: m, q: query, items, total: rs[0].total, counts: rs[0].counts, semantic: rs[0].semantic });
       setSource(rs[0].source);
       setListErr(null); setLastOk(Date.now());
       return items;
@@ -134,7 +138,33 @@ export default function WorkflowPage() {
     }
   }, [list, sel, select]);
 
+  /* ---- agent autonomy ---- */
+  const [policy, setPolicy] = useState<AutonomyPolicy | null>(null);
+  const [modeBusy, setModeBusy] = useState(false);
+  const loadPolicy = useCallback(() => { devrevAutonomy().then(setPolicy).catch(() => { /* the card stays hidden until the server answers */ }); }, []);
+  useEffect(loadPolicy, [loadPolicy]);
+  usePoll(loadPolicy, POLL_MS * 2);
+  const setMode = async (m: AutonomyPolicy["mode"]) => {
+    if (!policy || m === policy.mode || modeBusy) return;
+    const before = policy;
+    setPolicy({ ...policy, mode: m }); setModeBusy(true);
+    try { setPolicy(await setDevrevAutonomy(m)); toast(m === "off" ? "Agent turned off" : m === "suggest" ? "Agent will recommend, a person decides" : "Agent can close sure cases on its own"); }
+    catch (e) { setPolicy(before); toast(errMsg(e, "Could not change the agent mode")); }
+    finally { setModeBusy(false); }
+  };
+
+  /* ---- agent check: after a fix is submitted, look every 2 s until the agent has answered (at most 60 s) ---- */
+  const [watchId, setWatchId] = useState<string | null>(null);
+  const agentState = detail?.agent?.state ?? "none";
+  const answered = agentState !== "none" && agentState !== "checking";
+  const watching = !!detail && watchId === detail.ticket.id && !answered && policy?.mode !== "off";
+  useBurstPoll(!!detail && (agentState === "checking" || watching), () => loadDetail(true), AGENT_POLL_MS, AGENT_POLL_MAX_MS);
+
   const refreshAll = useCallback(() => { loadList(); loadDetail(); }, [loadList, loadDetail]);
+  const changed = useCallback((watch?: boolean) => {
+    if (watch && selRef.current) setWatchId(selRef.current);
+    refreshAll();
+  }, [refreshAll]);
 
   /* ---- sample report (kept from the old page) ---- */
   const [sending, setSending] = useState(false);
@@ -187,8 +217,8 @@ export default function WorkflowPage() {
         )}
         <CaseHero d={detail} now={now} />
         {detail.ticket.stage_key === "awaiting_verification"
-          ? <Decision key={detail.ticket.id} d={detail} onChanged={refreshAll} />
-          : <NextStep key={detail.ticket.id} d={detail} onChanged={refreshAll} />}
+          ? <Decision key={detail.ticket.id} d={detail} onChanged={changed} />
+          : <NextStep key={detail.ticket.id} d={detail} onChanged={changed} />}
         <div className="wf-pair">
           <DevRevCard d={detail} now={now} />
           <WhyCard d={detail} />
@@ -235,10 +265,13 @@ export default function WorkflowPage() {
             <p className="wf-sub">From a citizen&rsquo;s photo to a fixed street. Every step marked <b>DevRev</b> is a real record in DevRev.</p>
           </div>
           <div className="wf-head-r">
+            {list && <span className="wf-agentcount" title="Cases the agent verified and closed on its own"><Bot aria-hidden />Agents closed {plural(list.counts.agent_closed, "case")}</span>}
             <span className={`wf-sync is-${sync.tone}`}><i aria-hidden />{sync.text}</span>
             <Button variant="secondary" size="sm" icon={<Send />} loading={sending} onClick={sendSample}>Send a sample report</Button>
           </div>
         </header>
+
+        {policy && <AutonomyCard policy={policy} onMode={setMode} busy={modeBusy} />}
 
         <div className="wf-body">
           <Rail

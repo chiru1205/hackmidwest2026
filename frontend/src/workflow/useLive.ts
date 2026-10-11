@@ -24,3 +24,18 @@ export function useNow(ms = 1000): number {
   useEffect(() => { const id = window.setInterval(() => setNow(Date.now()), ms); return () => window.clearInterval(id); }, [ms]);
   return now;
 }
+
+/** Polls `fn` every `ms` while `active`, for at most `maxMs` from the moment it turned active. */
+export function useBurstPoll(active: boolean, fn: () => void, ms: number, maxMs: number) {
+  const ref = useRef(fn);
+  ref.current = fn;
+  useEffect(() => {
+    if (!active) return;
+    const t0 = Date.now();
+    const id = window.setInterval(() => {
+      if (Date.now() - t0 > maxMs) { window.clearInterval(id); return; }
+      if (!document.hidden) ref.current();
+    }, ms);
+    return () => window.clearInterval(id);
+  }, [active, ms, maxMs]);
+}

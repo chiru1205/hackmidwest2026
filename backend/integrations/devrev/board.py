@@ -121,6 +121,18 @@ def fix_photo_exists(cluster_id: str) -> bool:
         return False
 
 
+def clear_after_photos(cluster_id: str | None = None) -> None:
+    """Delete the crew's after-photo of one cluster, or of every cluster (Admin Reset). A new fix cycle needs a new photo."""
+    try:
+        from backend.api import config
+        files = [config.PHOTO_DIR / f"fix_{cluster_id}.jpg"] if cluster_id else list(config.PHOTO_DIR.glob("fix_*.jpg"))
+        for f in files:
+            f.unlink(missing_ok=True)
+    except OSError:
+        pass
+    invalidate()
+
+
 def make_ticket(w: dict, cf_id: str, meta: dict, cluster, now: datetime) -> dict | None:
     awaiting = meta.get("awaiting", False)
     key = stage_key(w["stage"], bool(cluster.vendor) and cluster.status == "assigned", awaiting)
@@ -280,7 +292,7 @@ def _devrev_steps(devrev_id: str) -> list[dict]:
         who = (e.get("created_by") or {}).get("display_name") or "someone"
         if e.get("type") == "timeline_comment":
             body = (e.get("body") or "").strip()
-            if body.startswith("Civic Flow:"):
+            if body.startswith(("Civic Flow:", "Civic Flow agent")):
                 continue  # our own comments are shown from our recorded actions
             out.append({"ts": ts, "source": "devrev", "kind": "comment", "title": f"Comment by {who}", "detail": body[:400]})
         elif e.get("type") == "timeline_change_event":
@@ -350,7 +362,8 @@ def journey(cf_id: str) -> dict | None:
     for e in events.for_ticket(cf_id):
         if e["kind"] == "created" or e["text"].endswith("in DevRev"):
             continue  # creation has its own step; outside DevRev changes already show from DevRev's own history
-        steps.append({"ts": e["ts"], "source": "civicflow", "kind": e["kind"], "title": e["text"], "detail": ""})
+        steps.append({"ts": e["ts"], "source": "agent" if e["source"] == "Agent" else "civicflow", "kind": e["kind"],
+                      "title": e["text"], "detail": ""})
     steps = [s for s in steps if s.get("ts")]
     steps.sort(key=lambda s: _ts(s["ts"]) or datetime.min.replace(tzinfo=timezone.utc))
     return {"ticket": t, "steps": steps}

@@ -50,3 +50,18 @@ export function railMeta(t: Row, now: number): string {
 export const cleanTitle = (title: string) => title.replace(/^\[P\d\]\s*/i, "");
 
 export const PRIORITY_WORD: Record<string, string> = { P1: "urgent", P2: "high", P3: "normal", P4: "low" };
+
+/** Who acted: class and label for DevRev, the verification agent and Civic Flow itself. */
+export type Source = "civicflow" | "devrev" | "agent";
+export const SRC_CLASS: Record<Source, string> = { devrev: "is-dev", agent: "is-agent", civicflow: "is-cf" };
+export const SRC_LABEL: Record<Source, string> = { devrev: "DevRev", agent: "Agent", civicflow: "Civic Flow" };
+export const srcOf = (s: string): Source => (s === "devrev" || s === "agent" ? s : "civicflow");
+
+/** Confidence arrives as 0-1; tolerate a 0-100 value. */
+export const pctOf = (c: number) => Math.max(0, Math.min(100, Math.round(c <= 1 ? c * 100 : c)));
+
+/** "a", "a and b", "a, b and c". */
+export function joinList(xs: string[]): string {
+  if (xs.length <= 1) return xs.join("");
+  return `${xs.slice(0, -1).join(", ")} and ${xs[xs.length - 1]}`;
+}

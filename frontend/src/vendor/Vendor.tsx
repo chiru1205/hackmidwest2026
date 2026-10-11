@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { motion } from "framer-motion";
-import { Building2, MapPin, CheckCheck, CircleDot, Clock, Inbox, Layers, Link2, PlayCircle, Search, TriangleAlert, Users } from "lucide-react";
+import { Building2, MapPin, CheckCheck, CircleDot, Clock, Inbox, Layers, Link2, PlayCircle, Search, ShieldCheck, TriangleAlert, Users } from "lucide-react";
 import type { VendorOrder } from "@contracts";
 import { api } from "../lib/api";
 import { useAsync, useEvents } from "../lib/hooks";
@@ -10,12 +10,12 @@ import {
 import Detail, { StagePill } from "./Detail";
 import { GeoChips, districtOf, zonesOf } from "../ops/geo";
 import { CategoryIcon, Photo } from "./parts";
-import { applyOverride, dueInfo, isOverdue, placeOf, stageOf, titleOf, type Override } from "./util";
+import { applyOverride, dueFor, isOverdue, loadAwaiting, placeOf, rememberAwaiting, stageOf, titleOf, type Override } from "./util";
 import { pinFresh } from "../lib/fresh";
 import "./vendor.css";
 
 const VENDORS = ["KC Road Crew Co.", "BrightLine Lighting", "GreenLeaf Urban Services"];
-type Filter = "all" | "open" | "progress" | "fixed" | "overdue";
+type Filter = "all" | "open" | "progress" | "awaiting" | "fixed" | "overdue";
 type Sort = "priority" | "due";
 const PAGE = 40;
 
@@ -34,7 +34,7 @@ export default function Vendor() {
   const [selId, setSelId] = useState<string | null>(null);
   const [open, setOpen] = useState(false);
   const [limit, setLimit] = useState(PAGE);
-  const [ov, setOv] = useState<Record<string, Override>>({});
+  const [ov, setOv] = useState<Record<string, Override>>(loadAwaiting);
   const listRef = useRef<HTMLUListElement>(null);
 
   // live: any ticket/cluster change refreshes the list (debounced)
@@ -46,6 +46,19 @@ export default function Vendor() {
     }
   });
   useEffect(() => () => window.clearTimeout(timer.current), []);
+
+  // The server now says which orders are awaiting verification, so what this browser remembered from an earlier visit
+  // is dropped once the first list loads (the city may have approved or sent the repair back since).
+  const reconciled = useRef(false);
+  useEffect(() => {
+    if (!orders.data || reconciled.current) return;
+    reconciled.current = true;
+    const byId = new Map(orders.data.map((o) => [o.cluster.id, o]));
+    const stale = Object.keys(ov).filter((id) => ov[id].awaiting && !byId.get(id)?.ticket?.tags?.includes("awaiting_verification"));
+    if (!stale.length) return;
+    stale.forEach((id) => rememberAwaiting(id, false));
+    setOv((m) => { const n = { ...m }; stale.forEach((id) => { if (n[id]?.awaiting) delete n[id]; }); return n; });
+  }, [orders.data]);  // eslint-disable-line react-hooks/exhaustive-deps
 
   const all = useMemo(() => {
     const base = orders.data ?? [];
@@ -67,10 +80,10 @@ export default function Vendor() {
   const forVendor = useMemo(() => all.filter((o) => (!vendor || o.cluster.vendor === vendor) && (!district || districtOf(o.cluster) === district)), [all, vendor, district]);
   const now = Date.now();
   const counts = useMemo(() => {
-    const n = { all: forVendor.length, open: 0, progress: 0, fixed: 0, overdue: 0 };
+    const n = { all: forVendor.length, open: 0, progress: 0, awaiting: 0, fixed: 0, overdue: 0 };
     forVendor.forEach((o) => {
       const s = stageOf(o);
-      if (s === "queued") n.open++; else if (s === "in_progress") n.progress++; else n.fixed++;
+      if (s === "queued") n.open++; else if (s === "in_progress") n.progress++; else if (s === "awaiting_verification") n.awaiting++; else n.fixed++;
       if (isOverdue(o, now)) n.overdue++;
     });
     return n;
@@ -87,6 +100,7 @@ export default function Vendor() {
       const s = stageOf(o);
       if (filter === "open" && s !== "queued") return false;
       if (filter === "progress" && s !== "in_progress") return false;
+      if (filter === "awaiting" && s !== "awaiting_verification") return false;
       if (filter === "fixed" && s !== "resolved") return false;
       if (filter === "overdue" && !isOverdue(o, now)) return false;
       if (needle) {
@@ -96,7 +110,8 @@ export default function Vendor() {
       return true;
     });
     rows.sort((a, b) => {
-      const ra = stageOf(a) === "resolved" ? 1 : 0, rb = stageOf(b) === "resolved" ? 1 : 0;
+      const rank = (o: typeof a) => { const s = stageOf(o); return s === "resolved" ? 2 : s === "awaiting_verification" ? 1 : 0; };  // the crew's own work first
+      const ra = rank(a), rb = rank(b);
       if (ra !== rb) return ra - rb;
       return sort === "due" ? +new Date(a.due) - +new Date(b.due) : b.cluster.priority - a.cluster.priority;
     });
@@ -137,14 +152,16 @@ export default function Vendor() {
       throw e;
     }
   }
+  /** The crew submits the repair; the city (or the agent) confirms it. The order stays on the list as awaiting verification. */
   async function fix(o: VendorOrder, blob: Blob | null, url: string | null) {
     const id = o.cluster.id;
     const prev = ov[id];
-    const fixedAt = new Date().toISOString();
-    const snap = applyOverride(o, { status: "fixed", stage: "resolved", fixedAt });
-    setOv((m) => ({ ...m, [id]: { status: "fixed", stage: "resolved", afterUrl: url ?? undefined, fixedAt, snapshot: snap } }));
+    setOv((m) => ({ ...m, [id]: { status: "in_progress", stage: "work_in_progress", afterUrl: url ?? undefined, awaiting: true } }));
+    rememberAwaiting(id, true);
     try { await api.fix(id, blob); }
     catch (e) {
+      if (/already awaiting/i.test(e instanceof Error ? e.message : "")) return;  // submitted earlier; the order is where it should be
+      rememberAwaiting(id, false);
       setOv((m) => { const n = { ...m }; if (prev) n[id] = prev; else delete n[id]; return n; });
       throw e;
     }
@@ -194,7 +211,7 @@ export default function Vendor() {
           <div className="vd-rail__scroll">
             {([
               ["all", "All", Layers, counts.all], ["open", "Open", CircleDot, counts.open], ["progress", "In progress", PlayCircle, counts.progress],
-              ["overdue", "Overdue", Clock, counts.overdue], ["fixed", "Fixed", CheckCheck, counts.fixed],
+              ["awaiting", "Awaiting verification", ShieldCheck, counts.awaiting], ["overdue", "Overdue", Clock, counts.overdue], ["fixed", "Fixed", CheckCheck, counts.fixed],
             ] as const).map(([id, label, Icon, n]) => (
               <button key={id} className={`vd-chip ${filter === id ? "is-on" : ""} ${id === "overdue" && n > 0 ? "is-warn" : ""}`} aria-pressed={filter === id} onClick={() => setFilter(id)}>
                 <Icon size={16} strokeWidth={1.75} aria-hidden /><span>{label}</span><b className="t-num">{n}</b>
@@ -208,7 +225,7 @@ export default function Vendor() {
         <header className="vd-main__head">
           <div>
             <h1 className="vd-h1">Work orders</h1>
-            <p className="vd-sub">{vendor || "All vendors"}{district ? ` ${"·"} ${district}` : ""} {"·"} <span className="t-num">{counts.open + counts.progress}</span> active</p>
+            <p className="vd-sub">{vendor || "All vendors"}{district ? ` ${"·"} ${district}` : ""} {"·"} <span className="t-num">{counts.open + counts.progress + counts.awaiting}</span> active</p>
           </div>
           <span className="spacer" />
           <Pill variant={live ? "success" : "neutral"} size="sm" icon={<Link2 size={12} strokeWidth={1.75} />} dot={live ? "pulse" : false}
@@ -228,7 +245,7 @@ export default function Vendor() {
           {visible.length > 0 && (
             <motion.ul ref={listRef} className="vd-list" role="listbox" aria-label="Work orders" onKeyDown={onKey} variants={list} initial="hidden" animate="show" key={`${vendor}|${district}|${filter}|${sort}`}>
               {visible.slice(0, limit).map((o, i) => {
-                const c = o.cluster, s = stageOf(o), due = dueInfo(o.due, s === "resolved");
+                const c = o.cluster, s = stageOf(o), due = dueFor(o);
                 const on = c.id === effId;
                 return (
                   <motion.li key={c.id} variants={i < 12 ? item : undefined} layout={false}>

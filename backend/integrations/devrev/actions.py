@@ -10,6 +10,7 @@ from . import board, events, live, set_devrev_stage_seen, set_severity
 log = logging.getLogger("civicflow.devrev.actions")
 LADDER = ("low", "medium", "high", "blocker")
 ACTIONS = ("start", "request_verification", "approve", "escalate", "reopen")
+MAX_PHOTO_BYTES = 15 * 1024 * 1024
 
 
 # ---------------------------------------------------------------- pure rules
@@ -49,11 +50,39 @@ def check_transition(action: str, key: str, severity: str = "medium", has_eviden
 
 
 # ---------------------------------------------------------------- execution
+def save_after_photo(cluster_id: str, data: bytes) -> str:
+    """Store the crew's after-photo as fix_<cluster_id>.jpg (a new photo replaces the old one). Returns its URL."""
+    from backend.api import adapters, config
+    try:
+        (config.PHOTO_DIR / f"fix_{cluster_id}.jpg").unlink(missing_ok=True)
+    except OSError:
+        pass
+    return adapters.save_photo(f"fix_{cluster_id}.jpg", data)
+
+
+def photo_error(data: bytes) -> str | None:
+    """Why an upload cannot be an after-photo (empty, too large, not an image), or None. One check for every upload route."""
+    if not data:
+        return "No photo was received"
+    if len(data) > MAX_PHOTO_BYTES:
+        return "That photo is too large"
+    try:
+        import io
+
+        from PIL import Image
+        Image.open(io.BytesIO(data)).verify()
+    except Exception:
+        return "That file is not a photo"
+    return None
+
+
 def _fail(msg: str) -> dict:
     return {"ok": False, "ticket": None, "error": msg}
 
 
-async def run(cf_id: str, action: str, note: str | None) -> dict:
+async def run(cf_id: str, action: str, note: str | None, agent=None, photo: bytes | None = None) -> dict:
+    """`agent` (an AgentVerdict) marks an approve made by the verification agent: same path, attributed to it.
+    `photo` (already validated) is the crew's after-photo for request_verification; it is saved only once the request is accepted."""
     from backend.api import adapters, events as sse, pipeline
 
     note = (note or "").strip() or None
@@ -85,6 +114,10 @@ async def run(cf_id: str, action: str, note: str | None) -> dict:
     kind = {"start": "stage", "request_verification": "verification", "approve": "resolved",
             "escalate": "escalated", "reopen": "reopened"}[action]
     comment_text = f"Civic Flow: {say.split(': ', 1)[1]}" + (f". Note: {note}" if note else "")
+    if agent is not None and action == "approve":
+        pct = round(agent.confidence * 100)
+        say = f"{disp}: agent verified and closed this case ({pct}%)"
+        comment_text = f"Civic Flow agent verified and closed this case (confidence {pct}%): {agent.reason or note}"
 
     commented = False
     if use_dr:
@@ -98,15 +131,20 @@ async def run(cf_id: str, action: str, note: str | None) -> dict:
         set_devrev_stage_seen(cf_id, stage_to)
 
     # ---- local state, through the code paths the app already uses
+    if photo and action == "request_verification":
+        await asyncio.to_thread(save_after_photo, cluster.id, photo)
     if action == "start":
         adapters.set_stage(cf_id, "work_in_progress")
         pipeline.set_status(cluster, "in_progress", "Work started")
         events.set_meta(cf_id, awaiting=False)
     elif action == "request_verification":
-        events.set_meta(cf_id, awaiting=True, evidence=meta["evidence"] + (1 if note else 0))  # the crew's note is evidence
+        events.set_meta(cf_id, awaiting=True, evidence=meta["evidence"] + (1 if note else 0), note=note or "")  # the crew's note is evidence
+        events.set_verdict(cf_id, None)  # a new check cycle starts
         pipeline.set_status(cluster, cluster.status, "Awaiting verification")
     elif action == "approve":
         events.set_meta(cf_id, awaiting=False, evidence=meta["evidence"] + (1 if note else 0))
+        if agent is not None:  # stored now, so "closed by the agent" is never shown before the case really is closed
+            events.set_verdict(cf_id, agent)
         pipeline.mark_fixed(cluster)
     elif action == "escalate":
         set_severity(cf_id, new_sev)
@@ -114,19 +152,28 @@ async def run(cf_id: str, action: str, note: str | None) -> dict:
         pipeline.set_status(cluster, cluster.status, f"Escalated to {new_sev}")
     elif action == "reopen":
         adapters.set_stage(cf_id, "queued")
-        events.set_meta(cf_id, awaiting=False, evidence=0)  # a new fix cycle needs new evidence
+        events.set_meta(cf_id, awaiting=False, evidence=0, reopened=meta["reopened"] + 1)  # a new fix cycle needs new evidence
+        events.set_verdict(cf_id, None)
+        board.clear_after_photos(cluster.id)  # the old photo belongs to the failed fix
         if cluster.status == "fixed":
             cluster.fixed_at = None
         pipeline.set_status(cluster, "assigned" if cluster.vendor else "reported", "Reopened")
 
-    text = say + (f" ({note})" if note else "")
+    text = say + (f" ({note})" if note and agent is None else "")
     if use_dr and action != "start" and not commented:
         text += " [DevRev comment not posted]"
-    events.record(kind, cf_id, disp if row["devrev_display"] else None, text, "DevRev" if use_dr else "Civic Flow")
+    events.record(kind, cf_id, disp if row["devrev_display"] else None, text,
+                  "Agent" if agent is not None else "DevRev" if use_dr else "Civic Flow")
     board.invalidate()
     t = adapters.get_ticket(cf_id)
     if t is not None:
         sse.publish("ticket.updated", {"ticket": t.model_dump(mode="json")})
     pipeline.publish_stats()
+    if action == "request_verification":  # the agent checks the fix in the background; the crew's call returns now
+        try:
+            from backend.agents import verify
+            verify.schedule(cf_id)
+        except Exception as e:
+            log.warning("agent check not started: %s", type(e).__name__)
     ticket = await asyncio.to_thread(board.find_ticket, cf_id)
     return {"ok": True, "ticket": ticket, "error": None}

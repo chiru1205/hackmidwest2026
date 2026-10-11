@@ -20,7 +20,7 @@ export function groupCases(items: CaseRow[]) {
 }
 
 /** `q` is the search the loaded rows answer, which can lag behind what is typed. */
-export interface RailList { mode: "needs" | "all"; q: string; items: CaseRow[]; total: number; counts: CaseCounts }
+export interface RailList { mode: "needs" | "all"; q: string; items: CaseRow[]; total: number; counts: CaseCounts; semantic: boolean }
 
 function Item({ c, selected, now, onSelect }: { c: CaseRow; selected: boolean; now: number; onSelect: () => void }) {
   return (
@@ -49,8 +49,9 @@ export function Rail({ list, loading, error, onRetry, q, onQ, browse, onBrowse, 
   if (list?.mode === "all") {
     head = (
       <>
-        <h2 className="wf-rail-title">{searching ? "Results" : "All cases"}</h2>
+        <h2 className="wf-rail-title">{searching ? (list.semantic ? "Closest matches" : "Results") : "All cases"}</h2>
         <span className="wf-rail-num">{list.total.toLocaleString()}</span>
+        {searching && list.semantic && <span className="wf-chip is-dev" title="Matched by meaning as well as by words">Smart search</span>}
         <span className="grow" />
         {counts && <span className="wf-rail-of">{counts.open.toLocaleString()} open overall</span>}
       </>

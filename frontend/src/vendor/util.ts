@@ -15,11 +15,15 @@ export function cleanAddress(raw?: string | null, fallback = "Unknown location")
 export const placeOf = (c: Cluster) => cleanAddress(c.address, c.neighborhood ?? "Unknown location");
 export const titleOf = (c: Cluster) => `${catLabel(c.category)} – ${placeOf(c)}`;
 
-export type Stage = "queued" | "in_progress" | "resolved";
-export const STAGE_LABEL: Record<Stage, string> = { queued: "Queued", in_progress: "In progress", resolved: "Resolved" };
+export type Stage = "queued" | "in_progress" | "awaiting_verification" | "resolved";
+export const STAGE_LABEL: Record<Stage, string> = { queued: "Queued", in_progress: "In progress", awaiting_verification: "Awaiting verification", resolved: "Resolved" };
 
-export function stageOf(o: VendorOrder): Stage {
+/** A work order plus the one thing the server list does not say: the crew submitted the repair and the city has not confirmed it. */
+export type OrderView = VendorOrder & { awaiting?: boolean };
+
+export function stageOf(o: OrderView): Stage {
   if (o.cluster.status === "fixed" || o.ticket?.stage === "resolved") return "resolved";
+  if (o.awaiting || o.ticket?.tags?.includes("awaiting_verification")) return "awaiting_verification";
   if (o.cluster.status === "in_progress" || o.ticket?.stage === "work_in_progress") return "in_progress";
   return "queued";
 }
@@ -44,7 +48,15 @@ export function dueInfo(due: string, done: boolean, now = Date.now()): DueInfo {
   return { text: `Due in ${days} days (${date})`, short: `Due ${date}`, tone: "ok" };
 }
 
-export const isOverdue = (o: VendorOrder, now = Date.now()) => stageOf(o) !== "resolved" && new Date(o.due).getTime() < now;
+/** Awaiting verification is the city's move, so it never counts against the crew's due date. */
+export const isOverdue = (o: OrderView, now = Date.now()) => { const s = stageOf(o); return s !== "resolved" && s !== "awaiting_verification" && new Date(o.due).getTime() < now; };
+
+/** Due-date info for a row or header: finished work shows Completed, submitted work shows Submitted. */
+export function dueFor(o: OrderView, now = Date.now()): DueInfo {
+  const s = stageOf(o);
+  if (s === "awaiting_verification") return { text: "Submitted for verification", short: "Submitted", tone: "done" };
+  return dueInfo(o.due, s === "resolved", now);
+}
 
 export function fmtDate(iso?: string | null, withTime = true): string {
   if (!iso) return "-";
@@ -62,12 +74,34 @@ export function ago(iso: string, now = Date.now()): string {
 
 export const SEVERITY_LABEL: Record<string, string> = { blocker: "Blocker", high: "High", medium: "Medium", low: "Low" };
 
-export interface Override { status: ClusterStatus; stage: TicketStage; afterUrl?: string; fixedAt?: string; snapshot?: VendorOrder }
+export interface Override { status: ClusterStatus; stage: TicketStage; afterUrl?: string; fixedAt?: string; snapshot?: VendorOrder; awaiting?: boolean }
 
-export function applyOverride(o: VendorOrder, ov?: Override): VendorOrder {
+/* The browser also remembers what the crew submitted (per viewer, a few hours) so the row flips at once, before the list reloads. */
+const AWAIT_KEY = "cf.vendor.awaiting";
+const AWAIT_TTL_MS = 6 * 3_600_000;
+const readAwaiting = (): Record<string, number> => {
+  try { return JSON.parse(localStorage.getItem(AWAIT_KEY) || "{}") as Record<string, number>; } catch { return {}; }
+};
+export function rememberAwaiting(id: string, on: boolean) {
+  try {
+    const m = readAwaiting();
+    if (on) m[id] = Date.now(); else delete m[id];
+    localStorage.setItem(AWAIT_KEY, JSON.stringify(m));
+  } catch { /* storage can be blocked; the optimistic state still works for this visit */ }
+}
+export function loadAwaiting(now = Date.now()): Record<string, Override> {
+  const out: Record<string, Override> = {};
+  for (const [id, ts] of Object.entries(readAwaiting())) {
+    if (now - ts < AWAIT_TTL_MS) out[id] = { status: "in_progress", stage: "work_in_progress", awaiting: true };
+  }
+  return out;
+}
+
+export function applyOverride(o: VendorOrder, ov?: Override): OrderView {
   if (!ov) return o;
   return {
     ...o,
+    awaiting: ov.awaiting || undefined,
     cluster: { ...o.cluster, status: ov.status, fixed_at: ov.fixedAt ?? o.cluster.fixed_at },
     ticket: o.ticket ? { ...o.ticket, stage: ov.stage } : o.ticket,
   };

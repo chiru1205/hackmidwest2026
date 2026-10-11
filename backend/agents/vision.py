@@ -43,6 +43,13 @@ def _shrink(image: bytes) -> bytes:
         return image
 
 
+def configured_provider() -> str:
+    """Which provider build_vision_model would use ("bedrock", "anthropic", or "" for none), without building a client."""
+    if os.getenv("AWS_BEARER_TOKEN_BEDROCK") or os.getenv("AWS_ACCESS_KEY_ID") or os.getenv("AWS_PROFILE"):
+        return "bedrock"
+    return "anthropic" if os.getenv("ANTHROPIC_API_KEY") else ""
+
+
 def build_vision_model():
     """Cached (the boto client is slow to create). Bedrock if AWS credentials exist, else Anthropic if a key exists, else None."""
     if os.getenv("AWS_BEARER_TOKEN_BEDROCK") or os.getenv("AWS_ACCESS_KEY_ID") or os.getenv("AWS_PROFILE"):

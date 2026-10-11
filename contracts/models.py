@@ -320,7 +320,7 @@ class Board(BaseModel):
 
 class JourneyStep(BaseModel):
     ts: str
-    source: Literal["civicflow", "devrev"]
+    source: Literal["civicflow", "devrev", "agent"]
     kind: Literal["report", "vision", "geofence", "dedup", "priority", "routing", "created", "stage", "comment",
                   "escalated", "verification", "resolved", "reopened"]
     title: str
@@ -349,7 +349,7 @@ class TicketEventRow(BaseModel):
     ticket_id: str
     devrev_id: Optional[str] = None
     text: str
-    source: Literal["DevRev", "Civic Flow"]
+    source: Literal["DevRev", "Civic Flow", "Agent"]
 
 
 # ---- Workflow page "case journey": GET /api/devrev/cases, GET /api/devrev/ticket/{id}/case
@@ -360,6 +360,7 @@ class CaseCounts(BaseModel):
     escalated: int = 0       # escalated and not resolved
     no_crew: int = 0         # queued with no crew for more than 24 h
     needs_you: int = 0       # distinct cases in any of the four groups above
+    agent_closed: int = 0    # cases the agent verified and closed on its own (all time, from the event log)
 
 
 class CaseRow(BoardTicket):
@@ -372,6 +373,7 @@ class CaseList(BaseModel):
     total: int               # rows matching the filter (not just this page)
     counts: CaseCounts       # always for the whole board, ignoring q/group
     items: list[CaseRow] = []
+    semantic: bool = False   # True when meaning-based ranking added matches to the plain text search for q
 
 
 class FactorBar(BaseModel):
@@ -398,7 +400,7 @@ class Station(BaseModel):
     detail: str
     state: Literal["done", "now", "todo"]
     chip: str                            # e.g. "Civic Flow", "Bedrock + Akamai AI", "DevRev - TKT-8"
-    chip_source: Literal["civicflow", "devrev"]
+    chip_source: Literal["civicflow", "devrev", "agent"]
     ts: Optional[str] = None             # when it happened (None for todo)
 
 
@@ -417,6 +419,82 @@ class CaseDetail(BaseModel):
     stations: list[Station] = []
     timeline: list[JourneyStep] = []                 # the existing journey steps, newest last
     can: list[Literal["start", "request_verification", "approve", "escalate", "reopen"]] = []  # actions allowed now
+    agent: Optional["AgentVerdict"] = None   # None until a fix check has run for this case
+
+
+# ---- agentic fix verification: an agent compares before/after photos (vision), a hosted chat agent decides, code enforces policy
+class AgentVerdict(BaseModel):
+    state: Literal["none", "checking", "recommends_approve", "recommends_review", "auto_approved", "skipped"] = "none"
+    decision: Optional[Literal["approve", "review"]] = None
+    confidence: float = 0.0              # 0-1
+    reason: str = ""                     # one sentence from the decision agent
+    observation: str = ""                # what the vision model saw in the before/after photos (1-2 sentences)
+    policy_note: str = ""                # why a person is still needed, or why auto-approval was allowed
+    checked_at: Optional[str] = None
+    eyes: str = "AWS Bedrock vision"     # which model read the photos
+    brain: str = "Akamai hosted chat"    # which model made the decision
+
+
+class AutonomyPolicy(BaseModel):
+    """GET /api/devrev/autonomy (staff). POST /api/devrev/autonomy {mode} changes the mode only."""
+    mode: Literal["off", "suggest", "auto"] = "suggest"   # off: no check; suggest: recommend only; auto: may close low-risk cases
+    auto_buckets: list[Bucket] = ["P3", "P4"]
+    min_confidence: float = 0.85
+    always_human: list[str] = []         # plain-language rules that always need a person
+    closed_by_agent: int = 0
+    recommended: int = 0
+
+
+# ---- Impact page (staff): GET /api/impact/live, and the judges' page GET /api/platform
+class DistrictCount(BaseModel):
+    label: str
+    duplicates: int = 0
+
+
+class AgentSplit(BaseModel):
+    closed_by_agent: int = 0
+    on_track: int = 0                    # open and moving with a crew, nothing needed from a person
+    needs_person: int = 0
+    total: int = 0
+
+
+class ImpactFact(BaseModel):
+    label: str
+    value: str
+    note: str = ""
+    estimate: bool = False
+    source: str = ""
+
+
+class ImpactLive(BaseModel):
+    as_of: str
+    reports: int = 0                     # total reports received
+    unique_issues: int = 0               # clusters
+    duplicates_avoided: int = 0          # reports - unique issues
+    tickets_in_devrev: int = 0
+    median_report_to_ticket_s: Optional[float] = None
+    districts: list[DistrictCount] = []  # duplicates absorbed per council district, largest first
+    split: AgentSplit = AgentSplit()
+    facts: list[ImpactFact] = []         # the real Kansas City open-data facts (same content as GET /api/impact)
+
+
+class PlatformPart(BaseModel):
+    name: str                            # e.g. "Hosted embeddings"
+    provider: str                        # "Akamai", "AWS", "DevRev", ...
+    role: str                            # one line: what it does here
+    calls: int = 0
+    errors: int = 0
+    avg_ms: int = 0
+    detail: str = ""
+
+
+class PlatformInfo(BaseModel):
+    as_of: str
+    parts: list[PlatformPart] = []
+    semantic_merges: int = 0             # reports merged by embedding similarity that distance alone would not have merged
+    hosting: str = ""                    # e.g. "Akamai Cloud (Linode), Chicago"
+    agents_mode: str = ""
+    devrev_mode: str = ""
 
 
 # ---- citizen app (GET /api/me/requests): one citizen's view of an issue they reported or confirmed

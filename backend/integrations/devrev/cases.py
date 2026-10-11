@@ -1,13 +1,14 @@
 """Workflow page "case journey": the filtered case list (whole board, server-side) and one case's six-station detail."""
 from __future__ import annotations
 
+import json
 import math
 import os
 import re
 
 from contracts.models import CaseDetail, CaseList
 
-from . import actions, board, raw_rows
+from . import actions, board, case_search, events, raw_rows
 
 GROUPS = ("needs", "approval", "overdue", "escalated", "no_crew", "all")
 REASONS = ("approval", "overdue", "escalated", "no_crew")
@@ -55,10 +56,34 @@ def _grouped(item: tuple[dict, list[str]]):
     return (min(REASONS.index(r) for r in rs) if rs else len(REASONS),) + _urgency(item)
 
 
+def agent_closed() -> int:
+    try:
+        return events.agent_counts()["closed_by_agent"]
+    except Exception:
+        return 0
+
+
+def _closest(needle: str, rows: list[tuple[dict, list[str]]], pick: list[tuple[dict, list[str]]]) -> list[tuple[dict, list[str]]]:
+    """Semantic matches for the query among `pick` that the substring search misses, most similar first. [] when the
+    query is too short or names a case id, the index is not ready, or embeddings are unavailable."""
+    try:
+        if not case_search.wants_semantic(needle, [t for t, _ in rows]):
+            return []
+        cl = board._clusters()
+        urgent = sorted((x for x in rows if x[0]["stage_key"] != "resolved" and x[0]["cluster_id"] in cl), key=_urgency)
+        open_rows = [(t, case_search.case_text(t, cl[t["cluster_id"]])) for t, _ in urgent[:case_search.CAP]]
+        by_id = {t["id"]: x for x in pick for t in [x[0]] if needle not in _haystack(t)}
+        hits = case_search.semantic_hits(needle, set(by_id), open_rows)
+        return [by_id[cid] for cid, _ in hits]
+    except Exception:
+        return []
+
+
 def list_cases(group: str = "needs", q: str = "", district: str = "", limit: int = 30, offset: int = 0) -> dict:
     tickets, source, as_of = board.all_tickets()
     rows = [(t, reasons_of(t)) for t in tickets]
-    counts = {"open": 0, "approval": 0, "overdue": 0, "escalated": 0, "no_crew": 0, "needs_you": 0}
+    counts = {"open": 0, "approval": 0, "overdue": 0, "escalated": 0, "no_crew": 0, "needs_you": 0,
+              "agent_closed": agent_closed()}
     for t, rs in rows:
         counts["open"] += t["stage_key"] != "resolved"
         counts["needs_you"] += bool(rs)
@@ -72,17 +97,20 @@ def list_cases(group: str = "needs", q: str = "", district: str = "", limit: int
     else:
         pick = [x for x in rows if x[1]]
     needle = (q or "").strip().lower()
-    if needle:
-        pick = [x for x in pick if needle in _haystack(x[0])]
     dist = (district or "").strip().lower()
     if dist:
         pick = [x for x in pick if (x[0].get("district") or "").lower() == dist]
+    near: list[tuple[dict, list[str]]] = []
+    if needle:
+        near = _closest(needle, rows, pick)
+        pick = [x for x in pick if needle in _haystack(x[0])]
     pick.sort(key=_grouped if group == "needs" else _urgency)
+    pick += near  # exact and substring matches first, then the semantic matches by similarity
 
     limit = max(1, min(int(limit), 100))
     offset = max(0, int(offset))
     items = [{**t, "reasons": rs} for t, rs in pick[offset:offset + limit]]
-    return CaseList(source=source, as_of=as_of, total=len(pick), counts=counts, items=items).model_dump(mode="json")
+    return CaseList(source=source, as_of=as_of, total=len(pick), counts=counts, items=items, semantic=bool(near)).model_dump(mode="json")
 
 
 # ---------------------------------------------------------------- detail
@@ -145,7 +173,20 @@ def _neighbors(n: int) -> str:
     return f"{n} neighbors sent photos and notes" if n != 1 else "1 neighbor sent a photo and note"
 
 
-def stations(t: dict, c, steps: list[dict]) -> list[dict]:
+def understood_chip(c) -> str:
+    """Name only what the saved trace of the first report shows really ran: a photo read, hosted embeddings."""
+    try:
+        from backend.api import store
+        trace = json.loads(store.meta_get(f"trace:{c.id}") or "[]")
+    except Exception:
+        trace = []
+    intake = next((s for s in trace if s.get("node") == "intake"), {})
+    vision = str(intake.get("summary") or "").startswith("vision:")
+    akamai = "akamai" in str(intake.get("summary") or "").lower() or any(str(s.get("model") or "").startswith("akamai") for s in trace)
+    return " + ".join(x for x, on in (("AI vision", vision), ("Akamai AI", akamai)) if on) or "Civic Flow"
+
+
+def stations(t: dict, c, steps: list[dict], agent=None) -> list[dict]:
     from backend.api import adapters
     key = t["stage_key"]
     n = max(1, t["reporters"])
@@ -165,19 +206,23 @@ def stations(t: dict, c, steps: list[dict]) -> list[dict]:
     verify_detail = {"done": "Fix checked and approved",
                      "now": "Marked ready for your check" + (", with an after-photo" if photo else ""),
                      "todo": "The crew sends an after-photo for you to check"}[state(4)]
+    by_agent = agent is not None and agent.state == "auto_approved" and key == "resolved"
+    if by_agent:
+        verify_detail = "The agent compared the before and after photos and closed the case"
     dr_label = DEVREV_LABEL[DEVREV_STAGE[key]]
     crew_detail = c.vendor or ("Waiting for a crew" if key in ("queued", "assigned") else "Crew not recorded")
     raw = [
         ("reported", "Reported", _neighbors(n), "Civic Flow", "civicflow",
          _step_ts(steps, "report")),
-        ("understood", "Understood", understood, "Bedrock + Akamai AI", "civicflow", _step_ts(steps, "dedup", "vision")),
+        ("understood", "Understood", understood, understood_chip(c), "civicflow", _step_ts(steps, "dedup", "vision")),
         ("ticket", "Ticket opened",
          f"{t['devrev_id'] or t['id']} opened with priority {t['priority_bucket']} ({c.priority:.0f}/100)",
          f"DevRev - {t['devrev_id']}" if synced else "Local ticket", "devrev" if synced else "civicflow",
          _step_ts(steps, "created")),
         ("crew", "Crew working", crew_detail, f"DevRev - {dr_label}" if synced else f"Local - {label}",
          "devrev" if synced else "civicflow", crew_ts),
-        ("verify", "Verify", verify_detail, "Civic Flow", "civicflow", _step_ts(steps, "verification", last=True)),
+        ("verify", "Verify", verify_detail, "Agent verified" if by_agent else "Civic Flow", "agent" if by_agent else "civicflow",
+         _step_ts(steps, "resolved", last=True) if by_agent else _step_ts(steps, "verification", last=True)),
         ("told", "Citizens told", f"{n} neighbors get Fixed!" if n != 1 else "1 neighbor gets Fixed!",
          "DevRev - Resolved" if synced else "Local ticket",
          "devrev" if synced else "civicflow", _step_ts(steps, "resolved", last=True)),
@@ -195,6 +240,7 @@ def case_detail(ident: str) -> dict:
     t, steps = j["ticket"], j["steps"]
     c = board._clusters()[t["cluster_id"]]
     synced = bool(t["devrev_id"])
+    agent = events.get_verdict(cf)
     after = f"/photos/fix_{c.id}.jpg" if board.fix_photo_exists(c.id) else None
     record = {
         "display_id": t["devrev_id"], "stage": DEVREV_STAGE[t["stage_key"]] if synced else None,
@@ -206,5 +252,5 @@ def case_detail(ident: str) -> dict:
     return CaseDetail(
         ticket=t, category=c.category, address=c.address, before_photo_url=c.photo_url, after_photo_url=after,
         crew_note=crew_note(steps, t["stage_key"]), priority_score=c.priority, rationale=c.rationale, factors=factors(c),
-        duplicates_avoided=max(0, c.reporter_count - 1), devrev=record, stations=stations(t, c, steps),
-        timeline=steps, can=can_do(t["stage_key"], t["severity"])).model_dump(mode="json")
+        duplicates_avoided=max(0, c.reporter_count - 1), devrev=record, stations=stations(t, c, steps, agent),
+        timeline=steps, can=can_do(t["stage_key"], t["severity"]), agent=agent).model_dump(mode="json")

@@ -212,6 +212,14 @@
 .ops-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--faint); }
 .ops-dot.ok { background: var(--success); } .ops-dot.bad { background: var(--p1); }
 
+/* mid-width laptops: the story and page buttons take a lot of the bar, so drop the brand block and the last KPI */
+@media (min-width: 1181px) and (max-width: 1560px) {
+  .ops-kpis__brand { display: none; }
+  .ops-kpis__grid { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+  .ops-kpis__grid > :nth-child(6) { display: none; }
+  .ops-kpis__actions { padding-left: var(--s-4); }
+}
+
 /* ---------- smaller screens: stack, scroll ---------- */
 @media (max-width: 1180px) {
   .ops-kpis { height: auto; flex-wrap: wrap; padding: var(--s-3) var(--s-4); gap: var(--s-3); }

@@ -212,9 +212,9 @@ def seed(n_clusters: int = 60) -> None:
                 created_at=_iso(first + timedelta(minutes=i * 7))))
         total_reporters += reporters
 
-    store.counters.update({"total_reports": total_reporters + 40,
-                           "duplicates_absorbed": total_reporters + 40 - len(specs),
-                           "llm_calls_avoided": total_reporters + 40 - len(specs)})
+    store.counters.update({"total_reports": total_reporters,
+                           "duplicates_absorbed": total_reporters - len(specs),
+                           "llm_calls_avoided": total_reporters - len(specs)})
     store.persist_counters()
     edge.warm()
     log.info("seeded %d clusters, %d users", len(specs), len(SEED_USERS))

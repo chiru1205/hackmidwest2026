@@ -6,7 +6,7 @@ import {
 import { Pill } from "../components/ui";
 import { catLabel } from "../lib/const";
 import type { CaseDetail, Station } from "../lib/api";
-import { PRIORITY_WORD, cleanTitle, longDur, overdueBy, plural, relTime } from "./format";
+import { PRIORITY_WORD, SRC_CLASS, cleanTitle, longDur, overdueBy, plural, relTime, srcOf } from "./format";
 
 const CAT_ICON: Record<string, ComponentType<SVGProps<SVGSVGElement>>> = {
   pothole: Construction, streetlight_out: Lightbulb, sidewalk_damage: Footprints, manhole_cover: CircleDot,
@@ -56,13 +56,16 @@ export function CaseHero({ d, now }: { d: CaseDetail; now: number }) {
       <ol className="wf-stations" aria-label="Journey from report to fix">
         {d.stations.map((s, i) => {
           const next = d.stations[i + 1];
+          const byAgent = s.key === "verify" && d.agent?.state === "auto_approved" && t.stage_key === "resolved";  // the agent closed it, say so
+          const chip = byAgent ? "Agent verified" : s.chip;
+          const chipSrc = byAgent ? "agent" : srcOf(s.chip_source);
           return (
             <li key={s.key} className={`wf-station is-${s.state} ${next ? `to-${next.state}` : ""}`} aria-current={s.state === "now" ? "step" : undefined}>
               <span className="wf-dot">{s.state === "done" ? <Check aria-hidden /> : i + 1}</span>
               <div className="wf-station-body">
                 <b><span className="wf-sr">{s.state === "done" ? "Completed: " : s.state === "now" ? "Current step: " : "Not yet: "}</span>{s.title}</b>
                 <span className="wf-station-detail">{s.detail}</span>
-                <span className={`wf-chip ${s.chip_source === "devrev" ? "is-dev" : "is-cf"}`}>{s.chip}</span>
+                <span className={`wf-chip ${SRC_CLASS[chipSrc]}`}>{chip}</span>
                 <span className="wf-station-when">{whenOf(s, now)}</span>
               </div>
             </li>

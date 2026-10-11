@@ -24,8 +24,9 @@ def do_reset(reseed: bool = True) -> None:
     store.wipe()
     events.clear()
     try:
-        from backend.integrations.devrev import baseline, events as dr_events
+        from backend.integrations.devrev import baseline, board, events as dr_events
         dr_events.clear_all()
+        board.clear_after_photos()    # seeded case ids repeat: a leftover after-photo would count as evidence for a fresh case
     except Exception:
         baseline = None
     if reseed:

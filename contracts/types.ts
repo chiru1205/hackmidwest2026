@@ -102,7 +102,7 @@ export interface Board {
   totals: { open: number; overdue: number; escalated: number; resolved: number; median_ttr: string | null; unsynced?: number };
 }
 export interface JourneyStep {
-  ts: string; source: "civicflow" | "devrev";
+  ts: string; source: "civicflow" | "devrev" | "agent";
   kind: "report" | "vision" | "geofence" | "dedup" | "priority" | "routing" | "created" | "stage" | "comment"
     | "escalated" | "verification" | "resolved" | "reopened";
   title: string; detail: string;
@@ -112,7 +112,7 @@ export interface TicketAction { action: "start" | "request_verification" | "appr
 export interface TicketActionResult { ok: boolean; ticket: BoardTicket | null; error: string | null }
 export interface TicketEventRow {
   ts: string; kind: "created" | "stage" | "comment" | "escalated" | "verification" | "resolved" | "reopened";
-  ticket_id: string; devrev_id: string | null; text: string; source: "DevRev" | "Civic Flow";
+  ticket_id: string; devrev_id: string | null; text: string; source: "DevRev" | "Civic Flow" | "Agent";
 }
 
 // ---- citizen app: GET /api/me/requests, GET /api/me/requests/{cluster_id}
@@ -132,9 +132,9 @@ export interface CitizenRequest {
 
 // ---- Workflow page "case journey": GET /api/devrev/cases, GET /api/devrev/ticket/{id}/case
 export type CaseReason = "approval" | "overdue" | "escalated" | "no_crew";
-export interface CaseCounts { open: number; approval: number; overdue: number; escalated: number; no_crew: number; needs_you: number }
+export interface CaseCounts { open: number; approval: number; overdue: number; escalated: number; no_crew: number; needs_you: number; agent_closed: number }
 export interface CaseRow extends BoardTicket { reasons: CaseReason[] }
-export interface CaseList { source: "devrev" | "local board"; as_of: string; total: number; counts: CaseCounts; items: CaseRow[] }
+export interface CaseList { source: "devrev" | "local board"; as_of: string; total: number; counts: CaseCounts; items: CaseRow[]; semantic: boolean }
 export interface FactorBar { label: string; value: string; pct: number }
 export interface DevrevRecord {
   display_id: string | null; stage: string | null; severity: string | null; part: string | null; owner: string | null;
@@ -142,11 +142,34 @@ export interface DevrevRecord {
 }
 export interface Station {
   key: "reported" | "understood" | "ticket" | "crew" | "verify" | "told"; title: string; detail: string;
-  state: "done" | "now" | "todo"; chip: string; chip_source: "civicflow" | "devrev"; ts: string | null;
+  state: "done" | "now" | "todo"; chip: string; chip_source: "civicflow" | "devrev" | "agent"; ts: string | null;
 }
 export type CaseAction = "start" | "request_verification" | "approve" | "escalate" | "reopen";
 export interface CaseDetail {
   ticket: BoardTicket; category: string; address: string | null; before_photo_url: string | null; after_photo_url: string | null;
   crew_note: string | null; priority_score: number; rationale: string; factors: FactorBar[]; duplicates_avoided: number;
-  devrev: DevrevRecord; stations: Station[]; timeline: JourneyStep[]; can: CaseAction[];
+  devrev: DevrevRecord; stations: Station[]; timeline: JourneyStep[]; can: CaseAction[]; agent: AgentVerdict | null;
+}
+
+// ---- agentic fix verification
+export interface AgentVerdict {
+  state: "none" | "checking" | "recommends_approve" | "recommends_review" | "auto_approved" | "skipped";
+  decision: "approve" | "review" | null; confidence: number; reason: string; observation: string; policy_note: string;
+  checked_at: string | null; eyes: string; brain: string;
+}
+export interface AutonomyPolicy {
+  mode: "off" | "suggest" | "auto"; auto_buckets: Bucket[]; min_confidence: number; always_human: string[];
+  closed_by_agent: number; recommended: number;
+}
+// ---- Impact page and judges' page
+export interface DistrictCount { label: string; duplicates: number }
+export interface AgentSplit { closed_by_agent: number; on_track: number; needs_person: number; total: number }
+export interface ImpactFact { label: string; value: string; note: string; estimate: boolean; source: string }
+export interface ImpactLive {
+  as_of: string; reports: number; unique_issues: number; duplicates_avoided: number; tickets_in_devrev: number;
+  median_report_to_ticket_s: number | null; districts: DistrictCount[]; split: AgentSplit; facts: ImpactFact[];
+}
+export interface PlatformPart { name: string; provider: string; role: string; calls: number; errors: number; avg_ms: number; detail: string }
+export interface PlatformInfo {
+  as_of: string; parts: PlatformPart[]; semantic_merges: number; hosting: string; agents_mode: string; devrev_mode: string;
 }

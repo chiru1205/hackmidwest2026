@@ -1,8 +1,9 @@
-import { useState, type ReactElement } from "react";
+import { useRef, useState, type ReactElement } from "react";
 import { CheckCircle2, ImageOff, Play, RotateCcw, ShieldCheck, Siren, TriangleAlert } from "lucide-react";
 import { Button, useToast } from "../components/ui";
 import { catLabel } from "../lib/const";
 import { devrevAction, type CaseAction, type CaseDetail, type DevrevActionName } from "../lib/api";
+import { AfterPhoto, AgentBlock } from "./Agent";
 
 /** Labels match the old board so staff see the same words. */
 const ACTION_META: Record<CaseAction, { label: string; icon: ReactElement }> = {
@@ -16,7 +17,10 @@ const ACTION_META: Record<CaseAction, { label: string; icon: ReactElement }> = {
 /** Closing a case needs evidence: a photo, an earlier note, or a note typed with the click. */
 const needsEvidence = (d: CaseDetail) => d.ticket.evidence_count === 0;
 
-function useCaseAction(id: string, onDone: () => void) {
+/** `watch` is true when the agent is about to check the fix, so the page polls faster for a while. */
+type Changed = (watch?: boolean) => void;
+
+function useCaseAction(id: string, onDone: Changed, beforeVerify?: () => Promise<boolean>) {
   const toast = useToast();
   const [busy, setBusy] = useState<DevrevActionName | null>(null);
   const [err, setErr] = useState<string | null>(null);
@@ -24,11 +28,12 @@ function useCaseAction(id: string, onDone: () => void) {
   const run = async (a: DevrevActionName, label: string) => {
     setBusy(a); setErr(null);
     try {
+      if (a === "request_verification" && beforeVerify && !(await beforeVerify())) return;  // a picked photo goes up first
       const r = await devrevAction(id, a, note.trim() || null);
       if (!r.ok) { setErr(r.error || "That action is not available right now."); return; }
       toast(`${label}: done`);
       setNote("");
-      onDone();
+      onDone(a === "request_verification");
     } catch (e) {
       setErr(e instanceof Error ? e.message : "Something went wrong. Try again.");
     } finally { setBusy(null); }
@@ -63,9 +68,11 @@ function PhonePreview({ d }: { d: CaseDetail }) {
   );
 }
 
-export function Decision({ d, onChanged }: { d: CaseDetail; onChanged: () => void }) {
+export function Decision({ d, onChanged }: { d: CaseDetail; onChanged: Changed }) {
   const id = d.ticket.id;
   const { busy, err, note, setNote, run } = useCaseAction(id, onChanged);
+  const pendingPhoto = useRef<(() => Promise<boolean>) | null>(null);
+  const recommended = d.agent?.state === "recommends_approve";
   const crew = d.ticket.vendor ?? "The crew";
   const needsNote = needsEvidence(d);
   const others = (["reopen", "escalate"] as const).filter((a) => d.can.includes(a));
@@ -80,10 +87,12 @@ export function Decision({ d, onChanged }: { d: CaseDetail; onChanged: () => voi
           </p>
           {d.crew_note && <p className="wf-card-p">Note sent with the request: &ldquo;{d.crew_note}&rdquo;</p>}
         </div>
+        <AgentBlock a={d.agent} />
         <div className="wf-photos">
           <Photo src={d.before_photo_url} tone="before" caption="Before · citizen photo" />
           <Photo src={d.after_photo_url} tone="after" caption="After · crew photo" />
         </div>
+        {!d.after_photo_url && <AfterPhoto id={id} url={null} pendingRef={pendingPhoto} busy={busy !== null} onAttached={() => onChanged(true)} />}
         <div className="wf-note">
           <label htmlFor={`wf-note-${id}`}>Your note</label>
           <textarea id={`wf-note-${id}`} rows={2} value={note} onChange={(e) => setNote(e.target.value)}
@@ -92,7 +101,7 @@ export function Decision({ d, onChanged }: { d: CaseDetail; onChanged: () => voi
         </div>
         {err && <div className="wf-inline-err" role="alert"><TriangleAlert aria-hidden /><span>{err}</span></div>}
         <div className="wf-actions">
-          <Button size="lg" className="wf-approve" icon={<CheckCircle2 />} loading={busy === "approve"} disabled={(busy !== null && busy !== "approve") || (needsNote && !note.trim())}
+          <Button size="lg" className={`wf-approve ${recommended ? "is-recommended" : ""}`} icon={<CheckCircle2 />} loading={busy === "approve"} disabled={(busy !== null && busy !== "approve") || (needsNote && !note.trim())}
             onClick={() => run("approve", "Approved and closed")}>Approve and close</Button>
           {others.map((a) => (
             <Button key={a} size="lg" variant="secondary" className={a === "escalate" ? "wf-danger" : ""} loading={busy === a}
@@ -115,9 +124,10 @@ const NEXT: Record<string, { title: string; text: string }> = {
   resolved: { title: "This case is closed", text: "Reopen it if the problem comes back." },
 };
 
-export function NextStep({ d, onChanged }: { d: CaseDetail; onChanged: () => void }) {
+export function NextStep({ d, onChanged }: { d: CaseDetail; onChanged: Changed }) {
   const id = d.ticket.id;
-  const { busy, err, note, setNote, run } = useCaseAction(id, onChanged);
+  const pendingPhoto = useRef<(() => Promise<boolean>) | null>(null);
+  const { busy, err, note, setNote, run } = useCaseAction(id, onChanged, () => pendingPhoto.current?.() ?? Promise.resolve(true));
   const meta = NEXT[d.ticket.stage_key] ?? { title: "Next step", text: "" };
   const acts = d.can;
   const wantsNote = acts.some((a) => a !== "start");
@@ -129,6 +139,10 @@ export function NextStep({ d, onChanged }: { d: CaseDetail; onChanged: () => voi
         <h3 className="wf-card-h is-sm">{meta.title}</h3>
         <p className="wf-card-p">{meta.text}{d.ticket.reporters > 1 && d.ticket.stage_key !== "resolved" ? ` Everyone who reported it will be told once it is fixed.` : ""}</p>
       </div>
+      <AgentBlock a={d.agent} />
+      {acts.includes("request_verification") && (
+        <AfterPhoto id={id} url={d.after_photo_url} pendingRef={pendingPhoto} busy={busy !== null} onAttached={() => onChanged(false)} />
+      )}
       {wantsNote && (
         <div className="wf-note">
           <label htmlFor={`wf-note-${id}`}>{needsNote ? "Note" : "Note (optional)"}</label>

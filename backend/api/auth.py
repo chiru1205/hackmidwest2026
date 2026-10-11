@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import hmac
 import os
+import secrets
 from typing import Optional
 
 from fastapi import Header, HTTPException, Query
@@ -19,6 +20,17 @@ def _check(supplied: Optional[str]) -> None:
         return
     if not supplied or not hmac.compare_digest(supplied.encode(), want.encode()):
         raise HTTPException(403, "city staff only")
+
+
+_INTERNAL = secrets.token_hex(16)   # per process: only code running inside this API (the DevRev poller) knows it
+
+
+def internal_token() -> str:
+    return _INTERNAL
+
+
+def is_internal(supplied: Optional[str]) -> bool:
+    return bool(supplied) and hmac.compare_digest(supplied.encode(), _INTERNAL.encode())
 
 
 def require_staff(x_role_token: Optional[str] = Header(None)) -> None:

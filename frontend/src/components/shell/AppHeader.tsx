@@ -1,6 +1,6 @@
 import { NavLink, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Building2, HardHat, LogOut, Menu, Radar, Workflow } from "lucide-react";
+import { Building2, HardHat, LogOut, Menu, Radar, TrendingUp, Workflow } from "lucide-react";
 import { MOCK } from "../../lib/api";
 import { ROLE, lockStaff } from "../../lib/auth";
 import { IconButton } from "../ui/Button";
@@ -10,16 +10,18 @@ import { spring } from "../ui/motion";
 import { HealthIndicator } from "./HealthIndicator";
 import { LogoMark, Wordmark } from "./Logo";
 
-export type Section = "citizen" | "ops" | "vendor" | "workflow";
+export type Section = "citizen" | "ops" | "vendor" | "workflow" | "impact" | "hood";
 export const sectionOf = (pathname: string): Section =>
   ROLE === "citizen" ? "citizen"
-    : pathname.startsWith("/vendor") ? "vendor" : pathname.startsWith("/workflow") ? "workflow" : "ops";
+    : pathname.startsWith("/vendor") ? "vendor" : pathname.startsWith("/workflow") ? "workflow"
+    : pathname.startsWith("/impact") ? "impact" : pathname.startsWith("/under-the-hood") ? "hood" : "ops";
 
 /** City staff navigation. The citizen app has no navigation here: it owns its tab bar. */
 const TABS: { id: Section; label: string; to: string; icon: typeof Radar }[] = [
   { id: "ops", label: "Operations", to: "/ops", icon: Radar },
   { id: "vendor", label: "Vendors", to: "/vendor", icon: HardHat },
   { id: "workflow", label: "Workflow", to: "/workflow", icon: Workflow },
+  { id: "impact", label: "Impact", to: "/impact", icon: TrendingUp },
 ];
 
 export function AppHeader({ section }: { section: Section }) {

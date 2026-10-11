@@ -10,7 +10,7 @@ from pydantic import BaseModel
 
 from contracts.models import Cluster, Event, Health, Stats, Ticket, VendorOrder
 from .. import adapters, config, events, pipeline, store
-from ..auth import require_staff, require_staff_events
+from ..auth import is_internal, require_staff, require_staff_events
 
 router = APIRouter()
 DUE_DAYS = {"P1": 2, "P2": 5, "P3": 10, "P4": 14}
@@ -36,9 +36,12 @@ class AdvanceBody(BaseModel):
 
 
 @router.post("/tickets/{ticket_id}/advance", response_model=Ticket, dependencies=[Depends(require_staff)])
-async def advance(ticket_id: str, body: AdvanceBody):
+async def advance(ticket_id: str, body: AdvanceBody, x_civicflow_internal: Optional[str] = Header(None)):
     if body.stage not in ("queued", "work_in_progress", "resolved", "canceled"):
         raise HTTPException(422, "bad stage")
+    if body.stage in ("resolved", "canceled") and not is_internal(x_civicflow_internal):
+        # closing needs evidence and the agent or a person: the case actions do that. Only the DevRev poller mirrors a close.
+        raise HTTPException(403, "Closing a ticket goes through verification")
     t = adapters.set_stage(ticket_id, body.stage)
     if t is None:
         raise HTTPException(404, "ticket not found")
@@ -59,7 +62,9 @@ async def advance(ticket_id: str, body: AdvanceBody):
 @router.get("/vendor/orders", response_model=list[VendorOrder], dependencies=[Depends(require_staff)])
 async def vendor_orders(vendor: Optional[str] = None):
     from backend.integrations.devrev import live as dr_live
+    from backend.integrations.devrev import events as dr_events
     only_devrev = dr_live.configured()  # live DevRev: vendors see only work orders that really exist in DevRev
+    awaiting = {tid for tid, m in dr_events.all_meta().items() if m["awaiting"]}  # submitted by the crew, not yet confirmed
     out = []
     for c in sorted(store.clusters.values(), key=lambda c: -c.priority):
         if c.status == "fixed" or not c.vendor:
@@ -73,6 +78,8 @@ async def vendor_orders(vendor: Optional[str] = None):
             due = datetime.fromisoformat(c.first_reported_at.replace("Z", "+00:00")) + timedelta(days=DUE_DAYS[c.bucket])
         except Exception:
             due = datetime.now(timezone.utc)
+        if ticket and ticket.id in awaiting:  # the vendor page reads this tag, so it still shows "awaiting" after a reload
+            ticket = ticket.model_copy(update={"tags": [*ticket.tags, "awaiting_verification"]})
         out.append(VendorOrder(cluster=c, ticket=ticket,
                                due=due.isoformat().replace("+00:00", "Z")))
     return out
@@ -83,21 +90,23 @@ async def vendor_fix(cluster_id: str, photo: Optional[UploadFile] = File(None)):
     c = store.clusters.get(cluster_id)
     if c is None:
         raise HTTPException(404, "cluster not found")
+    from backend.integrations.devrev import actions as dr_actions
+    if c.status == "fixed":  # already closed: nothing to submit
+        return c
+    data = None
     if photo is not None and photo.filename:
-        data = await photo.read()
-        if data:
-            adapters.save_photo(f"fix_{cluster_id}.jpg", data)
-    was_open = c.status != "fixed"
-    out = pipeline.mark_fixed(c)
-    if was_open and c.ticket_id:  # log the vendor fix (and its after-photo) in the ticket event history
-        try:
-            from backend.integrations.devrev import events as dr_events
-            dr_events.record("resolved", c.ticket_id, None,
-                             "Vendor marked fixed" + (" with an after-photo" if photo is not None and photo.filename else ""),
-                             "Civic Flow")
-        except Exception:
-            pass
-    return out
+        data = await photo.read(dr_actions.MAX_PHOTO_BYTES + 1) or None
+        err = dr_actions.photo_error(data) if data else None
+        if err:
+            raise HTTPException(400, err)
+    # "Mark fixed" from a crew only asks for verification; the case closes when it is approved (by a person or the agent).
+    # The photo is saved by the action only once the request is accepted, so a refused request leaves the evidence alone.
+    if not c.ticket_id:
+        raise HTTPException(409, "This case has no ticket yet")
+    res = await dr_actions.run(c.ticket_id, "request_verification", "Crew marked the repair complete", photo=data)
+    if not res.get("ok"):
+        raise HTTPException(409, res.get("error") or "The repair could not be submitted")
+    return store.clusters.get(cluster_id, c)
 
 
 @router.get("/impact")

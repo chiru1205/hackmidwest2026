@@ -1,5 +1,6 @@
 import { useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
+import { Link } from "react-router-dom";
 import {
   Activity, ArrowRight, CheckCircle2, Cpu, Gauge, Inbox, Layers, MapPin, Play, Plus, RotateCcw, Radio,
   Route as RouteIcon, BarChart3, Workflow, ScanLine, GitMerge, Scale, Send, Sparkles, Ticket as TicketIcon, Users, Wrench, X, Zap, Clock, FileText,
@@ -274,6 +275,8 @@ export default function Ops() {
 
         <footer className="ops-foot">
           <span className="ops-foot__brand"><span className="ops-foot__mark" aria-hidden /><span>Powered by <b>Akamai Cloud AI</b> (hosted chat, embeddings, image)</span><span className="ops-foot__sep" />AWS Bedrock vision{h?.flags.agents_mode === "graph" ? " / Strands agents" : ""}</span>
+          <span className="ops-foot__sep" />
+          <Link to="/under-the-hood" className="ops-foot__link">How it&rsquo;s built</Link>
           <span className="ops-foot__spacer" />
           {MOCK && <Pill variant="hazard" size="sm">Mock data</Pill>}
           {h ? (
@@ -523,6 +526,7 @@ function Impact({ stats }: { stats: Stats }) {
               </div>
             ))}
             <div className="ops-impact__save"><Clock size={14} strokeWidth={1.75} aria-hidden /><span>About <b className="t-num">{hours.toLocaleString()}</b> crew-hours saved by dedup (estimate)</span></div>
+            <Link to="/impact" className="ops-impact__more">See full impact</Link>
           </>
         )}
       </div>
