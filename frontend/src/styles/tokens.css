@@ -33,7 +33,8 @@
   --dur-1: 120ms; --dur-2: 200ms; --dur-3: 360ms;
 
   /* ---- layout ---- */
-  --header-h: 60px;
+  --bar-h: 60px; --ribbon-h: 52px;
+  --header-h: calc(var(--bar-h) + var(--ribbon-h));  /* the sticky header = nav bar + sponsor ribbon */
   --z-header: 40; --z-pop: 60; --z-sheet: 80; --z-toast: 100;
 }
 
@@ -128,4 +129,4 @@
   }
 }
 
-@media (max-width: 640px) { :root { --header-h: 56px; } }
+@media (max-width: 640px) { :root { --bar-h: 56px; --ribbon-h: 40px; } }

@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Lock } from "lucide-react";
 import { unlockStaff } from "../lib/auth";
 import { LogoMark, Wordmark } from "../components/shell/Logo";
+import { PoweredBy } from "../components/shell/PoweredBy";
 
 /** Demo-level staff sign-in. Not real security: the PIN is shown as a hint. */
 export default function Gate({ onUnlock }: { onUnlock: () => void }) {
@@ -14,6 +15,8 @@ export default function Gate({ onUnlock }: { onUnlock: () => void }) {
   };
 
   return (
+    <>
+    <PoweredBy />
     <div className="gate">
       <form className="gate__card" onSubmit={submit} aria-labelledby="gate-h">
         <div className="gate__brand"><LogoMark size={36} /><Wordmark /></div>
@@ -34,5 +37,6 @@ export default function Gate({ onUnlock }: { onUnlock: () => void }) {
         <button type="submit" className="gate__btn" disabled={!pin}>Sign in</button>
       </form>
     </div>
+    </>
   );
 }

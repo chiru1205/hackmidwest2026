@@ -9,6 +9,7 @@ import { Pill } from "../ui/Pill";
 import { spring } from "../ui/motion";
 import { HealthIndicator } from "./HealthIndicator";
 import { LogoMark, Wordmark } from "./Logo";
+import { PoweredBy } from "./PoweredBy";
 
 export type Section = "citizen" | "ops" | "vendor" | "workflow" | "impact" | "hood";
 export const sectionOf = (pathname: string): Section =>
@@ -83,6 +84,7 @@ export function AppHeader({ section }: { section: Section }) {
           </div>
         )}
       </div>
+      <PoweredBy />
     </header>
   );
 }

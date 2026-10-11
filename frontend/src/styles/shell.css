@@ -12,7 +12,7 @@
   backdrop-filter: blur(18px) saturate(1.6); -webkit-backdrop-filter: blur(18px) saturate(1.6);
   box-shadow: 0 1px 0 var(--line);
 }
-.app-header__in { height: var(--header-h); display: flex; align-items: center; gap: var(--s-3); padding: 0 var(--s-5); max-width: 1680px; margin: 0 auto; }
+.app-header__in { height: var(--bar-h); display: flex; align-items: center; gap: var(--s-3); padding: 0 var(--s-5); max-width: 1680px; margin: 0 auto; }
 .app-brand { display: inline-flex; align-items: center; gap: 10px; text-decoration: none; color: var(--text); flex: none; border-radius: var(--r-sm); }
 .app-brand svg { border-radius: 9px; box-shadow: 0 2px 8px -2px rgba(11, 27, 51, .4); }
 .app-wordmark { font: 700 19px/1 var(--font-display); letter-spacing: -.035em; }
@@ -114,3 +114,12 @@ button.app-menu__item { border: 0; background: transparent; width: 100%; cursor:
 .gate__btn:disabled { opacity: .5; cursor: default; }
 .gate__field input { height: 100%; padding: 0; border: 0; border-radius: 0; box-shadow: none !important; background: transparent !important; outline: 0 !important; }
 .gate__field input::-ms-reveal { display: none; }
+
+/* ---- sponsor ribbon (every page) ---- */
+.powered { height: var(--ribbon-h); box-sizing: border-box; display: flex; align-items: center; justify-content: center; gap: clamp(14px, 3vw, 44px); padding: 0 var(--s-4); border-top: 1px solid var(--line); background: linear-gradient(90deg, #eef2fb 0%, #ffffff 50%, #eef2fb 100%); color: var(--text); white-space: nowrap; overflow: hidden; }
+.powered__item { display: inline-flex; align-items: baseline; gap: .5em; }
+.powered em { font: 600 clamp(11px, 1.3vw, 17px)/1 var(--font-body); font-style: normal; color: var(--text-2, #4b5873); letter-spacing: .02em; }
+.powered b { font: 800 clamp(17px, 2.4vw, 30px)/1 var(--font-display); letter-spacing: -.03em; color: var(--text); }
+.powered__item:first-child b { color: var(--primary-text, #2552f0); }
+.powered__dot { width: 8px; height: 8px; border-radius: 50%; background: var(--line-strong, #c7d0e6); flex: none; }
+.gate { min-height: calc(100dvh - var(--ribbon-h)); }

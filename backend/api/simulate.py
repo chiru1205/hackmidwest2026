@@ -75,7 +75,7 @@ async def _run(req: SimulateRequest) -> None:
             lng = req.lng + dx / (111320.0 * cos)
             try:
                 await pipeline.submit_report(f"sim_u{random.randint(1, users)}", lat, lng, 10.0, req.category,
-                                             "simulated report", random.choice([2, 3, 3, 4]), None,
+                                             "storm demo report", random.choice([2, 3, 3, 4]), None,
                                              simulated=True, quiet_stats=(i % 5 != 0))
             except Exception as e:
                 log.warning("simulated report failed: %s", e)

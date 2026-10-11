@@ -208,7 +208,7 @@ async def submit_report(user_id: str, lat: float, lng: float, accuracy_m: float 
                         best = max(pool, key=lambda c: decision["scores"].get(c.id, 0), default=None)
                         ok = best is not None and decision["scores"].get(best.id, 0) >= 0.6
                         j = {"decision": "merge" if ok else "new", "cluster_id": best.id if ok else None,
-                             "reason": "rule judge (simulated report)"}
+                             "reason": "rule judge (storm demo report)"}
                     else:
                         j = await adapters.judge_dedup(report, pool, decision["scores"], ctx.emit)
                     used_llm = not simulated

@@ -15,7 +15,7 @@ const DEFAULT_MIN = 30;
 const DEFAULT_RATE = 45;
 
 type Tag = "real" | "live" | "est";
-const TAG_TEXT: Record<Tag, string> = { real: "REAL", live: "LIVE + SIMULATED", est: "ESTIMATE" };
+const TAG_TEXT: Record<Tag, string> = { real: "REAL", live: "LIVE DEMO", est: "ESTIMATE" };
 const TagPill = ({ kind }: { kind: Tag }) => <span className={`im-tag is-${kind}`}>{TAG_TEXT[kind]}</span>;
 
 export default function ImpactPage() {
@@ -32,7 +32,7 @@ export default function ImpactPage() {
             <h1 className="im-h1">Impact</h1>
             <p className="im-sub">
               What &ldquo;many reports, one ticket&rdquo; is worth to Kansas City. Three kinds of numbers, always labeled:{" "}
-              <b>Real</b> (KC open data), <b>Live + simulated</b> (this system right now, which includes the simulated demo reports) and{" "}
+              <b>Real</b> (KC open data), <b>Live demo</b> (this system right now, which includes the storm demo) and{" "}
               <b>Estimate</b> (you can change the assumptions).
             </p>
           </div>
@@ -103,7 +103,7 @@ function Body({ d }: { d: ImpactLive }) {
       <p className="im-src">
         {sources.length > 0 && <>Sources: {sources.join(". ")}. </>}
         {hasEstimate && <>Marked estimates are our own analysis of that data. </>}
-        Live figures are counted by this system and include simulated demo reports, not only reports from residents.
+        Live figures are counted by this system and include the storm demo, not only reports from residents.
         Staff time and cost are estimates from the two assumptions above, not measured savings.
       </p>
     </>
@@ -121,7 +121,7 @@ function Hero({ d, hours, dollars }: { d: ImpactLive; hours: string; dollars: st
   return (
     <section className="im-hero" aria-label="Headline">
       <div className="im-hero-l">
-        <span className="im-hero-tag">LIVE + SIMULATED REPORTS</span>
+        <span className="im-hero-tag">LIVE DEMO</span>
         <div className="im-hero-big">
           {fmt(d.reports)} {d.reports === 1 ? "report" : "reports"}.<br />
           <span>{fmt(d.tickets_in_devrev)} {d.tickets_in_devrev === 1 ? "ticket" : "tickets"}.</span>
@@ -309,7 +309,7 @@ function Split({ d }: { d: ImpactLive }) {
     { k: "person", n: s.needs_person, label: "need a person" },
   ];
   const sum = segs.reduce((a, x) => a + x.n, 0);
-  // the split covers the cases still open plus those the agent closed; closed-by-a-person cases and simulated issues kept off the board are not in it
+  // the split covers the cases still open plus those the agent closed; closed-by-a-person cases and storm-demo issues kept off the board are not in it
   const scope = d.unique_issues > s.total ? `${fmt(s.total)} cases counted, out of ${fmt(d.unique_issues)} issues in all` : `${fmt(s.total)} cases counted`;
   return (
     <section className="im-card" aria-labelledby="im-h-split">

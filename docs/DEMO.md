@@ -63,7 +63,7 @@ But Civic Flow doesn't stop when the work order is created.
 
 It follows the entire process.
 
-**[ADDED]** Every case is a real DevRev ticket, and it stays in sync both ways.
+**[ADDED]** Every case is a DevRev ticket, and it stays in sync both ways.
 
 From the first photo to the assigned crew, from the completed repair to the final resident notification.
 
@@ -135,7 +135,7 @@ The resident app is a web page, so it runs in a phone-shaped window next to the 
 ## Delivery notes (these matter as much as the words)
 - **Silence is a tool.** Let the collapse and the "Identified" reveal land before you talk. The product is doing the selling.
 - **One sentence to repeat:** "Less Red Tape. More Action." It is on the opener card and is your last line.
-- **Never apologize or say "prototype", "just", or "basically".** Say "simulated" once, plainly, for the storm.
+- **Never apologize or say "prototype", "just", or "basically".** Say "demo storm" once, plainly.
 - **Name the technology as what it *did*,** not as a logo: embeddings *matched meaning*, vision *read the photo*, agents *ranked and routed*, DevRev *holds the case*.
 - **Practice the first 20 seconds and the last 15 until you can do them without looking.** The middle is driven by the screen.
 - **Stretch move (only if you have rehearsed it and the room is friendly):** before you start, hand a judge the resident link and ask them to send a photo of anything broken during the pitch. It appears under "New, just in" on your screen. If the photo is not a city problem, you move on; do not rely on it.
@@ -158,11 +158,12 @@ The resident app is a web page, so it runs in a phone-shaped window next to the 
 4. After the live report, do **not** press Reset or a storm button (the storm resets the data).
 Live: resident `https://172-232-2-16.sslip.io/`, city `https://city.172-232-2-16.sslip.io/`.
 
-## Real vs simulated (say it plainly if asked)
-- The storm and the large report counts on Operations and Impact include **simulated** reports and are labeled so. The report from the phone is real.
-- The 13 tickets on the Workflow and Vendors pages are real DevRev tickets created for the demo.
+## What is live and what is demo data (say it plainly if asked)
+- The storm button generates a demo storm of reports. The report counts on Operations and Impact include it and the Impact page labels them "Live demo". The report you send from the phone is live.
+- The 13 tickets on the Workflow and Vendors pages are DevRev tickets created for the demo.
 - Savings are estimates from two stated assumptions, not measured savings.
 - Photo reading uses AWS vision, because Akamai's hosted models have no vision.
+- Every page carries a bold "Powered by DevRev, Powered by Akamai" ribbon under the header.
 
 ## Questions you may get
 | Question | Answer |

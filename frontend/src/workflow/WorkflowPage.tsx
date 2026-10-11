@@ -244,7 +244,7 @@ export default function WorkflowPage() {
     main = (
       <div className="wf-card wf-state">
         <EmptyState icon={<Inbox />} title="No tickets yet"
-          description="Send a sample report and it shows up here as a real DevRev ticket, with its whole journey."
+          description="Send a sample report and it shows up here as a DevRev ticket, with its whole journey."
           action={<Button icon={<Send />} loading={sending} onClick={sendSample}>Send a sample report</Button>} />
       </div>
     );
@@ -262,7 +262,7 @@ export default function WorkflowPage() {
         <header className="wf-head">
           <div className="wf-head-l">
             <h1 className="wf-h1">Case journey</h1>
-            <p className="wf-sub">From a citizen&rsquo;s photo to a fixed street. Every step marked <b>DevRev</b> is a real record in DevRev.</p>
+            <p className="wf-sub">From a citizen&rsquo;s photo to a fixed street. Every step marked <b>DevRev</b> is a record in DevRev.</p>
           </div>
           <div className="wf-head-r">
             {list && <span className="wf-agentcount" title="Cases the agent verified and closed on its own"><Bot aria-hidden />Agents closed {plural(list.counts.agent_closed, "case")}</span>}

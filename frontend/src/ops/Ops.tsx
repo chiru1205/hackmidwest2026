@@ -328,7 +328,7 @@ function KpiBar({ stats, loading, busy, sim, story, onStory, onReset, onAnalytic
           <div className="ops-storms__seg">
             {STORMS.map((st) => (
               <button key={st.key} type="button" className={`ops-storms__btn ${story?.storm.key === st.key ? "is-on" : ""}`} onClick={() => onStory(st)} disabled={busy}
-                title={`Reset the city, then simulate ${stormTotal(st).toLocaleString()} reports: ${st.title}. No AI calls.`}>{st.label}</button>
+                title={`Reset the city, then run the storm demo (${stormTotal(st).toLocaleString()} reports): ${st.title}. No AI calls.`}>{st.label}</button>
             ))}
           </div>
         </div>
@@ -361,7 +361,7 @@ function StoryCard({ story, stats, onClose }: { story: NonNullable<Story>; stats
           <div><AnimatedNumber value={issues} ms={500} className="ops-story__big is-accent" /><span className="ops-story__cap">{issues === 1 ? "issue" : "issues"}</span></div>
         </div>
         {story.phase !== "done" ? (
-          <ProgressBar value={reports} max={total} height={4} label="Simulation progress" />
+          <ProgressBar value={reports} max={total} height={4} label="Storm demo progress" />
         ) : (
           <div className="ops-story__done">
             <span><b className="t-num">{absorbed.toLocaleString()}</b> duplicates absorbed</span>

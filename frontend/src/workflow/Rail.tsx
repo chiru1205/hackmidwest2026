@@ -83,7 +83,7 @@ export function Rail({ list, loading, error, onRetry, q, onQ, browse, onBrowse, 
       <p className="wf-rail-empty">No case matches "{list.q}".</p>
     ) : list.mode === "needs" ? (
       counts && counts.open === 0 ? (
-        <EmptyState compact icon={<Send />} title="No tickets yet" description="Send a sample report and it shows up here as a real DevRev ticket."
+        <EmptyState compact icon={<Send />} title="No tickets yet" description="Send a sample report and it shows up here as a DevRev ticket."
           action={<Button size="sm" icon={<Send />} loading={sending} onClick={onSample}>Send a sample report</Button>} />
       ) : (
         <p className="wf-rail-empty">Nothing needs you right now. Everything open is on track.</p>
